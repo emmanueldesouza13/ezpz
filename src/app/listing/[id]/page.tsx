@@ -101,25 +101,17 @@ export default async function ListingDetailPage({
                       </span>
                     )}
                   </div>
-                  {isOwner && <EditProfileModal profile={seller!} />}
+                  {isOwner && (
+                    <EditProfileModal profile={seller!} listing={listing} categories={categories} />
+                  )}
                 </div>
                 {isOwner || isAdmin ? (
-                  <>
-                    <Link
-                      href={`/listing/${listing.id}/edit`}
-                      className="btn btn-line btn-block"
-                      style={{ marginBottom: 10 }}
-                    >
-                      <Icon name="Pencil" />
-                      Edit listing
-                    </Link>
-                    <RemoveListingButton
-                      table="listings"
-                      id={listing.id}
-                      redirectTo="/account"
-                      label="Remove this listing"
-                    />
-                  </>
+                  <RemoveListingButton
+                    table="listings"
+                    id={listing.id}
+                    redirectTo="/account"
+                    label="Remove this listing"
+                  />
                 ) : (
                   <SellerActions
                     listingId={listing.id}

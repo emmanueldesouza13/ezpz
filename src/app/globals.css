@@ -1011,6 +1011,10 @@
     width: 100%; max-width: 520px; padding: 24px; position: relative;
   }
   .modal-card h2 { font-size: 1.1rem; margin-bottom: 18px; padding-right: 24px; }
+  .modal-section-title {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--ink-faint); margin: 24px 0 14px; padding-top: 18px; border-top: 1px solid var(--line);
+  }
   .modal-close {
     position: absolute; top: 18px; right: 18px;
     width: 28px; height: 28px; border-radius: 50%; border: none; background: none;
