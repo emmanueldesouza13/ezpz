@@ -519,10 +519,21 @@
     box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--brand), var(--shadow-2);
   }
   .profile-avail-dot {
-    position: absolute; bottom: 2px; right: 2px;
+    position: absolute; top: 2px; right: 2px;
     width: 15px; height: 15px; border-radius: 50%;
-    background: var(--good); border: 3px solid var(--surface);
+    background: var(--good); border: 3px solid var(--paper);
   }
+  .avatar-photo-badge {
+    position: absolute; bottom: 0; right: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: var(--on-accent);
+    border: 2px solid var(--paper);
+    padding: 0; cursor: pointer;
+    box-shadow: var(--shadow-1);
+  }
+  .avatar-photo-badge svg { width: 13px; height: 13px; }
+  .avatar-photo-badge:hover { background: var(--accent-deep); }
   .profile-name-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
   .profile-name-row h2 { font-size: 1.15rem; font-weight: 800; margin: 0; }
   .profile-name-row svg { width: 16px; height: 16px; color: var(--brand); flex-shrink: 0; }

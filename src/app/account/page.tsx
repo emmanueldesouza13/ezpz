@@ -9,7 +9,6 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import EditProfileModal from "@/components/EditProfileModal";
-import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
@@ -96,15 +95,7 @@ export default function AccountPage() {
 
             {profile && (
               <div className="profile-id" style={{ marginBottom: 20 }}>
-                <div className="profile-avatar-wrap">
-                  <Avatar
-                    url={profile.avatar_url}
-                    color={profile.avatar_color}
-                    name={profile.display_name}
-                    className="profile-avatar"
-                  />
-                  {profile.available && <span className="profile-avail-dot" />}
-                </div>
+                <EditProfileModal profile={profile} onSaved={setProfile} />
                 <div className="profile-name-row">
                   <h2>{profile.display_name}</h2>
                   {profile.verified && <Icon name="BadgeCheck" />}
@@ -124,7 +115,6 @@ export default function AccountPage() {
                     </span>
                   )}
                 </div>
-                <EditProfileModal profile={profile} onSaved={setProfile} />
                 <p className="hint" style={{ marginTop: 8 }}>
                   This is what buyers see on your listings — name, avatar, location, bio, and availability.
                 </p>

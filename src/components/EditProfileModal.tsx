@@ -206,6 +206,23 @@ export default function EditProfileModal({
 
   return (
     <>
+      <div className="profile-avatar-wrap">
+        <Avatar
+          url={profile.avatar_url}
+          color={profile.avatar_color}
+          name={profile.display_name}
+          className="profile-avatar"
+        />
+        {profile.available && <span className="profile-avail-dot" />}
+        <button
+          type="button"
+          className="avatar-photo-badge"
+          onClick={openModal}
+          aria-label="Add or change profile photo"
+        >
+          <Icon name="Camera" />
+        </button>
+      </div>
       <button type="button" className="profile-edit-btn" onClick={openModal}>
         <Icon name="Pencil" />
         Edit profile

@@ -63,15 +63,19 @@ export default async function ListingDetailPage({
                 <p className="price mono">{formatPrice(listing.price, listing.is_free)}</p>
                 <h2>{listing.title}</h2>
                 <div className="profile-id">
-                  <div className="profile-avatar-wrap">
-                    <Avatar
-                      url={seller?.avatar_url}
-                      color={seller?.avatar_color}
-                      name={seller?.display_name}
-                      className="profile-avatar"
-                    />
-                    {seller?.available && <span className="profile-avail-dot" />}
-                  </div>
+                  {isOwner ? (
+                    <EditProfileModal profile={seller!} listing={listing} categories={categories} />
+                  ) : (
+                    <div className="profile-avatar-wrap">
+                      <Avatar
+                        url={seller?.avatar_url}
+                        color={seller?.avatar_color}
+                        name={seller?.display_name}
+                        className="profile-avatar"
+                      />
+                      {seller?.available && <span className="profile-avail-dot" />}
+                    </div>
+                  )}
                   <div className="profile-name-row">
                     <h2>{seller?.display_name ?? "Seller"}</h2>
                     {seller?.verified && <Icon name="BadgeCheck" />}
@@ -105,9 +109,6 @@ export default async function ListingDetailPage({
                       </span>
                     )}
                   </div>
-                  {isOwner && (
-                    <EditProfileModal profile={seller!} listing={listing} categories={categories} />
-                  )}
                 </div>
                 {isOwner || isAdmin ? (
                   <RemoveListingButton
