@@ -46,7 +46,6 @@ export default function ListingCard({
         )}
       </div>
       <div className="listing-card-body">
-        <p className="listing-card-title">{listing.title}</p>
         {seller?.display_name && (
           <span className="listing-card-meta-line listing-card-seller">
             <Icon name="User" />
