@@ -9,17 +9,6 @@ import { toast } from "@/lib/toast";
 import { isPhotoUrl } from "@/lib/format";
 import { GRADIENTS, type Profile, type Listing, type Category } from "@/lib/types";
 
-const AVATAR_COLORS = [
-  "#a72c53",
-  "#cc9d4e",
-  "#6b3fa0",
-  "#2f8f6b",
-  "#c9713f",
-  "#1f6f8b",
-  "#8a2f4f",
-  "#3a1626",
-];
-
 const MAX_PHOTOS = 6;
 
 export default function EditProfileModal({
@@ -286,22 +275,6 @@ export default function EditProfileModal({
               </div>
 
               <div className="field">
-                <label>Avatar color</label>
-                <div className="swatch-row">
-                  {AVATAR_COLORS.map((c) => (
-                    <button
-                      type="button"
-                      key={c}
-                      className={`swatch${color === c ? " active" : ""}`}
-                      style={{ background: c }}
-                      aria-label={c}
-                      onClick={() => setColor(c)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="field">
                 <label htmlFor="ep-location">Location</label>
                 <input
                   className="control"
@@ -380,17 +353,6 @@ export default function EditProfileModal({
                     ) : (
                       <p className="hint">The first photo is used as the main listing photo.</p>
                     )}
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="ep-l-title">Name</label>
-                    <input
-                      className="control"
-                      id="ep-l-title"
-                      required
-                      value={lTitle}
-                      onChange={(e) => setLTitle(e.target.value)}
-                    />
                   </div>
 
                   <div className="field">
