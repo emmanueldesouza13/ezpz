@@ -5,7 +5,6 @@ import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/server";
 import { getListingById, getProfile, getCategories } from "@/lib/data";
-import { formatPrice } from "@/lib/format";
 import SellerActions from "./SellerActions";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import DetailTabs from "./DetailTabs";
@@ -60,8 +59,6 @@ export default async function ListingDetailPage({
           <div className="detail-layout">
             <div>
               <div className="seller-panel">
-                <p className="price mono">{formatPrice(listing.price, listing.is_free)}</p>
-                <h2>{listing.title}</h2>
                 <div className="profile-id">
                   {isOwner ? (
                     <EditProfileModal profile={seller!} listing={listing} categories={categories} />
