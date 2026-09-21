@@ -404,6 +404,7 @@
     width: 7px; height: 7px; border-radius: var(--radius-chip); background: var(--good); flex-shrink: 0;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--good) 25%, transparent);
   }
+  .listing-card-seller { font-weight: 600; color: var(--ink-soft); }
   .listing-card-verified { margin-top: 0; font-size: 0.72rem; }
   .listing-card-verified svg { width: 12px; height: 12px; }
 
