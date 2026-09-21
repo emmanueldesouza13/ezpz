@@ -1,0 +1,217 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Category, Listing, Profile, Conversation, Message, Settings, TaxiService, Review } from "./types";
+
+// Thin query helpers shared by server and browser components — pass either
+// createClient() from lib/supabase/server or lib/supabase/client.
+
+const DEFAULT_LOGO_URL = "/logo.png";
+
+export async function getSiteSettings(supabase: SupabaseClient): Promise<Settings> {
+  const { data } = await supabase.from("settings").select("*").eq("id", 1).maybeSingle();
+  return (
+    (data as Settings) || {
+      id: 1,
+      logo_url: DEFAULT_LOGO_URL,
+      platform_mmg_number: null,
+      listing_fee: 2000,
+      taxi_mmg_number: null,
+      taxi_fee: 5000,
+      updated_at: "",
+    }
+  );
+}
+
+export async function getTaxiServices(supabase: SupabaseClient): Promise<TaxiService[]> {
+  const { data, error } = await supabase
+    .from("taxi_services")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getTaxiServices error", error);
+    return [];
+  }
+  return (data as TaxiService[]) || [];
+}
+
+export async function getMyTaxiServices(
+  supabase: SupabaseClient,
+  ownerId: string
+): Promise<TaxiService[]> {
+  const { data, error } = await supabase
+    .from("taxi_services")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .neq("status", "removed")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getMyTaxiServices error", error);
+    return [];
+  }
+  return (data as TaxiService[]) || [];
+}
+
+export async function getTaxiServiceById(
+  supabase: SupabaseClient,
+  id: string
+): Promise<TaxiService | null> {
+  const { data } = await supabase.from("taxi_services").select("*").eq("id", id).maybeSingle();
+  return (data as TaxiService) || null;
+}
+
+export async function getCategories(supabase: SupabaseClient): Promise<Category[]> {
+  const { data } = await supabase
+    .from("categories")
+    .select("*")
+    .order("sort_order", { ascending: true });
+  return (data as Category[]) || [];
+}
+
+export async function getListings(
+  supabase: SupabaseClient,
+  opts: {
+    category?: string | null;
+    q?: string | null;
+    minPrice?: number | null;
+    maxPrice?: number | null;
+  } = {}
+): Promise<Listing[]> {
+  let query = supabase
+    .from("listings")
+    .select("*, seller:profiles(*)")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
+  if (opts.category) query = query.eq("category", opts.category);
+  if (opts.q) query = query.ilike("title", `%${opts.q}%`);
+  if (opts.minPrice != null) query = query.gte("price", opts.minPrice);
+  if (opts.maxPrice != null) query = query.lte("price", opts.maxPrice);
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("getListings error", error);
+    return [];
+  }
+  return (data as Listing[]) || [];
+}
+
+export async function getMyListings(
+  supabase: SupabaseClient,
+  sellerId: string
+): Promise<Listing[]> {
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*, seller:profiles(*)")
+    .eq("seller_id", sellerId)
+    .neq("status", "removed")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getMyListings error", error);
+    return [];
+  }
+  return (data as Listing[]) || [];
+}
+
+export async function getListingById(
+  supabase: SupabaseClient,
+  id: string
+): Promise<Listing | null> {
+  const { data } = await supabase
+    .from("listings")
+    .select("*, seller:profiles(*)")
+    .eq("id", id)
+    .maybeSingle();
+  return (data as Listing) || null;
+}
+
+export async function getProfile(
+  supabase: SupabaseClient,
+  id: string
+): Promise<Profile | null> {
+  const { data } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+  return (data as Profile) || null;
+}
+
+export async function getReviews(
+  supabase: SupabaseClient,
+  sellerId: string
+): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*, reviewer:profiles!reviews_reviewer_id_fkey(*)")
+    .eq("seller_id", sellerId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getReviews error", error);
+    return [];
+  }
+  return (data as Review[]) || [];
+}
+
+export async function getMyConversations(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Conversation[]> {
+  const { data } = await supabase
+    .from("conversations")
+    .select("*, listing:listings(*), buyer:profiles!conversations_buyer_id_fkey(*), seller:profiles!conversations_seller_id_fkey(*)")
+    .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+    .order("created_at", { ascending: false });
+  return (data as Conversation[]) || [];
+}
+
+export async function getOrCreateConversation(
+  supabase: SupabaseClient,
+  listingId: string,
+  buyerId: string,
+  sellerId: string
+): Promise<Conversation | null> {
+  const { data: existing } = await supabase
+    .from("conversations")
+    .select("*")
+    .eq("listing_id", listingId)
+    .eq("buyer_id", buyerId)
+    .maybeSingle();
+  if (existing) return existing as Conversation;
+
+  const { data, error } = await supabase
+    .from("conversations")
+    .insert({ listing_id: listingId, buyer_id: buyerId, seller_id: sellerId })
+    .select("*")
+    .single();
+  if (error) {
+    console.error("getOrCreateConversation error", error);
+    return null;
+  }
+  return data as Conversation;
+}
+
+export async function getMessages(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<Message[]> {
+  const { data } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
+  return (data as Message[]) || [];
+}
+
+export async function sendMessage(
+  supabase: SupabaseClient,
+  conversationId: string,
+  senderId: string,
+  body: string
+): Promise<Message | null> {
+  const { data, error } = await supabase
+    .from("messages")
+    .insert({ conversation_id: conversationId, sender_id: senderId, body })
+    .select("*")
+    .single();
+  if (error) {
+    console.error("sendMessage error", error);
+    return null;
+  }
+  return data as Message;
+}
