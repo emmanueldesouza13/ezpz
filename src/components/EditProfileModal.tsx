@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "./Icon";
+import Avatar from "./Avatar";
 import { toast } from "@/lib/toast";
 import { isPhotoUrl } from "@/lib/format";
 import { GRADIENTS, type Profile, type Listing, type Category } from "@/lib/types";
@@ -39,6 +40,8 @@ export default function EditProfileModal({
   // profile fields
   const [name, setName] = useState(profile.display_name);
   const [color, setColor] = useState(profile.avatar_color);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [location, setLocation] = useState(profile.location ?? "");
   const [bio, setBio] = useState(profile.bio ?? "");
   const [available, setAvailable] = useState(profile.available);
@@ -59,6 +62,7 @@ export default function EditProfileModal({
   function openModal() {
     setName(profile.display_name);
     setColor(profile.avatar_color);
+    setAvatarUrl(profile.avatar_url);
     setLocation(profile.location ?? "");
     setBio(profile.bio ?? "");
     setAvailable(profile.available);
@@ -79,6 +83,33 @@ export default function EditProfileModal({
     }
 
     setOpen(true);
+  }
+
+  async function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast(`${file.name} isn't an image`);
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast("That photo is too large — 8MB max");
+      return;
+    }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${profile.id}/avatar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("listings")
+      .upload(path, file, { upsert: false, cacheControl: "3600" });
+    setUploadingAvatar(false);
+    if (upErr) {
+      toast(`Couldn't upload photo — ${upErr.message}`);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
+    setAvatarUrl(pub.publicUrl);
   }
 
   async function handlePhotoFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -134,6 +165,7 @@ export default function EditProfileModal({
     const profileUpdates = {
       display_name: name.trim() || profile.display_name,
       avatar_color: color,
+      avatar_url: avatarUrl,
       location: location.trim() || null,
       bio: bio.trim() || null,
       available,
@@ -191,6 +223,40 @@ export default function EditProfileModal({
             </button>
             <h2>Edit profile</h2>
             <form onSubmit={handleSave}>
+              <div className="field">
+                <label>Profile photo</label>
+                <div className="avatar-edit-row">
+                  <Avatar
+                    url={avatarUrl}
+                    color={color}
+                    name={name}
+                    className="profile-avatar"
+                    style={{ width: 64, height: 64, fontSize: "1.3rem" }}
+                  />
+                  <div className="avatar-edit-actions">
+                    <label
+                      className="btn btn-line"
+                      style={{ cursor: uploadingAvatar ? "wait" : "pointer" }}
+                    >
+                      <Icon name={uploadingAvatar ? "Loader2" : "Camera"} className={uploadingAvatar ? "spin" : undefined} />
+                      {uploadingAvatar ? "Uploading…" : avatarUrl ? "Change photo" : "Add photo"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFile}
+                        disabled={uploadingAvatar}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    {avatarUrl && (
+                      <button type="button" className="text-btn" onClick={() => setAvatarUrl(null)}>
+                        Remove photo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="field">
                 <label htmlFor="ep-name">Display name</label>
                 <input
@@ -382,7 +448,11 @@ export default function EditProfileModal({
                 <button type="button" className="btn btn-line" onClick={() => setOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-accent" disabled={saving || uploadingPhoto}>
+                <button
+                  type="submit"
+                  className="btn btn-accent"
+                  disabled={saving || uploadingPhoto || uploadingAvatar}
+                >
                   {saving ? "Saving…" : "Save changes"}
                 </button>
               </div>

@@ -7,6 +7,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
+import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { getMessages, sendMessage } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
@@ -114,12 +115,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 <Icon name="ArrowLeft" />
               </Link>
               <div className="avatar-wrap">
-                <div
+                <Avatar
+                  url={other?.avatar_url}
+                  color={other?.avatar_color}
+                  name={other?.display_name}
                   className="avatar"
-                  style={{ width: 34, height: 34, fontSize: "0.85rem", background: other?.avatar_color }}
-                >
-                  {other?.display_name?.charAt(0) ?? "?"}
-                </div>
+                  style={{ width: 34, height: 34, fontSize: "0.85rem" }}
+                />
                 {other?.available && <span className="avail-dot" style={{ width: 9, height: 9 }} />}
               </div>
               <div>

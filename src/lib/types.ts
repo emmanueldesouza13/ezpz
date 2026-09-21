@@ -47,6 +47,7 @@ export type Profile = {
   id: string;
   display_name: string;
   avatar_color: string;
+  avatar_url: string | null;
   verified: boolean;
   is_admin: boolean;
   mmg_number: string | null;

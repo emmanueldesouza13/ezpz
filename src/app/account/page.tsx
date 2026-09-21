@@ -9,6 +9,7 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import EditProfileModal from "@/components/EditProfileModal";
+import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
@@ -96,9 +97,12 @@ export default function AccountPage() {
             {profile && (
               <div className="profile-id" style={{ marginBottom: 20 }}>
                 <div className="profile-avatar-wrap">
-                  <div className="profile-avatar" style={{ background: profile.avatar_color }}>
-                    {profile.display_name.charAt(0)}
-                  </div>
+                  <Avatar
+                    url={profile.avatar_url}
+                    color={profile.avatar_color}
+                    name={profile.display_name}
+                    className="profile-avatar"
+                  />
                   {profile.available && <span className="profile-avail-dot" />}
                 </div>
                 <div className="profile-name-row">

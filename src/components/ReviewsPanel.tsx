@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getReviews } from "@/lib/data";
 import { timeAgo } from "@/lib/format";
 import Icon from "./Icon";
+import Avatar from "./Avatar";
 import { toast } from "@/lib/toast";
 import type { Review } from "@/lib/types";
 
@@ -158,12 +159,12 @@ export default function ReviewsPanel({
         <div className="review-list">
           {reviews.map((r) => (
             <div className="review-row" key={r.id}>
-              <div
+              <Avatar
+                url={r.reviewer?.avatar_url}
+                color={r.reviewer?.avatar_color ?? "var(--brand)"}
+                name={r.reviewer?.display_name}
                 className="review-avatar"
-                style={{ background: r.reviewer?.avatar_color ?? "var(--brand)" }}
-              >
-                {r.reviewer?.display_name?.charAt(0) ?? "?"}
-              </div>
+              />
               <div className="review-body">
                 <div className="review-head">
                   <span className="review-name">{r.reviewer?.display_name ?? "EzPz user"}</span>

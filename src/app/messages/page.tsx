@@ -6,6 +6,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackButton from "@/components/BackButton";
+import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { getMyConversations } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
@@ -73,9 +74,12 @@ export default function MessagesInboxPage() {
                   return (
                     <Link href={`/messages/${c.id}`} className="convo-row" key={c.id}>
                       <div className="avatar-wrap">
-                        <div className="avatar" style={{ background: other?.avatar_color }}>
-                          {other?.display_name?.charAt(0) ?? "?"}
-                        </div>
+                        <Avatar
+                          url={other?.avatar_url}
+                          color={other?.avatar_color}
+                          name={other?.display_name}
+                          className="avatar"
+                        />
                         {other?.available && <span className="avail-dot" />}
                       </div>
                       <div className="convo-text">

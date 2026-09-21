@@ -10,6 +10,7 @@ import SellerActions from "./SellerActions";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import DetailTabs from "./DetailTabs";
 import EditProfileModal from "@/components/EditProfileModal";
+import Avatar from "@/components/Avatar";
 
 export default async function ListingDetailPage({
   params,
@@ -63,9 +64,12 @@ export default async function ListingDetailPage({
                 <h2>{listing.title}</h2>
                 <div className="profile-id">
                   <div className="profile-avatar-wrap">
-                    <div className="profile-avatar" style={{ background: seller?.avatar_color }}>
-                      {seller?.display_name?.charAt(0) ?? "?"}
-                    </div>
+                    <Avatar
+                      url={seller?.avatar_url}
+                      color={seller?.avatar_color}
+                      name={seller?.display_name}
+                      className="profile-avatar"
+                    />
                     {seller?.available && <span className="profile-avail-dot" />}
                   </div>
                   <div className="profile-name-row">
