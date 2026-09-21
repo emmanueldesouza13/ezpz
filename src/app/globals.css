@@ -483,11 +483,11 @@
   .report-link svg { width: 14px; height: 14px; }
 
   .seller-panel {
-    background: var(--surface);
-    border: 1px solid var(--line);
+    background: transparent;
+    border: none;
     border-radius: var(--radius-card);
     padding: 20px;
-    box-shadow: var(--shadow-1);
+    box-shadow: none;
   }
   @media (min-width: 860px) { .seller-panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 96px); } }
 
