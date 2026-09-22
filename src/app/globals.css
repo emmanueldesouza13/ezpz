@@ -1326,6 +1326,17 @@
     margin-bottom: 22px;
   }
 
+  /* ---------- "trust verified sellers" warning popup ---------- */
+  .warn-popup-card { text-align: center; max-width: 360px; }
+  .warn-mascot { margin: 0 auto 14px; display: block; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35)); }
+  .warn-mascot-sparkle { animation: warnSparkle 2.4s ease-in-out infinite; transform-origin: 85px 28px; }
+  @keyframes warnSparkle {
+    0%, 100% { opacity: 0.35; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  .warn-popup-text { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.55; margin-bottom: 20px; }
+  .warn-popup-text strong { color: var(--accent); }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }

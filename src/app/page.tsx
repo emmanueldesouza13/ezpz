@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import CategoryNav from "@/components/CategoryNav";
 import ListingCard from "@/components/ListingCard";
 import FiltersButton from "@/components/FiltersButton";
+import VerifiedWarningPopup from "@/components/VerifiedWarningPopup";
 import { createClient } from "@/lib/supabase/server";
 import { getCategories, getListings } from "@/lib/data";
 
@@ -43,6 +44,7 @@ export default async function BrowsePage({
 
   return (
     <>
+      <VerifiedWarningPopup />
       <Header />
       <CategoryNav active={category} />
       <main>
