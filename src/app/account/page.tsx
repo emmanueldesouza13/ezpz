@@ -9,6 +9,7 @@ import Icon from "@/components/Icon";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import EditProfileModal from "@/components/EditProfileModal";
 import ProfileTabs from "@/components/ProfileTabs";
+import VerifyIdentity from "@/components/VerifyIdentity";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
@@ -129,6 +130,8 @@ export default function AccountPage() {
                 <ProfileTabs profile={profile} isOwner />
               </div>
             )}
+
+            {profile && <VerifyIdentity profile={profile} />}
 
             <form onSubmit={handleSaveMmg}>
               <div className="field">

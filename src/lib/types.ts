@@ -62,6 +62,21 @@ export type Profile = {
   created_at: string;
 };
 
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
+export type VerificationRequest = {
+  id: string;
+  user_id: string;
+  selfie_path: string | null;
+  id_card_path: string | null;
+  status: VerificationStatus;
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  rejection_reason: string | null;
+  user?: Profile;
+};
+
 export type Review = {
   id: string;
   seller_id: string;

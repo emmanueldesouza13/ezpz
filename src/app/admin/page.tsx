@@ -5,12 +5,20 @@ import Header from "@/components/Header";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/client";
-import { GRADIENTS, type Category, type Listing, type Profile, type Settings, type TaxiService } from "@/lib/types";
+import {
+  GRADIENTS,
+  type Category,
+  type Listing,
+  type Profile,
+  type Settings,
+  type TaxiService,
+  type VerificationRequest,
+} from "@/lib/types";
 import { formatPrice, isPhotoUrl } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { getSiteSettings } from "@/lib/data";
 
-type Tab = "listings" | "taxi" | "sellers" | "categories" | "branding" | "payouts";
+type Tab = "listings" | "taxi" | "sellers" | "verification" | "categories" | "branding" | "payouts";
 
 const MAX_PHOTOS = 6;
 
@@ -27,6 +35,7 @@ export default function AdminPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [taxiServices, setTaxiServices] = useState<TaxiService[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [verifications, setVerifications] = useState<VerificationRequest[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editListing, setEditListing] = useState<Listing | null | "new">(null);
   const [editTaxi, setEditTaxi] = useState<TaxiService | null | "new">(null);
@@ -38,20 +47,72 @@ export default function AdminPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
 
   const loadAll = useCallback(async () => {
-    const [{ data: l }, { data: t }, { data: p }, { data: c }, st] = await Promise.all([
+    const [{ data: l }, { data: t }, { data: p }, { data: v }, { data: c }, st] = await Promise.all([
       supabase.from("listings").select("*, seller:profiles(*)").order("created_at", { ascending: false }),
       supabase.from("taxi_services").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase
+        .from("verification_requests")
+        .select("*, user:profiles!verification_requests_user_id_fkey(*)")
+        .order("submitted_at", { ascending: false }),
       supabase.from("categories").select("*").order("sort_order", { ascending: true }),
       getSiteSettings(supabase),
     ]);
     setListings((l as Listing[]) || []);
     setTaxiServices((t as TaxiService[]) || []);
     setProfiles((p as Profile[]) || []);
+    setVerifications((v as VerificationRequest[]) || []);
     setCategories((c as Category[]) || []);
     setLogoUrl(st.logo_url);
     setSettings(st);
   }, [supabase]);
+
+  async function viewVerificationDoc(path: string) {
+    const { data, error } = await supabase.storage.from("verification").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) {
+      toast("Couldn't open that file — " + (error?.message ?? "try again"));
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async function approveVerification(v: VerificationRequest) {
+    const { data: userData } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("verification_requests")
+      .update({
+        status: "approved",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: userData.user?.id ?? null,
+        rejection_reason: null,
+      })
+      .eq("id", v.id)
+      .select();
+    if (error) { toast("Couldn't approve — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't approve — no permission or it's gone"); return; }
+    toast(`${v.user?.display_name ?? "Seller"} is now verified`);
+    loadAll();
+  }
+
+  async function rejectVerification(v: VerificationRequest) {
+    const reason = window.prompt("Reason for rejecting (shown to the seller):", v.rejection_reason ?? "");
+    if (reason === null) return;
+    const { data: userData } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("verification_requests")
+      .update({
+        status: "rejected",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: userData.user?.id ?? null,
+        rejection_reason: reason.trim() || "Please resubmit a clearer photo.",
+      })
+      .eq("id", v.id)
+      .select();
+    if (error) { toast("Couldn't reject — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't reject — no permission or it's gone"); return; }
+    toast("Verification rejected");
+    loadAll();
+  }
 
   function nextFeeStatus(s: "pending" | "paid" | "waived"): "pending" | "paid" | "waived" {
     return s === "pending" ? "paid" : s === "paid" ? "waived" : "pending";
@@ -235,7 +296,7 @@ export default function AdminPage() {
               away.
             </p>
             <div className="admin-tabs">
-              {(["listings", "taxi", "sellers", "categories", "branding", "payouts"] as Tab[]).map((t) => (
+              {(["listings", "taxi", "sellers", "verification", "categories", "branding", "payouts"] as Tab[]).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -248,6 +309,8 @@ export default function AdminPage() {
                     ? "Taxi"
                     : t === "sellers"
                     ? "Sellers"
+                    : t === "verification"
+                    ? `Verification${verifications.filter((v) => v.status === "pending").length > 0 ? ` (${verifications.filter((v) => v.status === "pending").length})` : ""}`
                     : t === "categories"
                     ? "Categories"
                     : t === "branding"
@@ -485,6 +548,66 @@ export default function AdminPage() {
                           <Icon name="Pencil" />
                           Edit
                         </button>
+                      </div>
+                    </div>
+                  ))
+                ))}
+
+              {tab === "verification" &&
+                (verifications.length === 0 ? (
+                  <div className="admin-empty">No verification requests yet.</div>
+                ) : (
+                  verifications.map((v) => (
+                    <div className="admin-row" key={v.id}>
+                      <div
+                        className="admin-swatch"
+                        style={{
+                          background: v.user?.avatar_color || "var(--surface-2)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#fff",
+                        }}
+                      >
+                        <Icon name="ShieldQuestion" />
+                      </div>
+                      <div className="admin-row-info">
+                        <div className="admin-row-title">
+                          {v.user?.display_name ?? "Unknown seller"}
+                          {v.status === "pending" && <span className="admin-flag off">Pending</span>}
+                          {v.status === "approved" && <span className="admin-flag on">Approved</span>}
+                          {v.status === "rejected" && <span className="admin-flag off">Rejected</span>}
+                        </div>
+                        <div className="admin-row-sub">
+                          Submitted {new Date(v.submitted_at).toLocaleDateString()}
+                          {v.status === "rejected" && v.rejection_reason ? ` · ${v.rejection_reason}` : ""}
+                        </div>
+                      </div>
+                      <div className="admin-row-actions">
+                        {v.selfie_path && (
+                          <button type="button" className="admin-btn" onClick={() => viewVerificationDoc(v.selfie_path!)}>
+                            <Icon name="Camera" />
+                            Selfie
+                          </button>
+                        )}
+                        {v.id_card_path && (
+                          <button type="button" className="admin-btn" onClick={() => viewVerificationDoc(v.id_card_path!)}>
+                            <Icon name="IdCard" />
+                            ID card
+                          </button>
+                        )}
+                        {v.status !== "approved" && (
+                          <button type="button" className="admin-btn" onClick={() => approveVerification(v)}>
+                            <Icon name="ShieldCheck" />
+                            Approve
+                          </button>
+                        )}
+                        {v.status !== "rejected" && (
+                          <button type="button" className="admin-btn danger" onClick={() => rejectVerification(v)}>
+                            <Icon name="ShieldX" />
+                            Reject
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))

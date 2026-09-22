@@ -776,6 +776,26 @@
   .switch input:checked + .switch-track { background: var(--good); }
   .switch input:checked + .switch-track::before { transform: translateX(18px); }
 
+  /* ---------- identity verification ---------- */
+  .verify-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: var(--radius-card); padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .verify-card > svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--accent); }
+  .verify-card.verify-approved { border-color: color-mix(in srgb, var(--good) 35%, var(--line)); }
+  .verify-card.verify-approved > svg { color: var(--good); }
+  .verify-card.verify-rejected > svg { color: var(--bad); }
+  .verify-card-info { flex: 1; min-width: 0; }
+  .verify-title { font-size: 0.9rem; font-weight: 700; }
+  .verify-sub { font-size: 0.76rem; color: var(--ink-faint); margin-top: 2px; line-height: 1.4; }
+  .verify-card .btn { flex-shrink: 0; }
+  @media (max-width: 480px) {
+    .verify-card { flex-wrap: wrap; }
+    .verify-card .btn { width: 100%; }
+  }
+
   .msg-note { font-size: 0.74rem; color: var(--ink-faint); text-align: center; margin-top: 9px; line-height: 1.5; }
 
   .mmg-box { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
