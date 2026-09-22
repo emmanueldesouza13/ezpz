@@ -86,11 +86,7 @@ export default function Header() {
             Post a listing
           </Link>
         )}
-        {email ? (
-          <Link href="/account" className="btn btn-line header-account" title={email}>
-            Account
-          </Link>
-        ) : (
+        {!email && (
           <Link href="/sign-in" className="btn btn-line header-account">
             Sign in
           </Link>
