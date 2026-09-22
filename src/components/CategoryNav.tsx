@@ -15,6 +15,9 @@ export default async function CategoryNav({ active }: { active?: string }) {
           <Link href="/" className="icon-nav-btn" aria-label="Home">
             <Icon name="Home" size={18} />
           </Link>
+          <Link href="/account" className="icon-nav-btn" aria-label="Profile">
+            <Icon name="CircleUserRound" size={18} />
+          </Link>
           <Link href="/payments" className="icon-nav-btn" aria-label="Payments">
             <Icon name="Wallet" size={18} />
           </Link>

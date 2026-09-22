@@ -9,6 +9,7 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import EditProfileModal from "@/components/EditProfileModal";
+import ProfileTabs from "@/components/ProfileTabs";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
@@ -100,6 +101,10 @@ export default function AccountPage() {
                   <h2>{profile.display_name}</h2>
                   {profile.verified && <Icon name="BadgeCheck" />}
                 </div>
+                <p className="profile-rating-row">
+                  <Icon name="Star" />
+                  {(profile.rating ?? 5).toFixed(1)} ({profile.rating_count ?? 0} ratings)
+                </p>
                 {profile.location && (
                   <p className="profile-location-row">
                     <Icon name="MapPin" />
@@ -108,6 +113,10 @@ export default function AccountPage() {
                 )}
                 {profile.bio && <p className="profile-bio">{profile.bio}</p>}
                 <div className="profile-badge-row">
+                  <span className="profile-badge">
+                    <Icon name="CalendarDays" />
+                    Since {new Date(profile.created_at).getFullYear()}
+                  </span>
                   {profile.available && (
                     <span className="profile-badge good">
                       <Icon name="CircleDot" />
@@ -118,6 +127,7 @@ export default function AccountPage() {
                 <p className="hint" style={{ marginTop: 8 }}>
                   This is what buyers see on your listings — name, avatar, location, bio, and availability.
                 </p>
+                <ProfileTabs profile={profile} isOwner />
               </div>
             )}
 
