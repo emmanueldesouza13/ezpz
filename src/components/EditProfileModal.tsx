@@ -8,6 +8,7 @@ import Avatar from "./Avatar";
 import { toast } from "@/lib/toast";
 import { isPhotoUrl } from "@/lib/format";
 import { GRADIENTS, type Profile, type Listing, type Category } from "@/lib/types";
+import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
 
 const MAX_PHOTOS = 6;
 
@@ -45,6 +46,8 @@ export default function EditProfileModal({
   const [lSwatch, setLSwatch] = useState(0);
   const [lPhotos, setLPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [lVideoUrl, setLVideoUrl] = useState<string | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
@@ -69,6 +72,7 @@ export default function EditProfileModal({
         const gi = GRADIENTS.indexOf(listing.images?.[0]);
         setLSwatch(gi >= 0 ? gi : 0);
       }
+      setLVideoUrl(listing.video_url ?? null);
     }
 
     setOpen(true);
@@ -141,6 +145,43 @@ export default function EditProfileModal({
     setLPhotos((p) => p.filter((_, idx) => idx !== i));
   }
 
+  async function handleVideoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("video/")) {
+      toast("That's not a video file");
+      return;
+    }
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      toast(`That video is too large — ${MAX_VIDEO_MB}MB max`);
+      return;
+    }
+    try {
+      const duration = await readVideoDuration(file);
+      if (duration > MAX_VIDEO_SECONDS + 1) {
+        toast(`Keep it to ${MAX_VIDEO_SECONDS} seconds or less`);
+        return;
+      }
+    } catch {
+      toast("Couldn't read that video — try another file");
+      return;
+    }
+    setUploadingVideo(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+    const path = `${profile.id}/video-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("listings")
+      .upload(path, file, { upsert: false, cacheControl: "3600" });
+    setUploadingVideo(false);
+    if (upErr) {
+      toast(`Couldn't upload video — ${upErr.message}`);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
+    setLVideoUrl(pub.publicUrl);
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
 
@@ -172,6 +213,7 @@ export default function EditProfileModal({
             category: lCategory,
             location: lLocation.trim(),
             images: lPhotos.length > 0 ? lPhotos : [GRADIENTS[lSwatch]],
+            video_url: lVideoUrl,
           })
           .eq("id", listing.id)
       : null;
@@ -356,6 +398,32 @@ export default function EditProfileModal({
                   </div>
 
                   <div className="field">
+                    <label>Video (optional)</label>
+                    {lVideoUrl ? (
+                      <div className="video-tile">
+                        <video src={lVideoUrl} controls playsInline />
+                        <button type="button" className="text-btn" onClick={() => setLVideoUrl(null)}>
+                          Remove video
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
+                        <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
+                        {uploadingVideo ? "Uploading…" : "Add a short video"}
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoFile}
+                          disabled={uploadingVideo}
+                        />
+                      </label>
+                    )}
+                    <p className="hint">
+                      Show your work in action — up to {MAX_VIDEO_SECONDS} seconds, {MAX_VIDEO_MB}MB max.
+                    </p>
+                  </div>
+
+                  <div className="field">
                     <label htmlFor="ep-l-category">Category</label>
                     <select
                       className="control"
@@ -430,7 +498,7 @@ export default function EditProfileModal({
                 <button
                   type="submit"
                   className="btn btn-accent"
-                  disabled={saving || uploadingPhoto || uploadingAvatar}
+                  disabled={saving || uploadingPhoto || uploadingAvatar || uploadingVideo}
                 >
                   {saving ? "Saving…" : "Save changes"}
                 </button>

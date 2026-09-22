@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCategories, getSiteSettings } from "@/lib/data";
 import { GRADIENTS, type Category } from "@/lib/types";
 import { toast } from "@/lib/toast";
+import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
 
 const MAX_PHOTOS = 6;
 
@@ -29,6 +30,8 @@ export default function PostPage() {
   const [swatch, setSwatch] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [fee, setFee] = useState(2000);
@@ -62,6 +65,44 @@ export default function PostPage() {
 
   function removePhoto(i: number) {
     setPhotos((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  async function handleVideoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("video/")) { toast("That's not a video file"); return; }
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      toast(`That video is too large — ${MAX_VIDEO_MB}MB max`);
+      return;
+    }
+    try {
+      const duration = await readVideoDuration(file);
+      if (duration > MAX_VIDEO_SECONDS + 1) {
+        toast(`Keep it to ${MAX_VIDEO_SECONDS} seconds or less`);
+        return;
+      }
+    } catch {
+      toast("Couldn't read that video — try another file");
+      return;
+    }
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+    if (!user) { router.push("/sign-in?next=/post"); return; }
+    setUploadingVideo(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+    const path = `${user.id}/video-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("listings")
+      .upload(path, file, { upsert: false, cacheControl: "3600" });
+    setUploadingVideo(false);
+    if (upErr) { toast(`Couldn't upload video — ${upErr.message}`); return; }
+    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
+    setVideoUrl(pub.publicUrl);
+  }
+
+  function removeVideo() {
+    setVideoUrl(null);
   }
 
   useEffect(() => {
@@ -115,6 +156,7 @@ export default function PostPage() {
         category,
         location: location.trim(),
         images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
+        video_url: videoUrl,
       })
       .select("id")
       .single();
@@ -189,6 +231,32 @@ export default function PostPage() {
                         The first photo is used as the main listing photo.
                       </p>
                     )}
+                  </div>
+
+                  <div className="field">
+                    <label>Video (optional)</label>
+                    {videoUrl ? (
+                      <div className="video-tile">
+                        <video src={videoUrl} controls playsInline />
+                        <button type="button" className="text-btn" onClick={removeVideo}>
+                          Remove video
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
+                        <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
+                        {uploadingVideo ? "Uploading…" : "Add a short video"}
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoFile}
+                          disabled={uploadingVideo}
+                        />
+                      </label>
+                    )}
+                    <p className="hint">
+                      Show your work in action — up to {MAX_VIDEO_SECONDS} seconds, {MAX_VIDEO_MB}MB max.
+                    </p>
                   </div>
 
                   <div className="field">
@@ -293,7 +361,7 @@ export default function PostPage() {
                     you&#39;ll get MMG payment instructions after you publish to settle it.
                   </div>
 
-                  <button type="submit" className="btn btn-accent btn-block" disabled={submitting}>
+                  <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto || uploadingVideo}>
                     {submitting ? "Publishing…" : "Publish listing"}
                   </button>
                 </form>

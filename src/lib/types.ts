@@ -92,6 +92,7 @@ export type Listing = {
   category: string;
   location: string;
   images: string[]; // uploaded photo public URLs, or (for older/no-photo listings) a CSS gradient string from the preset palette
+  video_url: string | null; // optional short clip showing the work, uploaded public URL
   featured: boolean;
   status: "active" | "sold" | "removed";
   fee_status: "pending" | "paid" | "waived";

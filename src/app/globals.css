@@ -372,6 +372,12 @@
     padding: 3px 7px; border-radius: var(--radius-chip); backdrop-filter: blur(3px);
   }
   .listing-card-photo-count svg { width: 10px; height: 10px; }
+  .listing-card-video-badge {
+    position: absolute; top: 8px; left: 8px; display: flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; background: rgba(10,6,9,0.65); color: #fff;
+    border-radius: 50%; backdrop-filter: blur(3px);
+  }
+  .listing-card-video-badge svg { width: 11px; height: 11px; }
   .listing-card-featured {
     position: absolute; bottom: 8px; left: 8px; display: flex; align-items: center; gap: 3px;
     font-size: 0.6rem; font-weight: 700; letter-spacing: 0.02em;
@@ -1090,6 +1096,13 @@
     display: flex; align-items: center; justify-content: center;
   }
   .photo-tile-remove svg { width: 12px; height: 12px; }
+
+  .video-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .video-tile video {
+    width: 100%; max-width: 220px; max-height: 320px;
+    border-radius: var(--radius-control); border: 1px solid var(--line);
+    background: #000; display: block;
+  }
 
   .swatch-picker { display: flex; gap: 8px; flex-wrap: wrap; }
   .swatch-btn {
