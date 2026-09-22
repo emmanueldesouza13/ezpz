@@ -8,6 +8,7 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/lib/toast";
+import { GUYANA_REGIONS, OTHER_REGION_VALUE } from "@/lib/guyana";
 
 export default function EditTaxiPage() {
   const supabase = createClient();
@@ -21,6 +22,7 @@ export default function EditTaxiPage() {
   const [vehicleMake, setVehicleMake] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [plate, setPlate] = useState("");
+  const [regionChoice, setRegionChoice] = useState("");
   const [serviceArea, setServiceArea] = useState("");
   const [phone, setPhone] = useState("");
   const [mmg, setMmg] = useState("");
@@ -61,6 +63,9 @@ export default function EditTaxiPage() {
       setVehicleModel(service.vehicle_model);
       setPlate(service.plate);
       setServiceArea(service.service_area);
+      setRegionChoice(
+        GUYANA_REGIONS.includes(service.service_area) ? service.service_area : OTHER_REGION_VALUE
+      );
       setPhone(service.phone);
       setMmg(service.mmg_number);
       setNotes(service.notes || "");
@@ -247,14 +252,39 @@ export default function EditTaxiPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="areaInput">Service area</label>
-                    <input
+                    <label htmlFor="areaSelect">Service area</label>
+                    <select
                       className="control"
-                      id="areaInput"
+                      id="areaSelect"
                       required
-                      value={serviceArea}
-                      onChange={(e) => setServiceArea(e.target.value)}
-                    />
+                      value={regionChoice}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setRegionChoice(v);
+                        if (v !== OTHER_REGION_VALUE) setServiceArea(v);
+                        else setServiceArea("");
+                      }}
+                    >
+                      <option value="" disabled>
+                        Choose a region
+                      </option>
+                      {GUYANA_REGIONS.map((r) => (
+                        <option value={r} key={r}>
+                          {r}
+                        </option>
+                      ))}
+                      <option value={OTHER_REGION_VALUE}>Other (type it in)</option>
+                    </select>
+                    {regionChoice === OTHER_REGION_VALUE && (
+                      <input
+                        className="control"
+                        style={{ marginTop: 8 }}
+                        required
+                        placeholder="e.g. Bartica"
+                        value={serviceArea}
+                        onChange={(e) => setServiceArea(e.target.value)}
+                      />
+                    )}
                   </div>
 
                   <div className="field">
