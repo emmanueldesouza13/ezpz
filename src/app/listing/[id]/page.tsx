@@ -68,7 +68,7 @@ export default async function ListingDetailPage({
           <div className="detail-layout">
             <div>
               <div className="seller-panel">
-                <div className="profile-id">
+                <div className={`profile-id${isOwner || isAdmin ? " profile-id-solo" : ""}`}>
                   {isOwner ? (
                     <EditProfileModal profile={seller!} listing={listing} categories={categories} />
                   ) : (
