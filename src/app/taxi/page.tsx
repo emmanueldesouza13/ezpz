@@ -31,9 +31,6 @@ export default async function TaxiPage() {
           <div className="browse-head">
             <div>
               <h1>Taxi &amp; rides</h1>
-              <p>
-                {services.length} taxi service{services.length === 1 ? "" : "s"} across Guyana
-              </p>
             </div>
             <Link href="/taxi/post" className="btn btn-accent">
               <Icon name="Plus" size={15} strokeWidth={2.4} />
