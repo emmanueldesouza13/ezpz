@@ -19,6 +19,7 @@ export type TaxiService = {
   phone: string;
   mmg_number: string;
   notes: string;
+  photo_url: string | null;
   status: "active" | "removed";
   fee_status: "pending" | "paid" | "waived";
   fee_paid_at: string | null;

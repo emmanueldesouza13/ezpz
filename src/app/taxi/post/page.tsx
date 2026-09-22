@@ -23,6 +23,8 @@ export default function TaxiPostPage() {
   const [phone, setPhone] = useState("");
   const [mmg, setMmg] = useState("");
   const [notes, setNotes] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [fee, setFee] = useState(5000);
@@ -48,6 +50,36 @@ export default function TaxiPostPage() {
       setFee(settings.taxi_fee);
     })();
   }, [supabase, router]);
+
+  async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast(`${file.name} isn't an image`);
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast("That photo is too large — 8MB max");
+      return;
+    }
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+    if (!user) { router.push("/sign-in?next=/taxi/post"); return; }
+    setUploadingPhoto(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${user.id}/taxi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("listings")
+      .upload(path, file, { upsert: false, cacheControl: "3600" });
+    setUploadingPhoto(false);
+    if (upErr) {
+      toast(`Couldn't upload photo — ${upErr.message}`);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
+    setPhotoUrl(pub.publicUrl);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +115,7 @@ export default function TaxiPostPage() {
         phone: phone.trim(),
         mmg_number: mmg.trim(),
         notes: notes.trim(),
+        photo_url: photoUrl,
       })
       .select("id")
       .single();
@@ -118,6 +151,35 @@ export default function TaxiPostPage() {
                   find and contact you directly.
                 </p>
                 <form onSubmit={handleSubmit}>
+                  <div className="field">
+                    <label>Vehicle photo</label>
+                    {photoUrl ? (
+                      <div className="video-tile">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={photoUrl}
+                          alt="Vehicle"
+                          style={{ width: "100%", maxWidth: 220, borderRadius: "var(--radius-control)", border: "1px solid var(--line)", display: "block" }}
+                        />
+                        <button type="button" className="text-btn" onClick={() => setPhotoUrl(null)}>
+                          Remove photo
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
+                        <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
+                        {uploadingPhoto ? "Uploading…" : "Add photo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoFile}
+                          disabled={uploadingPhoto}
+                        />
+                      </label>
+                    )}
+                    <p className="hint">A clear photo of the car helps riders spot you.</p>
+                  </div>
+
                   <div className="field">
                     <label htmlFor="driverNameInput">Driver / business name</label>
                     <input
@@ -229,7 +291,7 @@ export default function TaxiPostPage() {
                     — you&#39;ll get MMG payment instructions after you publish to settle it.
                   </div>
 
-                  <button type="submit" className="btn btn-accent btn-block" disabled={submitting}>
+                  <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto}>
                     {submitting ? "Publishing…" : "Publish sign-up"}
                   </button>
                 </form>

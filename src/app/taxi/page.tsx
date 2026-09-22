@@ -5,10 +5,22 @@ import CategoryNav from "@/components/CategoryNav";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/server";
 import { getTaxiServices } from "@/lib/data";
+import type { TaxiService } from "@/lib/types";
 
 export default async function TaxiPage() {
   const supabase = await createClient();
   const services = await getTaxiServices(supabase);
+
+  // One horizontally-scrolling row per service area (region), like a
+  // rental-car browse page grouped by city.
+  const byRegion = new Map<string, TaxiService[]>();
+  for (const s of services) {
+    const key = s.service_area.trim() || "Other areas";
+    const list = byRegion.get(key);
+    if (list) list.push(s);
+    else byRegion.set(key, [s]);
+  }
+  const regions = Array.from(byRegion.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
   return (
     <>
@@ -29,37 +41,40 @@ export default async function TaxiPage() {
             </Link>
           </div>
 
-          <div className="admin-list">
-            {services.map((s) => (
-              <Link href={`/taxi/${s.id}`} key={s.id} className="admin-row" style={{ textDecoration: "none" }}>
-                <div
-                  className="admin-swatch"
-                  style={{
-                    background: "var(--surface-2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--accent)",
-                  }}
-                >
-                  <Icon name="Car" />
-                </div>
-                <div className="admin-row-info">
-                  <div className="admin-row-title">
-                    {s.driver_name}
-                    <span className="admin-flag on">{s.plate}</span>
-                  </div>
-                  <div className="admin-row-sub">
-                    {s.vehicle_make} {s.vehicle_model} &middot; {s.service_area}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {regions.map(([region, list]) => (
+            <div className="region-row" key={region}>
+              <div className="region-row-head">
+                <h2>{region}</h2>
+                <p>
+                  {list.length} taxi service{list.length === 1 ? "" : "s"} in this area
+                </p>
+              </div>
+              <div className="region-scroll">
+                {list.map((s) => (
+                  <Link href={`/taxi/${s.id}`} key={s.id} className="region-card">
+                    <div className="region-card-photo">
+                      {s.photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.photo_url} alt={`${s.vehicle_make} ${s.vehicle_model}`} />
+                      ) : (
+                        <Icon name="Car" />
+                      )}
+                    </div>
+                    <div className="region-card-title">
+                      {s.vehicle_make} {s.vehicle_model}
+                    </div>
+                    <div className="region-card-sub">
+                      {s.driver_name} &middot; {s.plate}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
 
           {services.length === 0 && (
             <div className="empty-state">
-              No taxi services listed yet — be the first to sign up.
+              No taxi services yet — be the first to sign up.
             </div>
           )}
         </section>

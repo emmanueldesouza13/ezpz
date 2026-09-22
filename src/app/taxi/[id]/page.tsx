@@ -64,7 +64,17 @@ export default async function TaxiServiceDetailPage({
           </div>
           <div className="detail-layout">
             <div>
-              <div className="hero-photo" style={{ background: "linear-gradient(135deg,#2f8f6b,#134a38)" }}></div>
+              {service.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={service.photo_url}
+                  alt={`${service.vehicle_make} ${service.vehicle_model}`}
+                  className="hero-photo"
+                  style={{ objectFit: "cover", display: "block" }}
+                />
+              ) : (
+                <div className="hero-photo" style={{ background: "linear-gradient(135deg,#2f8f6b,#134a38)" }}></div>
+              )}
               <p className="section-label">About this service</p>
               <p className="desc-text">{service.notes || "No additional notes from this driver."}</p>
               <div className="callout">
