@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import CategoryNav from "@/components/CategoryNav";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/server";
@@ -76,7 +75,6 @@ export default async function TaxiPage() {
           )}
         </section>
       </main>
-      <Footer />
     </>
   );
 }

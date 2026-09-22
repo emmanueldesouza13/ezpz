@@ -1,5 +1,4 @@
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 
@@ -63,7 +62,6 @@ export default function SafetyPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

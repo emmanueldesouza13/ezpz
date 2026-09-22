@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/client";
@@ -75,7 +74,6 @@ export default function ResetPasswordPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

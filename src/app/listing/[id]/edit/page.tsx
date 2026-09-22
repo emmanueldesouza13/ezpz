@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
@@ -155,7 +154,6 @@ export default function EditListingPage() {
             <div className="empty-state">You can&#39;t edit this listing.</div>
           </section>
         </main>
-        <Footer />
       </>
     );
   }
@@ -300,7 +298,6 @@ export default function EditListingPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

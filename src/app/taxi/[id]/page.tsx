@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import FeeBanner from "@/components/FeeBanner";
@@ -36,7 +35,6 @@ export default async function TaxiServiceDetailPage({
             </div>
           </section>
         </main>
-        <Footer />
       </>
     );
   }
@@ -147,7 +145,6 @@ export default async function TaxiServiceDetailPage({
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

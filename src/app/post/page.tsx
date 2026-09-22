@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
@@ -370,7 +369,6 @@ export default function PostPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

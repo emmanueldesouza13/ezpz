@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import BackButton from "@/components/BackButton";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -100,7 +99,6 @@ export default function MessagesInboxPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

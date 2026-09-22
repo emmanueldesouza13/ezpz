@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import FeeBanner from "@/components/FeeBanner";
@@ -136,7 +135,6 @@ export default function PaymentsPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

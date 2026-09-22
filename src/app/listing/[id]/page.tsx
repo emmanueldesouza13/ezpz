@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/server";
@@ -39,7 +38,6 @@ export default async function ListingDetailPage({
             </div>
           </section>
         </main>
-        <Footer />
       </>
     );
   }
@@ -141,7 +139,6 @@ export default async function ListingDetailPage({
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }
