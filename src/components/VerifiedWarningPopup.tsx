@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 
-// Shows up to twice per browser session (resets when the tab/browser is
-// closed and reopened) — a friendly nudge, not a hard gate.
+// Shows once per browser session (resets when the tab/browser is closed and
+// reopened) — a friendly nudge, not a hard gate.
 const SESSION_KEY = "ezpz_verify_warn_shown";
-const MAX_SHOWS = 2;
+const MAX_SHOWS = 1;
 const DELAY_MS = 900;
 
 export default function VerifiedWarningPopup() {
