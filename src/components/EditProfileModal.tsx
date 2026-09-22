@@ -244,7 +244,6 @@ export default function EditProfileModal({
           name={profile.display_name}
           className="profile-avatar"
         />
-        {profile.available && <span className="profile-avail-dot" />}
         <button
           type="button"
           className="avatar-photo-badge"
