@@ -10,6 +10,7 @@ import RemoveListingButton from "@/components/RemoveListingButton";
 import DetailTabs from "./DetailTabs";
 import EditProfileModal from "@/components/EditProfileModal";
 import Avatar from "@/components/Avatar";
+import ListingMedia from "@/components/ListingMedia";
 
 export default async function ListingDetailPage({
   params,
@@ -125,6 +126,7 @@ export default async function ListingDetailPage({
               </div>
             </div>
             <div>
+              <ListingMedia images={listing.images} videoUrl={listing.video_url} />
               <DetailTabs listing={listing} categoryName={categoryName} isOwner={isOwner} />
             </div>
           </div>

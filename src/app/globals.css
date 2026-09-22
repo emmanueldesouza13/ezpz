@@ -609,6 +609,27 @@
   .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
 
   .tab-panel { min-height: 120px; }
+
+  .media-section { margin-top: 26px; }
+  .media-toggle { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .media-toggle-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    flex: 1; padding: 10px 6px 12px;
+    background: none; border: none; cursor: pointer;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 2px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .media-toggle-btn svg { width: 16px; height: 16px; }
+  .media-toggle-btn:hover { color: var(--ink-soft); }
+  .media-toggle-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+  .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+  .media-grid-item { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: #000; }
+  .media-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media-grid-item-video { grid-column: span 3; aspect-ratio: 9 / 12; }
+  .media-grid-item video { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .media-empty { font-size: 0.82rem; color: var(--ink-faint); padding: 10px 0; }
   .tab-fact-row { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-bottom: 18px; }
   .tab-fact { font-size: 0.82rem; color: var(--ink-soft); }
   .tab-fact strong {

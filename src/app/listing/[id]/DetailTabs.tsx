@@ -51,11 +51,6 @@ export default function DetailTabs({
       <div className="tab-panel">
         {tab === "about" && (
           <>
-            {listing.video_url && (
-              <div className="video-tile" style={{ marginBottom: 18 }}>
-                <video src={listing.video_url} controls playsInline />
-              </div>
-            )}
             {seller?.bio && <p className="desc-text" style={{ marginBottom: 18 }}>{seller.bio}</p>}
             <div className="tab-fact-row">
               {categoryName && (
