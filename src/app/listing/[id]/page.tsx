@@ -119,8 +119,6 @@ export default async function ListingDetailPage({
                   <SellerActions
                     listingId={listing.id}
                     sellerId={listing.seller_id}
-                    responseRate={seller?.response_rate ?? 90}
-                    mmg={seller?.mmg_number ?? null}
                   />
                 )}
               </div>
