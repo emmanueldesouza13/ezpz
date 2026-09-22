@@ -23,12 +23,21 @@ export default async function BrowsePage({
     getCategories(supabase),
   ]);
 
+  // One card per seller on the browse grid — their other listings' photos and
+  // videos show up together once you open this one (see ListingMedia).
+  const seenSellers = new Set<string>();
+  const oneEach = listings.filter((l) => {
+    if (seenSellers.has(l.seller_id)) return false;
+    seenSellers.add(l.seller_id);
+    return true;
+  });
+
   const cat = category ? categories.find((c) => c.slug === category) : null;
   const title = cat ? cat.name : "Nearby listings";
   const categoryNames = Object.fromEntries(categories.map((c) => [c.slug, c.name]));
   const sub =
-    listings.length +
-    (listings.length === 1 ? " listing" : " listings") +
+    oneEach.length +
+    (oneEach.length === 1 ? " listing" : " listings") +
     (q ? ` matching "${q}"` : "") +
     " across Guyana";
 
@@ -49,11 +58,11 @@ export default async function BrowsePage({
             />
           </div>
           <div className="listing-grid">
-            {listings.map((l) => (
+            {oneEach.map((l) => (
               <ListingCard listing={l} categoryName={categoryNames[l.category]} key={l.id} />
             ))}
           </div>
-          {listings.length === 0 && (
+          {oneEach.length === 0 && (
             <div className="empty-state">
               {q || category
                 ? "No listings match your search yet."

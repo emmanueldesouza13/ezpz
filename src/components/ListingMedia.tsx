@@ -4,21 +4,23 @@ import { useState } from "react";
 import Icon from "./Icon";
 import { isPhotoUrl } from "@/lib/format";
 
-// Instagram-style Photos/Videos toggle + grid for a listing's media,
-// shown on the listing detail page right below the seller card.
+// Instagram-style Photos/Videos toggle + grid for a seller's media, shown on
+// the listing detail page right below the seller card. Pooled across all of
+// that seller's active listings, not just the one being viewed — since the
+// browse grid only shows one card per seller, this is where the rest of
+// their work (other listings' photos and videos) surfaces.
 export default function ListingMedia({
   images,
-  videoUrl,
+  videos,
 }: {
   images: string[];
-  videoUrl: string | null;
+  videos: string[];
 }) {
   const photos = images.filter(isPhotoUrl);
-  const hasVideo = Boolean(videoUrl);
 
   const [tab, setTab] = useState<"photos" | "videos">(photos.length > 0 ? "photos" : "videos");
 
-  if (photos.length === 0 && !hasVideo) return null;
+  if (photos.length === 0 && videos.length === 0) return null;
 
   return (
     <div className="media-section">
@@ -61,11 +63,13 @@ export default function ListingMedia({
       )}
 
       {tab === "videos" && (
-        hasVideo ? (
+        videos.length > 0 ? (
           <div className="media-grid">
-            <div className="media-grid-item media-grid-item-video">
-              <video src={videoUrl!} controls playsInline />
-            </div>
+            {videos.map((url) => (
+              <div className="media-grid-item media-grid-item-video" key={url}>
+                <video src={url} controls playsInline />
+              </div>
+            ))}
           </div>
         ) : (
           <p className="media-empty">No video yet.</p>

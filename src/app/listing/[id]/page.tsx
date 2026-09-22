@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/server";
-import { getListingById, getProfile, getCategories } from "@/lib/data";
+import { getListingById, getProfile, getCategories, getSellerActiveListings } from "@/lib/data";
 import SellerActions from "./SellerActions";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import DetailTabs from "./DetailTabs";
@@ -50,6 +50,17 @@ export default async function ListingDetailPage({
 
   const seller = listing.seller;
   const categoryName = categories.find((c) => c.slug === listing.category)?.name;
+
+  // Pool photos/videos across all of this seller's active listings, since
+  // the browse grid only shows one card per seller — the rest of their work
+  // surfaces here instead of on separate listing cards.
+  const sellerListings = await getSellerActiveListings(supabase, listing.seller_id);
+  const sellerImages = (sellerListings.length > 0 ? sellerListings : [listing]).flatMap(
+    (l) => l.images ?? []
+  );
+  const sellerVideos = (sellerListings.length > 0 ? sellerListings : [listing])
+    .map((l) => l.video_url)
+    .filter((v): v is string => Boolean(v));
 
   return (
     <>
@@ -125,7 +136,7 @@ export default async function ListingDetailPage({
             </div>
             <div>
               <DetailTabs listing={listing} categoryName={categoryName} isOwner={isOwner} />
-              <ListingMedia images={listing.images} videoUrl={listing.video_url} />
+              <ListingMedia images={sellerImages} videos={sellerVideos} />
             </div>
           </div>
         </section>

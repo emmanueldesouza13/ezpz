@@ -112,6 +112,23 @@ export async function getMyListings(
   return (data as Listing[]) || [];
 }
 
+export async function getSellerActiveListings(
+  supabase: SupabaseClient,
+  sellerId: string
+): Promise<Listing[]> {
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("seller_id", sellerId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getSellerActiveListings error", error);
+    return [];
+  }
+  return (data as Listing[]) || [];
+}
+
 export async function getListingById(
   supabase: SupabaseClient,
   id: string
