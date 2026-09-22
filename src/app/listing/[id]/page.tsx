@@ -124,8 +124,8 @@ export default async function ListingDetailPage({
               </div>
             </div>
             <div>
-              <ListingMedia images={listing.images} videoUrl={listing.video_url} />
               <DetailTabs listing={listing} categoryName={categoryName} isOwner={isOwner} />
+              <ListingMedia images={listing.images} videoUrl={listing.video_url} />
             </div>
           </div>
         </section>
