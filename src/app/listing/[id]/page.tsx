@@ -5,7 +5,6 @@ import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/server";
 import { getListingById, getProfile, getCategories, getSellerActiveListings } from "@/lib/data";
 import SellerActions from "./SellerActions";
-import RemoveListingButton from "@/components/RemoveListingButton";
 import DetailTabs from "./DetailTabs";
 import EditProfileModal from "@/components/EditProfileModal";
 import Avatar from "@/components/Avatar";
@@ -117,14 +116,7 @@ export default async function ListingDetailPage({
                     )}
                   </div>
                 </div>
-                {isOwner || isAdmin ? (
-                  <RemoveListingButton
-                    table="listings"
-                    id={listing.id}
-                    redirectTo="/account"
-                    label="Remove this listing"
-                  />
-                ) : (
+                {!isOwner && !isAdmin && (
                   <SellerActions
                     listingId={listing.id}
                     sellerId={listing.seller_id}
