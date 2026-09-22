@@ -9,6 +9,7 @@ import DetailTabs from "./DetailTabs";
 import EditProfileModal from "@/components/EditProfileModal";
 import Avatar from "@/components/Avatar";
 import ListingMedia from "@/components/ListingMedia";
+import BlueTick from "@/components/BlueTick";
 
 export default async function ListingDetailPage({
   params,
@@ -84,7 +85,7 @@ export default async function ListingDetailPage({
                   )}
                   <div className="profile-name-row">
                     <h2>{seller?.display_name ?? "Seller"}</h2>
-                    {seller?.verified && <Icon name="BadgeCheck" />}
+                    {seller?.verified && <BlueTick size={16} />}
                   </div>
                   <p className="profile-rating-row">
                     <Icon name="Star" />

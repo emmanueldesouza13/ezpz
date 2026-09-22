@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Listing } from "@/lib/types";
 import { isPhotoUrl } from "@/lib/format";
 import Icon from "./Icon";
+import BlueTick from "./BlueTick";
 
 export default function ListingCard({
   listing,
@@ -48,6 +49,7 @@ export default function ListingCard({
           <span className="listing-card-meta-line listing-card-seller">
             <Icon name="User" />
             {seller.display_name}
+            {seller.verified && <BlueTick size={12} />}
           </span>
         )}
         <div className="listing-card-meta">
@@ -57,12 +59,6 @@ export default function ListingCard({
           </span>
           {seller?.available && <span className="listing-card-avail-dot" title="Available now" />}
         </div>
-        {seller?.verified && (
-          <div className="verified-line listing-card-verified">
-            <Icon name="BadgeCheck" />
-            Verified
-          </div>
-        )}
       </div>
     </Link>
   );

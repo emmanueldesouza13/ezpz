@@ -10,6 +10,7 @@ import RemoveListingButton from "@/components/RemoveListingButton";
 import EditProfileModal from "@/components/EditProfileModal";
 import ProfileTabs from "@/components/ProfileTabs";
 import VerifyIdentity from "@/components/VerifyIdentity";
+import BlueTick from "@/components/BlueTick";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
@@ -99,7 +100,7 @@ export default function AccountPage() {
                 <EditProfileModal profile={profile} onSaved={setProfile} />
                 <div className="profile-name-row">
                   <h2>{profile.display_name}</h2>
-                  {profile.verified && <Icon name="BadgeCheck" />}
+                  {profile.verified && <BlueTick size={16} />}
                 </div>
                 <p className="profile-rating-row">
                   <Icon name="Star" />
