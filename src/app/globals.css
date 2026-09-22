@@ -995,12 +995,14 @@
 
   /* ---------------- admin ---------------- */
   .admin-login-wrap {
+    position: relative;
     max-width: 360px; margin: 0 auto; padding-top: 80px; padding-bottom: 60px;
     text-align: center;
   }
   .admin-login-wrap > .page-back {
-    display: flex; width: 100%; justify-content: flex-start;
-    margin-left: 0; margin-right: 0;
+    position: absolute;
+    top: 14px; left: 0;
+    margin: 0;
   }
   .admin-login-wrap .icon-circle {
     width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px;
