@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Listing } from "@/lib/types";
-import { formatPrice, isPhotoUrl } from "@/lib/format";
+import { isPhotoUrl } from "@/lib/format";
 import Icon from "./Icon";
 
 export default function ListingCard({
@@ -13,7 +13,6 @@ export default function ListingCard({
   const seller = listing.seller;
   const photo = listing.images[0];
   const photoCount = listing.images.filter(isPhotoUrl).length;
-  const showPrice = !listing.is_free && listing.price > 0;
 
   return (
     <Link href={`/listing/${listing.id}`} className="listing-card">
@@ -41,12 +40,6 @@ export default function ListingCard({
           <span className="listing-card-featured">
             <Icon name="Sparkle" />
             Featured
-          </span>
-        )}
-        {showPrice && (
-          <span className="listing-card-seal">
-            <Icon name="Gem" />
-            {formatPrice(listing.price, listing.is_free)}
           </span>
         )}
       </div>
