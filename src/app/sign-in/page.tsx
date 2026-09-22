@@ -148,38 +148,16 @@ function SignInForm() {
         {error && <p className="admin-error">{error}</p>}
       </form>
       {mode === "signin" && (
-        <div className="signup-teaser">
-          <span className="signup-teaser-badge">
-            <Icon name="Sparkles" size={12} />
-            New to EzPz?
-          </span>
-          <p className="signup-teaser-line">
-            Your work, in front of buyers across Guyana — post free, get paid straight to your
-            MMG, no middleman.
-          </p>
-          <div className="signup-teaser-perks">
-            <span>
-              <Icon name="Wallet" size={13} />
-              Direct MMG payouts
-            </span>
-            <span>
-              <Icon name="Star" size={13} />
-              Build your rating
-            </span>
-            <span>
-              <Icon name="MessageCircle" size={13} />
-              Chat with buyers
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-accent btn-block"
-            onClick={() => { setMode("signup"); setError(null); }}
-          >
-            <Icon name="ArrowRight" size={15} />
-            Create your free account
-          </button>
-        </div>
+        <button
+          type="button"
+          className="glow-cta"
+          onClick={() => { setMode("signup"); setError(null); }}
+          aria-label="Create an account"
+        >
+          <span className="glow-cta-ring" />
+          <span className="glow-cta-sheen" />
+          <Icon name="Sparkles" size={20} />
+        </button>
       )}
 
       <div className="signin-switch">
