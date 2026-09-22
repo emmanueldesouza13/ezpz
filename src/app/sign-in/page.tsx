@@ -147,24 +147,16 @@ function SignInForm() {
         </button>
         {error && <p className="admin-error">{error}</p>}
       </form>
-      {mode === "signin" && (
-        <button
-          type="button"
-          className="glow-cta"
-          onClick={() => { setMode("signup"); setError(null); }}
-          aria-label="Create an account"
-        >
-          <span className="glow-cta-ring" />
-          <span className="glow-cta-sheen" />
-          <Icon name="Sparkles" size={20} />
-        </button>
-      )}
-
       <div className="signin-switch">
         {mode === "signin" && (
-          <button type="button" onClick={() => { setMode("forgot"); setError(null); }}>
-            Forgot password?
-          </button>
+          <>
+            <button type="button" onClick={() => { setMode("signup"); setError(null); }}>
+              New here? Create an account
+            </button>
+            <button type="button" onClick={() => { setMode("forgot"); setError(null); }}>
+              Forgot password?
+            </button>
+          </>
         )}
         {mode !== "signin" && (
           <button type="button" onClick={() => { setMode("signin"); setError(null); }}>

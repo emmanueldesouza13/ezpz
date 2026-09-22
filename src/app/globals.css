@@ -1025,32 +1025,6 @@
   .signin-switch button { background: none; border: none; padding: 0; font-size: 0.82rem; color: var(--ink-soft); text-decoration: underline; cursor: pointer; }
   .signin-switch button:hover { color: var(--ink); }
 
-  .glow-cta {
-    position: relative;
-    width: 64px; height: 64px; margin: 30px auto 0;
-    display: flex; align-items: center; justify-content: center;
-    border: none; border-radius: 50%; cursor: pointer;
-    background: var(--paper); color: var(--accent);
-    box-shadow: 0 0 0 1px var(--brand-tint-line), var(--shadow-2);
-    animation: glow-pulse 2.4s ease-in-out infinite;
-  }
-  .glow-cta svg { position: relative; z-index: 2; }
-  .glow-cta-ring {
-    position: absolute; inset: -3px; border-radius: 50%; z-index: 0;
-    background: conic-gradient(from 0deg, var(--accent), var(--brand), transparent 40%, var(--accent));
-    animation: glow-spin 3.5s linear infinite;
-    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-  }
-  .glow-cta-sheen {
-    position: absolute; inset: 1px; border-radius: 50%; z-index: 1;
-    background: var(--paper);
-  }
-  @keyframes glow-spin { to { transform: rotate(360deg); } }
-  @keyframes glow-pulse {
-    0%, 100% { box-shadow: 0 0 0 1px var(--brand-tint-line), var(--shadow-2), 0 0 0 0 var(--brand-tint); }
-    50% { box-shadow: 0 0 0 1px var(--brand-tint-line), var(--shadow-2), 0 0 0 10px transparent; }
-  }
 
   .admin-wrap { max-width: 1080px; padding-top: 24px; padding-bottom: 60px; }
   .admin-topbar {
