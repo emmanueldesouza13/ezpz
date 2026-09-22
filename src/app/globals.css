@@ -833,6 +833,13 @@
   .icon-nav-row {
     display: flex; align-items: center; justify-content: space-between;
     gap: 8px; padding-block: 11px;
+    position: sticky;
+    top: var(--header-h, 132px);
+    z-index: 35;
+    background: var(--surface);
+    margin-inline: -18px;
+    padding-inline: 18px;
+    border-bottom: 1px solid var(--line);
   }
   .icon-nav-btn {
     position: relative;

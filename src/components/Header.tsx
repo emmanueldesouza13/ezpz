@@ -14,6 +14,7 @@ export default function Header() {
   const [region, setRegion] = useState("Georgetown, Guyana");
   const [regionOpen, setRegionOpen] = useState(false);
   const regionRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -25,6 +26,21 @@ export default function Header() {
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
+  // Publish the header's real rendered height as a CSS var so the quick-nav
+  // row below it can stick right underneath, however many lines the header
+  // wraps to (logo/location/search/button reflow differently by viewport).
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const setVar = () => {
+      document.documentElement.style.setProperty("--header-h", `${el.offsetHeight}px`);
+    };
+    setVar();
+    const observer = new ResizeObserver(setVar);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (regionRef.current && !regionRef.current.contains(e.target as Node)) setRegionOpen(false);
@@ -34,7 +50,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="site-header">
+    <header className="site-header" ref={headerRef}>
       <div className="wrap header-row">
         <Link href="/" className="logo brand-face">
           {/* eslint-disable-next-line @next/next/no-img-element */}
