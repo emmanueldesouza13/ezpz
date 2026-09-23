@@ -724,11 +724,27 @@
     letter-spacing: 0.04em; color: var(--ink-faint); margin-bottom: 2px;
   }
 
-  .rating-big-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
   .rating-big { font-size: 2.4rem; font-weight: 800; color: var(--ink); line-height: 1; }
   .rating-stars { display: inline-flex; gap: 2px; }
   .rating-stars svg { width: 16px; height: 16px; fill: var(--accent); color: var(--accent); }
-  .rating-count-line { font-size: 0.82rem; color: var(--ink-faint); margin-bottom: 18px; }
+  .rating-count-line { font-size: 0.82rem; color: var(--ink-faint); margin-top: 4px; }
+
+  .rating-summary-card {
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: var(--radius-card); padding: 16px; margin-bottom: 20px;
+  }
+  .rating-summary-main { display: flex; align-items: center; gap: 14px; }
+  .rating-breakdown { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .rating-bar-row { display: flex; align-items: center; gap: 6px; }
+  .rating-bar-row + .rating-bar-row { margin-top: 5px; }
+  .rating-bar-label { font-size: 0.74rem; font-weight: 700; color: var(--ink-soft); width: 8px; text-align: right; }
+  .rating-bar-row svg { width: 11px; height: 11px; fill: var(--accent); color: var(--accent); flex-shrink: 0; }
+  .rating-bar-track {
+    flex: 1; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden;
+  }
+  .rating-bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+  .rating-bar-count { font-size: 0.74rem; color: var(--ink-faint); width: 18px; text-align: right; }
+  .review-write-btn { margin-bottom: 20px; }
 
   .tab-empty {
     text-align: center; color: var(--ink-faint);

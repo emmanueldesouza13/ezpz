@@ -48,6 +48,7 @@ export default function ReviewsPanel({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const COLLAPSED_COUNT = 3;
@@ -102,11 +103,20 @@ export default function ReviewsPanel({
     const saved = data as Review;
     setReviews((cur) => [saved, ...cur.filter((r) => r.reviewer_id !== userId)]);
     toast(myReview ? "Review updated" : "Review posted");
+    setShowForm(false);
   }
 
   function focusMyReview() {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setShowForm(true);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
   }
+
+  const breakdown = [5, 4, 3, 2, 1].map((star) => {
+    const starCount = reviews.filter((r) => Math.round(r.rating) === star).length;
+    return { star, starCount, pct: count > 0 ? (starCount / count) * 100 : 0 };
+  });
 
   async function handleDelete() {
     if (!userId || !myReview) return;
@@ -134,23 +144,50 @@ export default function ReviewsPanel({
 
   return (
     <>
-      <div className="rating-big-row">
-        <span className="rating-big">{avg.toFixed(1)}</span>
-        <Stars value={avg} size={16} />
+      <div className="rating-summary-card">
+        <div className="rating-summary-main">
+          <span className="rating-big">{avg.toFixed(1)}</span>
+          <div>
+            <Stars value={avg} size={16} />
+            <p className="rating-count-line">
+              {t(count === 1 ? "reviews.basedOn_one" : "reviews.basedOn_other", { count })}
+            </p>
+          </div>
+        </div>
+        {!loading && count > 0 && (
+          <div className="rating-breakdown">
+            {breakdown.map(({ star, starCount, pct }) => (
+              <div className="rating-bar-row" key={star}>
+                <span className="rating-bar-label">{star}</span>
+                <Icon name="Star" size={11} />
+                <span className="rating-bar-track">
+                  <span className="rating-bar-fill" style={{ width: `${pct}%` }} />
+                </span>
+                <span className="rating-bar-count">{starCount}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <p className="rating-count-line">
-        {t(count === 1 ? "reviews.basedOn_one" : "reviews.basedOn_other", { count })}
-      </p>
 
       {userId === sellerId ? null : userId === null ? (
         <div className="review-form-box">
-          <p className="hint" style={{ marginBottom: 10 }}>
+          <p className="hint" style={{ marginBottom: 0 }}>
             <Link href="/sign-in" style={{ color: "var(--brand)", fontWeight: 700 }}>
               {t("reviews.signInPrompt")}
             </Link>{" "}
             {t("reviews.signInSuffix")}
           </p>
         </div>
+      ) : userId && !showForm ? (
+        <button
+          type="button"
+          className="btn btn-line btn-block review-write-btn"
+          onClick={() => setShowForm(true)}
+        >
+          <Icon name="Pencil" size={15} />
+          {myReview ? t("reviews.updateYourReview") : t("reviews.writeReview")}
+        </button>
       ) : userId ? (
         <form className="review-form-box" onSubmit={handleSubmit} ref={formRef}>
           <p className="review-form-label">
@@ -185,6 +222,14 @@ export default function ReviewsPanel({
           />
           <button type="submit" className="btn btn-accent btn-block" disabled={saving || rating < 1}>
             {saving ? t("common.saving") : myReview ? t("reviews.updateReview") : t("reviews.postReview")}
+          </button>
+          <button
+            type="button"
+            className="btn btn-line btn-block"
+            style={{ marginTop: 8 }}
+            onClick={() => setShowForm(false)}
+          >
+            {t("common.cancel")}
           </button>
           {myReview && (
             <button
