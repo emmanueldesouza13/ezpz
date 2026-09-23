@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import ConversationRow from "@/components/ConversationRow";
 import { createClient } from "@/lib/supabase/client";
@@ -52,7 +51,6 @@ export default function MessagesInboxPage() {
 
   return (
     <>
-      <Header />
       <main>
         <section className="wrap">
           <div className="inbox-wrap">

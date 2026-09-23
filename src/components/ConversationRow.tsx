@@ -30,7 +30,11 @@ export default function ConversationRow({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirming, setConfirming] = useState<"delete" | "block" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(
+    null
+  );
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -42,6 +46,29 @@ export default function ConversationRow({
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
   }, []);
+
+  // The conversation list sits in a card with `overflow: hidden` (for its
+  // rounded corners), which silently clips an absolutely-positioned dropdown
+  // that opens downward off the last row. Position the dropdown relative to
+  // the viewport instead, and flip it to open upward when there isn't room
+  // below, so it's never cut off no matter which row it's on.
+  function toggleMenu() {
+    if (!menuOpen) {
+      const btn = menuBtnRef.current;
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        const dropdownHeight = 108; // ~2 menu items
+        const right = window.innerWidth - rect.right;
+        if (window.innerHeight - rect.bottom < dropdownHeight + 12) {
+          setMenuPos({ bottom: window.innerHeight - rect.top + 4, right });
+        } else {
+          setMenuPos({ top: rect.bottom + 4, right });
+        }
+      }
+    }
+    setMenuOpen((v) => !v);
+    setConfirming(null);
+  }
 
   const isBuyer = conversation.buyer_id === userId;
   const other = isBuyer ? conversation.seller : conversation.buyer;
@@ -107,15 +134,20 @@ export default function ConversationRow({
           type="button"
           className="convo-menu-btn"
           aria-label="Chat options"
-          onClick={() => {
-            setMenuOpen((v) => !v);
-            setConfirming(null);
-          }}
+          ref={menuBtnRef}
+          onClick={toggleMenu}
         >
           <Icon name="MoreVertical" size={17} />
         </button>
-        {menuOpen && (
-          <div className="distance-menu convo-menu-dropdown">
+        {menuOpen && menuPos && (
+          <div
+            className="distance-menu convo-menu-dropdown"
+            style={{
+              top: menuPos.top,
+              bottom: menuPos.bottom,
+              right: menuPos.right,
+            }}
+          >
             <button
               type="button"
               className="distance-menu-item"

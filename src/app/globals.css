@@ -997,7 +997,7 @@
   }
   .convo-menu-btn:hover { background: var(--surface-2); color: var(--ink); }
   .convo-menu-dropdown {
-    top: calc(100% + 4px); left: auto; right: 0;
+    position: fixed;
     min-width: 168px;
   }
   .convo-menu-dropdown .distance-menu-item {
