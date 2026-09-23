@@ -14,7 +14,10 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
-  const [mode, setMode] = useState<Mode>("signin");
+  const initialMode = searchParams.get("mode");
+  const [mode, setMode] = useState<Mode>(
+    initialMode === "signup" || initialMode === "forgot" ? initialMode : "signin"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);

@@ -34,7 +34,7 @@ export default function TaxiPostPage() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        router.push("/sign-in?next=/taxi/post");
+        router.push("/sign-in?next=/taxi/post&mode=signup");
         return;
       }
       setCheckingAuth(false);
@@ -66,7 +66,7 @@ export default function TaxiPostPage() {
     }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
-    if (!user) { router.push("/sign-in?next=/taxi/post"); return; }
+    if (!user) { router.push("/sign-in?next=/taxi/post&mode=signup"); return; }
     setUploadingPhoto(true);
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${user.id}/taxi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -100,7 +100,7 @@ export default function TaxiPostPage() {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) {
-      router.push("/sign-in?next=/taxi/post");
+      router.push("/sign-in?next=/taxi/post&mode=signup");
       return;
     }
 
