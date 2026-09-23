@@ -22,12 +22,27 @@ export async function getSiteSettings(supabase: SupabaseClient): Promise<Setting
   );
 }
 
-export async function getTaxiServices(supabase: SupabaseClient): Promise<TaxiService[]> {
-  const { data, error } = await supabase
+export async function getTaxiServices(
+  supabase: SupabaseClient,
+  q?: string | null
+): Promise<TaxiService[]> {
+  let query = supabase
     .from("taxi_services")
     .select("*")
     .eq("status", "active")
     .order("created_at", { ascending: false });
+
+  const term = q?.trim();
+  if (term) {
+    // Commas/parens have special meaning in PostgREST's .or() filter
+    // syntax, so strip them from the raw search term before building it.
+    const safe = term.replace(/[,()]/g, "");
+    query = query.or(
+      `driver_name.ilike.%${safe}%,vehicle_make.ilike.%${safe}%,vehicle_model.ilike.%${safe}%,plate.ilike.%${safe}%,service_area.ilike.%${safe}%`
+    );
+  }
+
+  const { data, error } = await query;
   if (error) {
     console.error("getTaxiServices error", error);
     return [];

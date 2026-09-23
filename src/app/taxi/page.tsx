@@ -7,13 +7,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getTaxiServices } from "@/lib/data";
 import type { TaxiService } from "@/lib/types";
 
-export default async function TaxiPage() {
+export default async function TaxiPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
     redirect("/sign-in?next=/taxi");
   }
-  const services = await getTaxiServices(supabase);
+  const services = await getTaxiServices(supabase, q);
 
   // One horizontally-scrolling row per service area (region), like a
   // rental-car browse page grouped by city.
@@ -35,6 +40,7 @@ export default async function TaxiPage() {
           <div className="browse-head">
             <div>
               <h1>Taxi &amp; rides</h1>
+              {q && <p>{services.length} matching &quot;{q}&quot;</p>}
             </div>
             <Link href="/taxi/post" className="btn btn-accent">
               <Icon name="Plus" size={15} strokeWidth={2.4} />
@@ -75,7 +81,9 @@ export default async function TaxiPage() {
 
           {services.length === 0 && (
             <div className="empty-state">
-              No taxi services yet — be the first to sign up.
+              {q
+                ? `No taxi services match "${q}".`
+                : "No taxi services yet — be the first to sign up."}
             </div>
           )}
         </section>

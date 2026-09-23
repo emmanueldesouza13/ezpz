@@ -15,6 +15,7 @@ export default function Header() {
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [region, setRegion] = useState(DEFAULT_REGION_LABEL);
   const [regionOpen, setRegionOpen] = useState(false);
+  const [isTaxiSection, setIsTaxiSection] = useState(false);
   const regionRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const supabase = createClient();
@@ -27,8 +28,9 @@ export default function Header() {
     try {
       const r = new URLSearchParams(window.location.search).get("region");
       if (r && REGIONS.includes(r)) setRegion(r);
+      setIsTaxiSection(window.location.pathname.startsWith("/taxi"));
     } catch {
-      // ignore — just fall back to the default label
+      // ignore — just fall back to the defaults
     }
   }, []);
 
@@ -120,7 +122,7 @@ export default function Header() {
         </div>
         <form
           className="search-form"
-          action="/"
+          action={isTaxiSection ? "/taxi" : "/"}
           onSubmit={(e) => {
             const input = (e.currentTarget.elements.namedItem("q") as HTMLInputElement);
             if (!input.value.trim()) e.preventDefault();
@@ -130,7 +132,7 @@ export default function Header() {
           <input
             name="q"
             type="text"
-            placeholder="Search"
+            placeholder={isTaxiSection ? "Search taxi services" : "Search"}
             autoComplete="off"
           />
         </form>
