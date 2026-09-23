@@ -20,6 +20,8 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false);
   const [selfiePath, setSelfiePath] = useState<string | null>(null);
   const [idCardPath, setIdCardPath] = useState<string | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [idPreview, setIdPreview] = useState<string | null>(null);
   const [uploadingSelfie, setUploadingSelfie] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -43,10 +45,34 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
     })();
   }, [supabase, profile.id]);
 
+  function setPreview(kind: "selfie" | "id", url: string | null) {
+    const setter = kind === "selfie" ? setSelfiePreview : setIdPreview;
+    setter((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return url;
+    });
+  }
+
+  async function loadPreview(path: string | null, kind: "selfie" | "id") {
+    if (!path) {
+      setPreview(kind, null);
+      return;
+    }
+    const { data, error } = await supabase.storage.from("verification").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) return;
+    setPreview(kind, data.signedUrl);
+  }
+
   function openModal() {
-    setSelfiePath(request?.selfie_path ?? null);
-    setIdCardPath(request?.id_card_path ?? null);
+    const sPath = request?.selfie_path ?? null;
+    const iPath = request?.id_card_path ?? null;
+    setSelfiePath(sPath);
+    setIdCardPath(iPath);
+    setPreview("selfie", null);
+    setPreview("id", null);
     setOpen(true);
+    loadPreview(sPath, "selfie");
+    loadPreview(iPath, "id");
   }
 
   async function uploadDoc(file: File, kind: "selfie" | "id"): Promise<string | null> {
@@ -74,20 +100,40 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    if (file.type.startsWith("image/")) setPreview("selfie", URL.createObjectURL(file));
     setUploadingSelfie(true);
     const path = await uploadDoc(file, "selfie");
     setUploadingSelfie(false);
-    if (path) setSelfiePath(path);
+    if (path) {
+      setSelfiePath(path);
+    } else {
+      loadPreview(selfiePath, "selfie");
+    }
   }
 
   async function handleIdFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    if (file.type.startsWith("image/")) setPreview("id", URL.createObjectURL(file));
     setUploadingId(true);
     const path = await uploadDoc(file, "id");
     setUploadingId(false);
-    if (path) setIdCardPath(path);
+    if (path) {
+      setIdCardPath(path);
+    } else {
+      loadPreview(idCardPath, "id");
+    }
+  }
+
+  function removeSelfie() {
+    setPreview("selfie", null);
+    setSelfiePath(null);
+  }
+
+  function removeId() {
+    setPreview("id", null);
+    setIdCardPath(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -150,8 +196,16 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
 
   return (
     <>
-      <div className={`verify-card${status === "rejected" ? " verify-rejected" : ""}`}>
-        <Icon name={status === "pending" ? "Clock" : status === "rejected" ? "ShieldAlert" : "Shield"} />
+      <div
+        className={`verify-card${status === "rejected" ? " verify-rejected" : ""}${status === "pending" ? " verify-pending" : ""}`}
+      >
+        {status === "pending" ? (
+          <span className="verify-icon-badge">
+            <Icon name="Clock" />
+          </span>
+        ) : (
+          <Icon name={status === "rejected" ? "ShieldAlert" : "Shield"} />
+        )}
         <div className="verify-card-info">
           <p className="verify-title">
             {status === "pending"
@@ -170,10 +224,38 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
               : t("verify.uploadPrompt", { fee: fee.toLocaleString() })}
           </p>
         </div>
-        <button type="button" className="btn btn-line" onClick={openModal}>
-          {request ? t("verify.resubmit") : t("verify.verifyBtn")}
-        </button>
+        {status !== "pending" && (
+          <button type="button" className="btn btn-line" onClick={openModal}>
+            {request ? t("verify.resubmit") : t("verify.verifyBtn")}
+          </button>
+        )}
       </div>
+
+      {status === "pending" && (
+        <div className="verify-progress">
+          <div className="verify-progress-steps">
+            <div className="verify-step verify-step-done">
+              <span className="verify-step-dot">
+                <Icon name="Check" size={10} />
+              </span>
+              {t("verify.stepSubmitted")}
+            </div>
+            <div className="verify-step verify-step-active">
+              <span className="verify-step-dot">
+                <span className="verify-step-pulse" />
+              </span>
+              {t("verify.stepReviewing")}
+            </div>
+            <div className="verify-step">
+              <span className="verify-step-dot" />
+              {t("verify.stepVerified")}
+            </div>
+          </div>
+          <button type="button" className="btn btn-line btn-block verify-progress-resubmit" onClick={openModal}>
+            {t("verify.resubmit")}
+          </button>
+        </div>
+      )}
 
       {feeUnpaid && (
         <FeeBanner
@@ -214,42 +296,103 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <label>{t("verify.selfieLabel")}</label>
-                <label
-                  className="btn btn-line"
-                  style={{ cursor: uploadingSelfie ? "wait" : "pointer", display: "inline-flex" }}
-                >
-                  <Icon
-                    name={uploadingSelfie ? "Loader2" : "Camera"}
-                    className={uploadingSelfie ? "spin" : undefined}
-                  />
-                  {uploadingSelfie ? t("post.uploading") : selfiePath ? t("verify.selfieAdded") : t("verify.selfieAdd")}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="user"
-                    onChange={handleSelfieFile}
-                    disabled={uploadingSelfie}
-                    style={{ display: "none" }}
-                  />
-                </label>
+                {selfiePath && selfiePreview ? (
+                  <div className="verify-photo-preview">
+                    <img src={selfiePreview} alt={t("verify.selfiePreviewAlt")} />
+                    <div className="verify-photo-actions">
+                      <label
+                        className="btn btn-line"
+                        style={{ cursor: uploadingSelfie ? "wait" : "pointer", display: "inline-flex" }}
+                      >
+                        <Icon
+                          name={uploadingSelfie ? "Loader2" : "RotateCcw"}
+                          className={uploadingSelfie ? "spin" : undefined}
+                        />
+                        {uploadingSelfie ? t("post.uploading") : t("verify.retakePhoto")}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="user"
+                          onChange={handleSelfieFile}
+                          disabled={uploadingSelfie}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="btn btn-line"
+                        onClick={removeSelfie}
+                        disabled={uploadingSelfie}
+                      >
+                        <Icon name="Trash2" />
+                        {t("verify.removePhoto")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    className="btn btn-line"
+                    style={{ cursor: uploadingSelfie ? "wait" : "pointer", display: "inline-flex" }}
+                  >
+                    <Icon
+                      name={uploadingSelfie ? "Loader2" : "Camera"}
+                      className={uploadingSelfie ? "spin" : undefined}
+                    />
+                    {uploadingSelfie ? t("post.uploading") : t("verify.selfieAdd")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      onChange={handleSelfieFile}
+                      disabled={uploadingSelfie}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="field" style={{ marginBottom: 20 }}>
                 <label>{t("verify.idLabel")}</label>
-                <label
-                  className="btn btn-line"
-                  style={{ cursor: uploadingId ? "wait" : "pointer", display: "inline-flex" }}
-                >
-                  <Icon name={uploadingId ? "Loader2" : "IdCard"} className={uploadingId ? "spin" : undefined} />
-                  {uploadingId ? t("post.uploading") : idCardPath ? t("verify.idAdded") : t("verify.idAdd")}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleIdFile}
-                    disabled={uploadingId}
-                    style={{ display: "none" }}
-                  />
-                </label>
+                {idCardPath && idPreview ? (
+                  <div className="verify-photo-preview">
+                    <img src={idPreview} alt={t("verify.idPreviewAlt")} />
+                    <div className="verify-photo-actions">
+                      <label
+                        className="btn btn-line"
+                        style={{ cursor: uploadingId ? "wait" : "pointer", display: "inline-flex" }}
+                      >
+                        <Icon name={uploadingId ? "Loader2" : "RotateCcw"} className={uploadingId ? "spin" : undefined} />
+                        {uploadingId ? t("post.uploading") : t("verify.retakePhoto")}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleIdFile}
+                          disabled={uploadingId}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+                      <button type="button" className="btn btn-line" onClick={removeId} disabled={uploadingId}>
+                        <Icon name="Trash2" />
+                        {t("verify.removePhoto")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    className="btn btn-line"
+                    style={{ cursor: uploadingId ? "wait" : "pointer", display: "inline-flex" }}
+                  >
+                    <Icon name={uploadingId ? "Loader2" : "IdCard"} className={uploadingId ? "spin" : undefined} />
+                    {uploadingId ? t("post.uploading") : t("verify.idAdd")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleIdFile}
+                      disabled={uploadingId}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                )}
                 <p className="hint">{t("verify.idHint")}</p>
               </div>
 
