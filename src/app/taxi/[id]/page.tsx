@@ -77,8 +77,7 @@ export default async function TaxiServiceDetailPage({
               <p className="section-label">About this service</p>
               <p className="desc-text">{service.notes || "No additional notes from this driver."}</p>
               <DismissibleCallout>
-                Confirm the fare and pickup details before you ride, and never wire money or pay
-                outside the app up front. <Link href="/safety">More safety tips</Link>
+                Confirm the fare and pickup details before you ride.
               </DismissibleCallout>
             </div>
             <div>
