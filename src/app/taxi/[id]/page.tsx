@@ -102,10 +102,6 @@ export default async function TaxiServiceDetailPage({
                   <div className="fee-number-row">
                     <span className="mono">{service.plate}</span>
                   </div>
-                  <p className="fee-caption">
-                    {service.vehicle_make} {service.vehicle_model} &middot; check the plate
-                    matches before you get in.
-                  </p>
                 </div>
                 <div className="fee-box">
                   <div className="fee-label">
@@ -115,10 +111,6 @@ export default async function TaxiServiceDetailPage({
                   <div className="fee-number-row">
                     <span className="mono">{service.phone}</span>
                   </div>
-                  <p className="fee-caption">
-                    Call or message this number to book a pickup. Pay the driver directly via MMG
-                    ({service.mmg_number}) — EzPz never holds or processes payments.
-                  </p>
                 </div>
                 {(isOwner || isAdmin) && (
                   <>
