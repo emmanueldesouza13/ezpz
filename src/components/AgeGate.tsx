@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 
+// Shows once per browser session (resets whenever someone opens the site in
+// a fresh tab or after closing the browser) rather than once ever — normal
+// in-site navigation between pages doesn't remount this, so it won't nag
+// them page to page, only on a genuinely new visit.
 const STORAGE_KEY = "ezpz_age_verified";
 
 export default function AgeGate({ children }: { children: React.ReactNode }) {
@@ -11,7 +15,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem(STORAGE_KEY) === "1") setVerified(true);
+      if (sessionStorage.getItem(STORAGE_KEY) === "1") setVerified(true);
     } catch {
       // ignore — storage unavailable, just fall back to asking again
     }
@@ -21,7 +25,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
   function handleVerify() {
     setVerified(true);
     try {
-      localStorage.setItem(STORAGE_KEY, "1");
+      sessionStorage.setItem(STORAGE_KEY, "1");
     } catch {
       // ignore — nothing to persist to
     }

@@ -7,7 +7,7 @@ import Icon from "./Icon";
 // reopened) — a friendly nudge, not a hard gate.
 const SESSION_KEY = "ezpz_verify_warn_shown";
 const MAX_SHOWS = 1;
-const DELAY_MS = 900;
+const DELAY_MS = 4500; // give the age gate room to close first, so the two don't feel stacked
 
 export default function VerifiedWarningPopup() {
   const [open, setOpen] = useState(false);
