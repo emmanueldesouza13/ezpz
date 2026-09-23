@@ -408,6 +408,8 @@ export const translations = {
       noneYet: "No written reviews yet for this seller.",
       ezpzUserFallback: "EzPz user",
       edit: "Edit",
+      showAllReviews: "Show all {count} reviews",
+      showFewerReviews: "Show fewer reviews",
     },
     verifiedWarning: {
       title: "Only trust Verified sellers",
@@ -812,6 +814,8 @@ export const translations = {
       noneYet: "Todavía no hay reseñas escritas para este vendedor.",
       ezpzUserFallback: "Usuario de EzPz",
       edit: "Editar",
+      showAllReviews: "Ver las {count} reseñas",
+      showFewerReviews: "Ver menos reseñas",
     },
     verifiedWarning: {
       title: "Confía solo en vendedores Verificados",

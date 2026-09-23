@@ -47,7 +47,10 @@ export default function ReviewsPanel({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const COLLAPSED_COUNT = 3;
 
   useEffect(() => {
     let cancelled = false;
@@ -208,7 +211,7 @@ export default function ReviewsPanel({
 
       {reviews.length > 0 && (
         <div className="review-list">
-          {reviews.map((r) => (
+          {(expanded ? reviews : reviews.slice(0, COLLAPSED_COUNT)).map((r) => (
             <div className="review-row" key={r.id}>
               <Avatar
                 url={r.reviewer?.avatar_url}
@@ -235,6 +238,17 @@ export default function ReviewsPanel({
             </div>
           ))}
         </div>
+      )}
+
+      {reviews.length > COLLAPSED_COUNT && (
+        <button
+          type="button"
+          className="review-toggle-btn"
+          onClick={() => setExpanded((cur) => !cur)}
+        >
+          {expanded ? t("reviews.showFewerReviews") : t("reviews.showAllReviews", { count: reviews.length })}
+          <Icon name="ChevronDown" size={16} style={expanded ? { transform: "rotate(180deg)" } : undefined} />
+        </button>
       )}
     </>
   );

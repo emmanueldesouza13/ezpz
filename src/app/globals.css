@@ -767,6 +767,13 @@
     font-size: 0.72rem; font-weight: 700; color: var(--brand);
   }
   .review-edit-link svg { width: 11px; height: 11px; }
+  .review-toggle-btn {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    width: 100%; margin-top: 16px; padding: 10px;
+    background: none; border: 1px solid var(--line); border-radius: var(--radius-card);
+    cursor: pointer; font-size: 0.84rem; font-weight: 700; color: var(--ink-soft);
+  }
+  .review-toggle-btn svg { transition: transform 0.15s ease; }
 
   /* ---------- schedule ---------- */
   .schedule-list { border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
