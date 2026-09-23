@@ -8,7 +8,8 @@ import type { TaxiService } from "@/lib/types";
 
 export default async function TaxiPage() {
   const supabase = await createClient();
-  const services = await getTaxiServices(supabase);
+  const { data: userData } = await supabase.auth.getUser();
+  const services = userData.user ? await getTaxiServices(supabase) : [];
 
   // One horizontally-scrolling row per service area (region), like a
   // rental-car browse page grouped by city.
@@ -37,41 +38,52 @@ export default async function TaxiPage() {
             </Link>
           </div>
 
-          {regions.map(([region, list]) => (
-            <div className="region-row" key={region}>
-              <div className="region-row-head">
-                <h2>{region}</h2>
-                <p>
-                  {list.length} taxi service{list.length === 1 ? "" : "s"} in this area
-                </p>
-              </div>
-              <div className="region-scroll">
-                {list.map((s) => (
-                  <Link href={`/taxi/${s.id}`} key={s.id} className="region-card">
-                    <div className="region-card-photo">
-                      {s.photo_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={s.photo_url} alt={`${s.vehicle_make} ${s.vehicle_model}`} />
-                      ) : (
-                        <Icon name="Car" />
-                      )}
-                    </div>
-                    <div className="region-card-title">
-                      {s.vehicle_make} {s.vehicle_model}
-                    </div>
-                    <div className="region-card-sub">
-                      {s.driver_name} &middot; {s.plate}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {services.length === 0 && (
+          {!userData.user ? (
             <div className="empty-state">
-              No taxi services yet — be the first to sign up.
+              <Link href="/sign-in?next=/taxi" style={{ color: "var(--brand)", fontWeight: 700 }}>
+                Sign in
+              </Link>{" "}
+              to see taxi services in your area.
             </div>
+          ) : (
+            <>
+              {regions.map(([region, list]) => (
+                <div className="region-row" key={region}>
+                  <div className="region-row-head">
+                    <h2>{region}</h2>
+                    <p>
+                      {list.length} taxi service{list.length === 1 ? "" : "s"} in this area
+                    </p>
+                  </div>
+                  <div className="region-scroll">
+                    {list.map((s) => (
+                      <Link href={`/taxi/${s.id}`} key={s.id} className="region-card">
+                        <div className="region-card-photo">
+                          {s.photo_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={s.photo_url} alt={`${s.vehicle_make} ${s.vehicle_model}`} />
+                          ) : (
+                            <Icon name="Car" />
+                          )}
+                        </div>
+                        <div className="region-card-title">
+                          {s.vehicle_make} {s.vehicle_model}
+                        </div>
+                        <div className="region-card-sub">
+                          {s.driver_name} &middot; {s.plate}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {services.length === 0 && (
+                <div className="empty-state">
+                  No taxi services yet — be the first to sign up.
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>
