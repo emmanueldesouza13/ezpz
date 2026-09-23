@@ -40,7 +40,7 @@ export default function SellerActions({
   return (
     <button type="button" className="btn btn-brand btn-block" onClick={handleMessage}>
       <Icon name="MessageCircle" />
-      Message seller
+      Message
     </button>
   );
 }
