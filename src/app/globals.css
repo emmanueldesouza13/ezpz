@@ -748,8 +748,12 @@
   .star-picker-btn { background: none; border: none; cursor: pointer; padding: 2px; }
   .star-picker-btn svg { width: 22px; height: 22px; fill: var(--accent); color: var(--accent); transition: opacity .1s ease; }
 
-  .review-list { display: flex; flex-direction: column; gap: 16px; }
-  .review-row { display: flex; gap: 10px; }
+  .review-list { display: flex; flex-direction: column; gap: 10px; }
+  .review-row {
+    display: flex; gap: 10px;
+    background: var(--surface-2); border-radius: var(--radius-card);
+    padding: 12px 14px;
+  }
   .review-avatar {
     width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -767,12 +771,7 @@
     font-size: 0.72rem; font-weight: 700; color: var(--brand);
   }
   .review-edit-link svg { width: 11px; height: 11px; }
-  .review-toggle-btn {
-    display: flex; align-items: center; justify-content: center; gap: 5px;
-    width: 100%; margin-top: 16px; padding: 10px;
-    background: none; border: 1px solid var(--line); border-radius: var(--radius-card);
-    cursor: pointer; font-size: 0.84rem; font-weight: 700; color: var(--ink-soft);
-  }
+  .review-toggle-btn { margin-top: 14px; }
   .review-toggle-btn svg { transition: transform 0.15s ease; }
 
   /* ---------- schedule ---------- */

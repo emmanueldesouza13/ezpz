@@ -243,7 +243,7 @@ export default function ReviewsPanel({
       {reviews.length > COLLAPSED_COUNT && (
         <button
           type="button"
-          className="review-toggle-btn"
+          className="btn btn-line btn-block review-toggle-btn"
           onClick={() => setExpanded((cur) => !cur)}
         >
           {expanded ? t("reviews.showFewerReviews") : t("reviews.showAllReviews", { count: reviews.length })}
