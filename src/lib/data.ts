@@ -7,6 +7,29 @@ import { REGION_TOWNS } from "./guyana";
 
 const DEFAULT_LOGO_URL = "/logo.png";
 
+// Applies a free-text search across several ilike-matched columns, word by
+// word: each word must match SOME field (so "Jeep Wrangler" still finds a
+// row where "Jeep" is only in vehicle_make and "Wrangler" is only in
+// vehicle_model), but every word has to match somewhere on the row for it
+// to count as a hit. Supabase-js ANDs together multiple .or() calls, which
+// gives us that "every word, any field" behavior for free.
+function applyWordSearch<T>(
+  query: T,
+  term: string,
+  fields: string[]
+): T {
+  // Commas/parens have special meaning in PostgREST's .or() filter syntax,
+  // so strip them from the raw search term before building it.
+  const safe = term.replace(/[,()]/g, "");
+  const words = safe.split(/\s+/).filter(Boolean);
+  let q = query;
+  for (const word of words) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    q = (q as any).or(fields.map((f) => `${f}.ilike.%${word}%`).join(","));
+  }
+  return q;
+}
+
 export async function getSiteSettings(supabase: SupabaseClient): Promise<Settings> {
   const { data } = await supabase.from("settings").select("*").eq("id", 1).maybeSingle();
   return (
@@ -34,12 +57,13 @@ export async function getTaxiServices(
 
   const term = q?.trim();
   if (term) {
-    // Commas/parens have special meaning in PostgREST's .or() filter
-    // syntax, so strip them from the raw search term before building it.
-    const safe = term.replace(/[,()]/g, "");
-    query = query.or(
-      `driver_name.ilike.%${safe}%,vehicle_make.ilike.%${safe}%,vehicle_model.ilike.%${safe}%,plate.ilike.%${safe}%,service_area.ilike.%${safe}%`
-    );
+    query = applyWordSearch(query, term, [
+      "driver_name",
+      "vehicle_make",
+      "vehicle_model",
+      "plate",
+      "service_area",
+    ]);
   }
 
   const { data, error } = await query;
@@ -103,12 +127,7 @@ export async function getListings(
   if (opts.q) {
     const term = opts.q.trim();
     if (term) {
-      // Commas/parens have special meaning in PostgREST's .or() filter
-      // syntax, so strip them from the raw search term before building it.
-      const safe = term.replace(/[,()]/g, "");
-      query = query.or(
-        `title.ilike.%${safe}%,location.ilike.%${safe}%,description.ilike.%${safe}%`
-      );
+      query = applyWordSearch(query, term, ["title", "location", "description"]);
     }
   }
   if (opts.minPrice != null) query = query.gte("price", opts.minPrice);
