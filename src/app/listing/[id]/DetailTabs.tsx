@@ -55,12 +55,6 @@ export default function DetailTabs({
                 <strong>Rate</strong>
                 {formatPrice(listing.price, listing.is_free)}
               </div>
-              {categoryName && (
-                <div className="tab-fact">
-                  <strong>Category</strong>
-                  {categoryName}
-                </div>
-              )}
               <div className="tab-fact">
                 <strong>Location</strong>
                 {seller?.location || listing.location}
