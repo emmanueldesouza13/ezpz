@@ -15,6 +15,9 @@ export default function IconNavRow({ hasUnread }: { hasUnread: boolean }) {
       <Link href="/" className="icon-nav-btn" aria-label={t("nav.home")}>
         <Icon name="Home" size={18} />
       </Link>
+      <Link href="/taxi" className="icon-nav-btn" aria-label={t("nav.taxi")}>
+        <Icon name="Car" size={18} />
+      </Link>
       <Link href="/payments" className="icon-nav-btn" aria-label={t("nav.payments")}>
         <Icon name="Wallet" size={18} />
       </Link>
@@ -25,9 +28,6 @@ export default function IconNavRow({ hasUnread }: { hasUnread: boolean }) {
       >
         <Icon name="MessageCircle" size={18} />
         {hasUnread && <span className="icon-nav-badge" />}
-      </Link>
-      <Link href="/taxi" className="icon-nav-btn" aria-label={t("nav.taxi")}>
-        <Icon name="Car" size={18} />
       </Link>
       <Link href="/account" className="icon-nav-btn" aria-label={t("nav.profile")}>
         <Icon name="CircleUserRound" size={18} />
