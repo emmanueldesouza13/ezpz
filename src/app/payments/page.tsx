@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import FeeBanner from "@/components/FeeBanner";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices, getMyVerificationRequest, getSiteSettings } from "@/lib/data";
 import type { Listing, TaxiService, Settings, VerificationRequest } from "@/lib/types";
@@ -66,11 +66,13 @@ export default function PaymentsPage() {
 
   return (
     <>
-      <Header />
       <main>
         <section className="wrap">
           <div className="post-wrap">
-            <BackButton />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <BackButton />
+              <LanguageSwitcher />
+            </div>
             <h1>{t("payments.title")}</h1>
             <p className="lede">
               {t("payments.lede")}
