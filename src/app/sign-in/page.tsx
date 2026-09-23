@@ -3,7 +3,6 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import { createClient } from "@/lib/supabase/client";
@@ -169,15 +168,12 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <>
-      <Header />
-      <main>
-        <section className="wrap">
-          <Suspense fallback={null}>
-            <SignInForm />
-          </Suspense>
-        </section>
-      </main>
-    </>
+    <main>
+      <section className="wrap">
+        <Suspense fallback={null}>
+          <SignInForm />
+        </Suspense>
+      </section>
+    </main>
   );
 }
