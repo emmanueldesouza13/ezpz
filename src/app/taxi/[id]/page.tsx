@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import FeeBanner from "@/components/FeeBanner";
+import DismissibleCallout from "@/components/DismissibleCallout";
 import { createClient } from "@/lib/supabase/server";
 import { getTaxiServiceById, getSiteSettings, getProfile } from "@/lib/data";
 import { timeAgo } from "@/lib/format";
@@ -75,13 +76,10 @@ export default async function TaxiServiceDetailPage({
               )}
               <p className="section-label">About this service</p>
               <p className="desc-text">{service.notes || "No additional notes from this driver."}</p>
-              <div className="callout">
-                <Icon name="Shield" />
-                <span>
-                  Confirm the fare and pickup details before you ride, and never wire money or pay
-                  outside the app up front. <Link href="/safety">More safety tips</Link>
-                </span>
-              </div>
+              <DismissibleCallout>
+                Confirm the fare and pickup details before you ride, and never wire money or pay
+                outside the app up front. <Link href="/safety">More safety tips</Link>
+              </DismissibleCallout>
             </div>
             <div>
               <div className="seller-panel">
