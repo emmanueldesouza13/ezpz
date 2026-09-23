@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { getReviews } from "@/lib/data";
@@ -43,6 +43,9 @@ export default function ReviewsPanel({
   const [comment, setComment] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +99,34 @@ export default function ReviewsPanel({
     toast(myReview ? "Review updated" : "Review posted");
   }
 
+  function focusMyReview() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function handleDelete() {
+    if (!userId || !myReview) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setDeleting(true);
+    const { error } = await supabase
+      .from("reviews")
+      .delete()
+      .eq("seller_id", sellerId)
+      .eq("reviewer_id", userId);
+    setDeleting(false);
+    setConfirmDelete(false);
+    if (error) {
+      toast("Couldn't delete your review — try again");
+      return;
+    }
+    setReviews((cur) => cur.filter((r) => r.reviewer_id !== userId));
+    setRating(0);
+    setComment("");
+    toast("Review deleted");
+  }
+
   return (
     <>
       <div className="rating-big-row">
@@ -116,7 +147,7 @@ export default function ReviewsPanel({
           </p>
         </div>
       ) : userId ? (
-        <form className="review-form-box" onSubmit={handleSubmit}>
+        <form className="review-form-box" onSubmit={handleSubmit} ref={formRef}>
           <p className="review-form-label">{myReview ? "Update your review" : "Write a review"}</p>
           <div
             className="star-picker"
@@ -148,6 +179,18 @@ export default function ReviewsPanel({
           <button type="submit" className="btn btn-accent btn-block" disabled={saving || rating < 1}>
             {saving ? "Saving…" : myReview ? "Update review" : "Post review"}
           </button>
+          {myReview && (
+            <button
+              type="button"
+              className="btn btn-line btn-block"
+              style={{ marginTop: 8, ...(confirmDelete ? { color: "#c0392b", borderColor: "#c0392b" } : undefined) }}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Icon name="Trash2" />
+              {deleting ? "Deleting…" : confirmDelete ? "Tap again to confirm" : "Delete my review"}
+            </button>
+          )}
         </form>
       ) : null}
 
@@ -170,6 +213,12 @@ export default function ReviewsPanel({
                   <span className="review-name">{r.reviewer?.display_name ?? "EzPz user"}</span>
                   <Stars value={r.rating} />
                   <span className="review-time">{timeAgo(r.created_at)}</span>
+                  {userId && r.reviewer_id === userId && (
+                    <button type="button" className="review-edit-link" onClick={focusMyReview}>
+                      <Icon name="Pencil" />
+                      Edit
+                    </button>
+                  )}
                 </div>
                 {r.comment && <p className="review-comment">{r.comment}</p>}
               </div>
