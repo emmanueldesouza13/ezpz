@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Icon from "@/components/Icon";
 import ReportButton from "./ReportButton";
 import ReviewsPanel from "@/components/ReviewsPanel";
@@ -13,7 +12,6 @@ const TABS = [
   { key: "about", label: "About", icon: "Info" },
   { key: "reviews", label: "Reviews", icon: "Star" },
   { key: "schedule", label: "Schedule", icon: "Calendar" },
-  { key: "screening", label: "Screening", icon: "ShieldCheck" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -94,29 +92,6 @@ export default function DetailTabs({
             available={seller.available}
             responseRate={seller.response_rate ?? 90}
           />
-        )}
-
-        {tab === "screening" && (
-          <>
-            <div className="tab-fact-row">
-              <div className="tab-fact">
-                <strong>Identity</strong>
-                {seller?.verified ? "Verified on EzPz" : "Not yet verified"}
-              </div>
-              <div className="tab-fact">
-                <strong>Member since</strong>
-                {seller ? new Date(seller.created_at).getFullYear() : "—"}
-              </div>
-            </div>
-            <div className="tab-empty">
-              EzPz doesn&#39;t run formal background checks yet. Meet in public places and read
-              our{" "}
-              <Link href="/safety" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                safety tips
-              </Link>
-              .
-            </div>
-          </>
         )}
       </div>
     </div>
