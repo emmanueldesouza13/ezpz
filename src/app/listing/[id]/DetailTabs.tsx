@@ -6,7 +6,7 @@ import Icon from "@/components/Icon";
 import ReportButton from "./ReportButton";
 import ReviewsPanel from "@/components/ReviewsPanel";
 import ScheduleEditor from "@/components/ScheduleEditor";
-import { timeAgo } from "@/lib/format";
+import { timeAgo, formatPrice } from "@/lib/format";
 import type { Listing } from "@/lib/types";
 
 const TABS = [
@@ -53,6 +53,10 @@ export default function DetailTabs({
           <>
             {seller?.bio && <p className="desc-text" style={{ marginBottom: 18 }}>{seller.bio}</p>}
             <div className="tab-fact-row">
+              <div className="tab-fact">
+                <strong>Rate</strong>
+                {formatPrice(listing.price, listing.is_free)}
+              </div>
               {categoryName && (
                 <div className="tab-fact">
                   <strong>Category</strong>
