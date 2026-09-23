@@ -1,37 +1,39 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-// BackButton used to decide whether it was safe to call router.back() by
-// checking window.history.length > 1 — but that count includes entries the
-// browser adds on its own (redirects, a fresh tab's baseline, an in-app
-// browser's own history), not just pages this app actually navigated
-// through. That's why "Back" sometimes did nothing or bounced somewhere
-// odd: history.length said there was something to go back to when there
-// wasn't really an EzPz page behind the current one.
+// BackButton needs to know "is there really an EzPz page behind this one in
+// this browser tab?" before it calls router.back() — window.history.length
+// can't answer that (it counts entries the browser adds on its own too),
+// and watching the URL's pathname alone undercounts: a navigation that only
+// changes the query string (like picking a region filter on "/") doesn't
+// change the pathname, so it was going uncounted and Back would wrongly
+// fall back to home instead of actually going back.
 //
-// This component is mounted once, at the root, and counts real client-side
-// route changes into sessionStorage as they happen. BackButton then trusts
-// that count instead of history.length — it's scoped to this browser tab
-// and reflects only navigation this app actually performed.
+// Fix: patch history.pushState itself, once, at the root. Every client-side
+// navigation Next.js performs — path change or query-only — calls the real
+// pushState under the hood, so this reliably counts all of them into
+// sessionStorage. BackButton trusts that count instead.
 export const NAV_DEPTH_KEY = "ezpz_nav_depth";
 
 export default function NavDepthTracker() {
-  const pathname = usePathname();
-  const prevPathname = useRef<string | null>(null);
-
   useEffect(() => {
-    if (prevPathname.current !== null && prevPathname.current !== pathname) {
+    if (typeof window === "undefined") return;
+    const w = window as unknown as { __ezpzPushPatched?: boolean };
+    if (w.__ezpzPushPatched) return; // don't double-patch (StrictMode/HMR)
+    w.__ezpzPushPatched = true;
+
+    const originalPush = window.history.pushState.bind(window.history);
+    window.history.pushState = function patchedPushState(...args) {
       try {
         const depth = Number(sessionStorage.getItem(NAV_DEPTH_KEY) || "0");
         sessionStorage.setItem(NAV_DEPTH_KEY, String(depth + 1));
       } catch {
         // ignore — storage unavailable, BackButton just falls back more often
       }
-    }
-    prevPathname.current = pathname;
-  }, [pathname]);
+      return originalPush(...(args as Parameters<History["pushState"]>));
+    } as History["pushState"];
+  }, []);
 
   return null;
 }
