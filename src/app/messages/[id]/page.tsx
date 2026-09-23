@@ -115,19 +115,28 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               <Link href="/messages" className="chat-back">
                 <Icon name="ArrowLeft" />
               </Link>
-              <div className="avatar-wrap">
-                <Avatar
-                  url={other?.avatar_url}
-                  color={other?.avatar_color}
-                  name={other?.display_name}
-                  className="avatar"
-                  style={{ width: 34, height: 34, fontSize: "0.85rem" }}
-                />
-              </div>
-              <div>
-                <div className="chat-head-name">{other?.display_name ?? "User"}</div>
-                <div className="chat-head-listing">{convo.listing?.title}</div>
-              </div>
+              {other ? (
+                <Link href={`/seller/${other.id}`} className="chat-head-profile-link">
+                  <div className="avatar-wrap">
+                    <Avatar
+                      url={other.avatar_url}
+                      color={other.avatar_color}
+                      name={other.display_name}
+                      className="avatar"
+                      style={{ width: 34, height: 34, fontSize: "0.85rem" }}
+                    />
+                  </div>
+                  <div>
+                    <div className="chat-head-name">{other.display_name ?? "User"}</div>
+                    <div className="chat-head-listing">{convo.listing?.title}</div>
+                  </div>
+                </Link>
+              ) : (
+                <div>
+                  <div className="chat-head-name">User</div>
+                  <div className="chat-head-listing">{convo.listing?.title}</div>
+                </div>
+              )}
             </div>
             <div className="chat-scroll" ref={scrollRef}>
               {messages.map((m) => (

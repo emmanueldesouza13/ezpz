@@ -1024,6 +1024,11 @@
     border: 1px solid var(--line); flex-shrink: 0;
   }
   .chat-back:hover { background: var(--surface-2); }
+  .chat-head-profile-link {
+    display: flex; align-items: center; gap: 11px;
+    min-width: 0; flex: 1;
+  }
+  .chat-head-profile-link:hover .chat-head-name { color: var(--accent); }
   .chat-head-name { font-size: 0.94rem; font-weight: 700; }
   .chat-head-listing { font-size: 0.76rem; color: var(--ink-faint); }
   .chat-scroll {

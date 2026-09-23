@@ -182,6 +182,23 @@ export async function getSellerActiveListings(
   return (data as Listing[]) || [];
 }
 
+export async function getSellerTaxiServices(
+  supabase: SupabaseClient,
+  ownerId: string
+): Promise<TaxiService[]> {
+  const { data, error } = await supabase
+    .from("taxi_services")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("getSellerTaxiServices error", error);
+    return [];
+  }
+  return (data as TaxiService[]) || [];
+}
+
 export async function getListingById(
   supabase: SupabaseClient,
   id: string
