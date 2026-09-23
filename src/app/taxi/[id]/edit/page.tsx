@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/lib/toast";
 import { GUYANA_REGIONS, OTHER_REGION_VALUE } from "@/lib/guyana";
 
+const MAX_PHOTOS = 6;
+
 export default function EditTaxiPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -26,7 +28,7 @@ export default function EditTaxiPage() {
   const [phone, setPhone] = useState("");
   const [mmg, setMmg] = useState("");
   const [notes, setNotes] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -68,39 +70,46 @@ export default function EditTaxiPage() {
       setPhone(service.phone);
       setMmg(service.mmg_number);
       setNotes(service.notes || "");
-      setPhotoUrl(service.photo_url ?? null);
+      setPhotos(
+        Array.isArray(service.photos) && service.photos.length > 0
+          ? service.photos
+          : service.photo_url
+            ? [service.photo_url]
+            : []
+      );
       setChecking(false);
     })();
   }, [supabase, router, id]);
 
-  async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handlePhotoFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast(`${file.name} isn't an image`);
-      return;
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      toast("That photo is too large — 8MB max");
-      return;
-    }
+    if (files.length === 0) return;
+    const room = MAX_PHOTOS - photos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_PHOTOS} photos`); return; }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) return;
     setUploadingPhoto(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${user.id}/taxi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("listings")
-      .upload(path, file, { upsert: false, cacheControl: "3600" });
-    setUploadingPhoto(false);
-    if (upErr) {
-      toast(`Couldn't upload photo — ${upErr.message}`);
-      return;
+    const uploaded: string[] = [];
+    for (const file of files.slice(0, room)) {
+      if (!file.type.startsWith("image/")) { toast(`${file.name} isn't an image — skipped`); continue; }
+      if (file.size > 8 * 1024 * 1024) { toast(`${file.name} is too large — 8MB max`); continue; }
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/taxi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("listings")
+        .upload(path, file, { upsert: false, cacheControl: "3600" });
+      if (upErr) { toast(`Couldn't upload ${file.name} — ${upErr.message}`); continue; }
+      const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
+      uploaded.push(pub.publicUrl);
     }
-    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-    setPhotoUrl(pub.publicUrl);
+    setUploadingPhoto(false);
+    if (uploaded.length > 0) setPhotos((p) => [...p, ...uploaded]);
+  }
+
+  function removePhoto(i: number) {
+    setPhotos((p) => p.filter((_, idx) => idx !== i));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -129,7 +138,8 @@ export default function EditTaxiPage() {
         phone: phone.trim(),
         mmg_number: mmg.trim(),
         notes: notes.trim(),
-        photo_url: photoUrl,
+        photo_url: photos[0] ?? null,
+        photos,
       })
       .eq("id", id)
       .select();
@@ -177,31 +187,37 @@ export default function EditTaxiPage() {
                 <p className="lede">Update the details below and save your changes.</p>
                 <form onSubmit={handleSubmit}>
                   <div className="field">
-                    <label>Vehicle photo</label>
-                    {photoUrl ? (
-                      <div className="video-tile">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={photoUrl}
-                          alt="Vehicle"
-                          style={{ width: "100%", maxWidth: 220, borderRadius: "var(--radius-control)", border: "1px solid var(--line)", display: "block" }}
-                        />
-                        <button type="button" className="text-btn" onClick={() => setPhotoUrl(null)}>
-                          Remove photo
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
-                        <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
-                        {uploadingPhoto ? "Uploading…" : "Add photo"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoFile}
-                          disabled={uploadingPhoto}
-                        />
-                      </label>
-                    )}
+                    <label>Vehicle photos</label>
+                    <div className="swatch-picker">
+                      {photos.map((url, i) => (
+                        <div className="photo-tile" key={url}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={url} alt={`Vehicle photo ${i + 1}`} />
+                          <button
+                            type="button"
+                            className="photo-tile-remove"
+                            aria-label="Remove photo"
+                            onClick={() => removePhoto(i)}
+                          >
+                            <Icon name="X" />
+                          </button>
+                        </div>
+                      ))}
+                      {photos.length < MAX_PHOTOS && (
+                        <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
+                          <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
+                          {uploadingPhoto ? "Uploading…" : "Add photo"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handlePhotoFiles}
+                            disabled={uploadingPhoto}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    {photos.length > 0 && <p className="hint">The first photo is used as the main photo.</p>}
                   </div>
 
                   <div className="field">

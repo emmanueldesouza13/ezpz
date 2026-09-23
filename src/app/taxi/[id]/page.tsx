@@ -4,6 +4,7 @@ import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
 import FeeBanner from "@/components/FeeBanner";
 import DismissibleCallout from "@/components/DismissibleCallout";
+import TaxiPhotoSlider from "@/components/TaxiPhotoSlider";
 import { createClient } from "@/lib/supabase/server";
 import { getTaxiServiceById, getSiteSettings, getProfile } from "@/lib/data";
 import { timeAgo } from "@/lib/format";
@@ -63,17 +64,16 @@ export default async function TaxiServiceDetailPage({
           </div>
           <div className="detail-layout">
             <div>
-              {service.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={service.photo_url}
-                  alt={`${service.vehicle_make} ${service.vehicle_model}`}
-                  className="hero-photo"
-                  style={{ objectFit: "cover", display: "block" }}
-                />
-              ) : (
-                <div className="hero-photo" style={{ background: "linear-gradient(135deg,#2f8f6b,#134a38)" }}></div>
-              )}
+              <TaxiPhotoSlider
+                photos={
+                  service.photos && service.photos.length > 0
+                    ? service.photos
+                    : service.photo_url
+                      ? [service.photo_url]
+                      : []
+                }
+                alt={`${service.vehicle_make} ${service.vehicle_model}`}
+              />
               <p className="section-label">About this service</p>
               <p className="desc-text">{service.notes || "No additional notes from this driver."}</p>
               <DismissibleCallout>
