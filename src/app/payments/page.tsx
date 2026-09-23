@@ -8,33 +8,40 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import FeeBanner from "@/components/FeeBanner";
 import { createClient } from "@/lib/supabase/client";
-import { getMyListings, getMyTaxiServices, getSiteSettings } from "@/lib/data";
-import type { Listing, TaxiService, Settings } from "@/lib/types";
+import { getMyListings, getMyTaxiServices, getMyVerificationRequest, getSiteSettings } from "@/lib/data";
+import type { Listing, TaxiService, Settings, VerificationRequest } from "@/lib/types";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function PaymentsPage() {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [mmg, setMmg] = useState<string | null>(null);
+  const [verified, setVerified] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [myTaxi, setMyTaxi] = useState<TaxiService[]>([]);
+  const [myVerification, setMyVerification] = useState<VerificationRequest | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) { router.push("/sign-in?next=/payments"); return; }
-      const [{ data: profile }, s, listings, taxi] = await Promise.all([
-        supabase.from("profiles").select("mmg_number").eq("id", data.user.id).maybeSingle(),
+      const [{ data: profile }, s, listings, taxi, verification] = await Promise.all([
+        supabase.from("profiles").select("mmg_number, verified").eq("id", data.user.id).maybeSingle(),
         getSiteSettings(supabase),
         getMyListings(supabase, data.user.id),
         getMyTaxiServices(supabase, data.user.id),
+        getMyVerificationRequest(supabase, data.user.id),
       ]);
       setMmg(profile?.mmg_number ?? null);
+      setVerified(profile?.verified ?? false);
       setSettings(s);
       setMyListings(listings);
       setMyTaxi(taxi);
+      setMyVerification(verification);
       setLoading(false);
     })();
   }, [supabase, router]);
@@ -54,7 +61,8 @@ export default function PaymentsPage() {
 
   const pendingListings = myListings.filter((l) => l.fee_status === "pending");
   const pendingTaxi = myTaxi.filter((t) => t.fee_status === "pending");
-  const allPaidUp = pendingListings.length === 0 && pendingTaxi.length === 0;
+  const pendingVerification = !verified && myVerification && myVerification.fee_status === "pending";
+  const allPaidUp = pendingListings.length === 0 && pendingTaxi.length === 0 && !pendingVerification;
 
   return (
     <>
@@ -63,30 +71,29 @@ export default function PaymentsPage() {
         <section className="wrap">
           <div className="post-wrap">
             <BackButton />
-            <h1>Payments</h1>
+            <h1>{t("payments.title")}</h1>
             <p className="lede">
-              EzPz never holds your money. Buyers and sellers pay each other directly by MMG —
-              here&#39;s everything about the money side of your account.
+              {t("payments.lede")}
             </p>
 
-            <h2 style={{ marginTop: 24 }}>Your payout number</h2>
+            <h2 style={{ marginTop: 24 }}>{t("payments.payoutNumber")}</h2>
             {mmg ? (
               <div className="fee-box standalone">
                 <div className="fee-label">
                   <Icon name="Wallet" size={15} />
-                  Buyers pay you at this MMG number
+                  {t("payments.buyersPayHere")}
                 </div>
                 <div className="fee-number-row">
                   <span className="mono">{mmg}</span>
                   <button type="button" className="fee-copy" onClick={() => handleCopy(mmg)}>
                     <Icon name="Copy" size={13} />
-                    Copy
+                    {t("common.copy")}
                   </button>
                 </div>
                 <p className="fee-caption">
-                  This is shown on every listing you post.{" "}
+                  {t("payments.shownOnListing")}{" "}
                   <Link href="/account" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                    Change it in your account
+                    {t("payments.changeInAccount")}
                   </Link>
                   .
                 </p>
@@ -94,18 +101,18 @@ export default function PaymentsPage() {
             ) : (
               <div className="fee-box standalone">
                 <p className="fee-caption">
-                  You haven&#39;t added an MMG number yet, so buyers have no way to pay you.{" "}
+                  {t("payments.noMmgYet")}{" "}
                   <Link href="/account" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                    Add one in your account
+                    {t("payments.addOneInAccount")}
                   </Link>
                   .
                 </p>
               </div>
             )}
 
-            <h2 style={{ marginTop: 28 }}>Fees you owe</h2>
+            <h2 style={{ marginTop: 28 }}>{t("payments.feesYouOwe")}</h2>
             {allPaidUp ? (
-              <div className="empty-state">You&#39;re all paid up — no activation fees pending.</div>
+              <div className="empty-state">{t("payments.allPaidUp")}</div>
             ) : (
               <>
                 {pendingListings.map((l) => (
@@ -119,10 +126,10 @@ export default function PaymentsPage() {
                     />
                   </div>
                 ))}
-                {pendingTaxi.map((t) => (
-                  <div key={t.id} style={{ marginBottom: 14 }}>
+                {pendingTaxi.map((svc) => (
+                  <div key={svc.id} style={{ marginBottom: 14 }}>
                     <p className="admin-row-title" style={{ marginBottom: 6 }}>
-                      <Link href={`/taxi/${t.id}`}>{t.driver_name}</Link>
+                      <Link href={`/taxi/${svc.id}`}>{svc.driver_name}</Link>
                     </p>
                     <FeeBanner
                       mmg={settings?.taxi_mmg_number ?? null}
@@ -130,6 +137,20 @@ export default function PaymentsPage() {
                     />
                   </div>
                 ))}
+                {pendingVerification && (
+                  <div style={{ marginBottom: 14 }}>
+                    <p className="admin-row-title" style={{ marginBottom: 6 }}>
+                      <Link href="/account">{t("payments.blueTickLink")}</Link>
+                    </p>
+                    <FeeBanner
+                      mmg={settings?.platform_mmg_number ?? null}
+                      fee={settings?.verification_fee ?? 1000}
+                      label={t("fees.blueTickLabel")}
+                      caption={t("fees.blueTickCaption", { fee: (settings?.verification_fee ?? 1000).toLocaleString() })}
+                      noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: (settings?.verification_fee ?? 1000).toLocaleString() })}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "./Icon";
 import Avatar from "./Avatar";
+import AvatarCropModal from "./AvatarCropModal";
 import { toast } from "@/lib/toast";
 import { isPhotoUrl } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { GRADIENTS, type Profile, type Listing, type Category } from "@/lib/types";
 import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
 
@@ -25,6 +27,7 @@ export default function EditProfileModal({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   // profile fields
@@ -32,6 +35,8 @@ export default function EditProfileModal({
   const [color, setColor] = useState(profile.avatar_color);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [cropSource, setCropSource] = useState<Blob | null>(null);
+  const [loadingRecrop, setLoadingRecrop] = useState(false);
   const [location, setLocation] = useState(profile.location ?? "");
   const [bio, setBio] = useState(profile.bio ?? "");
   const [available, setAvailable] = useState(profile.available);
@@ -78,7 +83,10 @@ export default function EditProfileModal({
     setOpen(true);
   }
 
-  async function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+  // Picking a file no longer uploads it straight away — it opens the crop
+  // tool first so people can reposition/zoom before it's saved as their
+  // avatar.
+  function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -90,12 +98,32 @@ export default function EditProfileModal({
       toast("That photo is too large — 8MB max");
       return;
     }
+    setCropSource(file);
+  }
+
+  // Re-open the crop tool on the photo that's already set, so someone can
+  // fix the framing without having to re-upload from their camera roll.
+  async function handleEditExistingAvatar() {
+    if (!avatarUrl) return;
+    setLoadingRecrop(true);
+    try {
+      const res = await fetch(avatarUrl);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      setCropSource(blob);
+    } catch {
+      toast("Couldn't load that photo to edit — try uploading it again");
+    } finally {
+      setLoadingRecrop(false);
+    }
+  }
+
+  async function handleCroppedAvatar(blob: Blob) {
     setUploadingAvatar(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${profile.id}/avatar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const path = `${profile.id}/avatar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
     const { error: upErr } = await supabase.storage
       .from("listings")
-      .upload(path, file, { upsert: false, cacheControl: "3600" });
+      .upload(path, blob, { upsert: false, cacheControl: "3600", contentType: "image/jpeg" });
     setUploadingAvatar(false);
     if (upErr) {
       toast(`Couldn't upload photo — ${upErr.message}`);
@@ -103,6 +131,7 @@ export default function EditProfileModal({
     }
     const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
     setAvatarUrl(pub.publicUrl);
+    setCropSource(null);
   }
 
   async function handlePhotoFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -248,14 +277,14 @@ export default function EditProfileModal({
           type="button"
           className="avatar-photo-badge"
           onClick={openModal}
-          aria-label="Add or change profile photo"
+          aria-label={t("editProfile.addOrChangePhoto")}
         >
           <Icon name="Camera" />
         </button>
       </div>
       <button type="button" className="profile-edit-btn" onClick={openModal}>
         <Icon name="Pencil" />
-        Edit profile
+        {t("editProfile.editProfile")}
       </button>
       {open && (
         <div
@@ -268,10 +297,10 @@ export default function EditProfileModal({
             <button type="button" className="modal-close" onClick={() => setOpen(false)}>
               <Icon name="X" />
             </button>
-            <h2>Edit profile</h2>
+            <h2>{t("editProfile.editProfile")}</h2>
             <form onSubmit={handleSave}>
               <div className="field">
-                <label>Profile photo</label>
+                <label>{t("editProfile.profilePhotoLabel")}</label>
                 <div className="avatar-edit-row">
                   <Avatar
                     url={avatarUrl}
@@ -286,7 +315,11 @@ export default function EditProfileModal({
                       style={{ cursor: uploadingAvatar ? "wait" : "pointer" }}
                     >
                       <Icon name={uploadingAvatar ? "Loader2" : "Camera"} className={uploadingAvatar ? "spin" : undefined} />
-                      {uploadingAvatar ? "Uploading…" : avatarUrl ? "Change photo" : "Add photo"}
+                      {uploadingAvatar
+                        ? t("post.uploading")
+                        : avatarUrl
+                          ? t("editProfile.changePhoto")
+                          : t("post.addPhoto")}
                       <input
                         type="file"
                         accept="image/*"
@@ -296,16 +329,26 @@ export default function EditProfileModal({
                       />
                     </label>
                     {avatarUrl && (
-                      <button type="button" className="text-btn" onClick={() => setAvatarUrl(null)}>
-                        Remove photo
-                      </button>
+                      <div style={{ display: "flex", gap: 14 }}>
+                        <button
+                          type="button"
+                          className="text-btn text-btn-neutral"
+                          onClick={handleEditExistingAvatar}
+                          disabled={loadingRecrop}
+                        >
+                          {loadingRecrop ? t("editProfile.loading") : t("editProfile.cropReposition")}
+                        </button>
+                        <button type="button" className="text-btn" onClick={() => setAvatarUrl(null)}>
+                          {t("post.removePhoto")}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
 
               <div className="field">
-                <label htmlFor="ep-name">Display name</label>
+                <label htmlFor="ep-name">{t("editProfile.displayNameLabel")}</label>
                 <input
                   className="control"
                   id="ep-name"
@@ -316,33 +359,33 @@ export default function EditProfileModal({
               </div>
 
               <div className="field">
-                <label htmlFor="ep-location">Location</label>
+                <label htmlFor="ep-location">{t("editProfile.locationLabel")}</label>
                 <input
                   className="control"
                   id="ep-location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Linden"
+                  placeholder={t("editProfile.locationPlaceholder")}
                 />
               </div>
 
               <div className="field" style={{ marginBottom: 14 }}>
-                <label htmlFor="ep-bio">About / bio</label>
+                <label htmlFor="ep-bio">{t("editProfile.bioLabel")}</label>
                 <textarea
                   className="control"
                   id="ep-bio"
                   maxLength={400}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell buyers a bit about you and your work"
+                  placeholder={t("editProfile.bioPlaceholder")}
                 />
                 <p className="hint">{bio.length}/400</p>
               </div>
 
               <div className="avail-toggle-row" style={{ marginBottom: listing ? 0 : 22 }}>
                 <div className="avail-toggle-text">
-                  <p>Available to work</p>
-                  <p>Shows a green dot on your profile.</p>
+                  <p>{t("editProfile.availableToWork")}</p>
+                  <p>{t("editProfile.availableHint")}</p>
                 </div>
                 <label className="switch">
                   <input
@@ -356,19 +399,19 @@ export default function EditProfileModal({
 
               {listing && (
                 <>
-                  <h3 className="modal-section-title">Listing details</h3>
+                  <h3 className="modal-section-title">{t("editProfile.listingDetails")}</h3>
 
                   <div className="field">
-                    <label>Photos</label>
+                    <label>{t("post.photosLabel")}</label>
                     <div className="swatch-picker">
                       {lPhotos.map((url, i) => (
                         <div className="photo-tile" key={url}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={url} alt={`Photo ${i + 1}`} />
+                          <img src={url} alt={t("editProfile.photoAlt", { n: i + 1 })} />
                           <button
                             type="button"
                             className="photo-tile-remove"
-                            aria-label="Remove photo"
+                            aria-label={t("post.removePhoto")}
                             onClick={() => removePhoto(i)}
                           >
                             <Icon name="X" />
@@ -378,7 +421,7 @@ export default function EditProfileModal({
                       {lPhotos.length < MAX_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
-                          {uploadingPhoto ? "Uploading…" : "Add photo"}
+                          {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
                           <input
                             type="file"
                             accept="image/*"
@@ -390,25 +433,25 @@ export default function EditProfileModal({
                       )}
                     </div>
                     {lPhotos.length === 0 ? (
-                      <p className="hint">Snap a photo or pick one from your phone — up to {MAX_PHOTOS}.</p>
+                      <p className="hint">{t("post.photosHintEmpty", { max: MAX_PHOTOS })}</p>
                     ) : (
-                      <p className="hint">The first photo is used as the main listing photo.</p>
+                      <p className="hint">{t("post.photosHintSome")}</p>
                     )}
                   </div>
 
                   <div className="field">
-                    <label>Video (optional)</label>
+                    <label>{t("post.videoLabel")}</label>
                     {lVideoUrl ? (
                       <div className="video-tile">
                         <video src={lVideoUrl} controls playsInline />
                         <button type="button" className="text-btn" onClick={() => setLVideoUrl(null)}>
-                          Remove video
+                          {t("post.removeVideo")}
                         </button>
                       </div>
                     ) : (
                       <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
                         <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
-                        {uploadingVideo ? "Uploading…" : "Add a short video"}
+                        {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
                         <input
                           type="file"
                           accept="video/*"
@@ -418,12 +461,12 @@ export default function EditProfileModal({
                       </label>
                     )}
                     <p className="hint">
-                      Show your work in action — up to {MAX_VIDEO_SECONDS} seconds, {MAX_VIDEO_MB}MB max.
+                      {t("post.videoHint", { seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
                     </p>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="ep-l-category">Category</label>
+                    <label htmlFor="ep-l-category">{t("post.categoryLabel")}</label>
                     <select
                       className="control"
                       id="ep-l-category"
@@ -441,7 +484,7 @@ export default function EditProfileModal({
 
                   <div className="price-row" style={{ marginBottom: 20 }}>
                     <div className="field">
-                      <label htmlFor="ep-l-price">Price</label>
+                      <label htmlFor="ep-l-price">{t("post.priceLabel")}</label>
                       <div className="price-input">
                         <span>GY$</span>
                         <input
@@ -462,12 +505,12 @@ export default function EditProfileModal({
                         checked={lIsFree}
                         onChange={(e) => setLIsFree(e.target.checked)}
                       />
-                      List as free
+                      {t("post.listAsFree")}
                     </label>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="ep-l-location">Listing location</label>
+                    <label htmlFor="ep-l-location">{t("editProfile.listingLocationLabel")}</label>
                     <input
                       className="control"
                       id="ep-l-location"
@@ -478,7 +521,7 @@ export default function EditProfileModal({
                   </div>
 
                   <div className="field" style={{ marginBottom: 22 }}>
-                    <label htmlFor="ep-l-description">Description</label>
+                    <label htmlFor="ep-l-description">{t("post.descriptionLabel")}</label>
                     <textarea
                       className="control"
                       id="ep-l-description"
@@ -492,19 +535,27 @@ export default function EditProfileModal({
 
               <div className="modal-actions">
                 <button type="button" className="btn btn-line" onClick={() => setOpen(false)}>
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-accent"
                   disabled={saving || uploadingPhoto || uploadingAvatar || uploadingVideo}
                 >
-                  {saving ? "Saving…" : "Save changes"}
+                  {saving ? t("common.saving") : t("account.saveChanges")}
                 </button>
               </div>
             </form>
           </div>
         </div>
+      )}
+      {cropSource && (
+        <AvatarCropModal
+          source={cropSource}
+          onCancel={() => setCropSource(null)}
+          onSave={handleCroppedAvatar}
+          saving={uploadingAvatar}
+        />
       )}
     </>
   );

@@ -10,6 +10,7 @@ import { getCategories } from "@/lib/data";
 import { GRADIENTS, type Category } from "@/lib/types";
 import { isPhotoUrl, stripDigits } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const MAX_PHOTOS = 6;
 
@@ -18,6 +19,7 @@ export default function EditListingPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const { t } = useLanguage();
 
   const [checking, setChecking] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -151,7 +153,7 @@ export default function EditListingPage() {
         <Header />
         <main>
           <section className="wrap">
-            <div className="empty-state">You can&#39;t edit this listing.</div>
+            <div className="empty-state">{t("editListing.cantEdit")}</div>
           </section>
         </main>
       </>
@@ -166,23 +168,23 @@ export default function EditListingPage() {
           <div className="post-wrap">
             <BackButton />
             {done ? (
-              <div className="empty-state">Saved — taking you back to the listing…</div>
+              <div className="empty-state">{t("editListing.saved")}</div>
             ) : (
               <>
-                <h1>Edit listing</h1>
-                <p className="lede">Update the details below and save your changes.</p>
+                <h1>{t("editListing.title")}</h1>
+                <p className="lede">{t("editListing.lede")}</p>
                 <form onSubmit={handleSubmit}>
                   <div className="field">
-                    <label>Photos</label>
+                    <label>{t("post.photosLabel")}</label>
                     <div className="swatch-picker">
                       {photos.map((url, i) => (
                         <div className="photo-tile" key={url}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={url} alt={`Photo ${i + 1}`} />
+                          <img src={url} alt={t("editProfile.photoAlt", { n: i + 1 })} />
                           <button
                             type="button"
                             className="photo-tile-remove"
-                            aria-label="Remove photo"
+                            aria-label={t("post.removePhoto")}
                             onClick={() => removePhoto(i)}
                           >
                             <Icon name="X" />
@@ -192,7 +194,7 @@ export default function EditListingPage() {
                       {photos.length < MAX_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
-                          {uploadingPhoto ? "Uploading…" : "Add photo"}
+                          {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
                           <input
                             type="file"
                             accept="image/*"
@@ -204,16 +206,14 @@ export default function EditListingPage() {
                       )}
                     </div>
                     {photos.length === 0 ? (
-                      <p className="hint">
-                        Snap a photo or pick one from your phone — up to {MAX_PHOTOS}.
-                      </p>
+                      <p className="hint">{t("post.photosHintEmpty", { max: MAX_PHOTOS })}</p>
                     ) : (
-                      <p className="hint">The first photo is used as the main listing photo.</p>
+                      <p className="hint">{t("post.photosHintSome")}</p>
                     )}
                   </div>
 
                   <div className="field">
-                    <label htmlFor="titleInput">Name</label>
+                    <label htmlFor="titleInput">{t("post.nameLabel")}</label>
                     <input
                       className="control"
                       id="titleInput"
@@ -224,7 +224,7 @@ export default function EditListingPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="categorySelect">Category</label>
+                    <label htmlFor="categorySelect">{t("post.categoryLabel")}</label>
                     <select
                       className="control"
                       id="categorySelect"
@@ -242,7 +242,7 @@ export default function EditListingPage() {
 
                   <div className="price-row" style={{ marginBottom: 20 }}>
                     <div className="field">
-                      <label htmlFor="priceInput">Price</label>
+                      <label htmlFor="priceInput">{t("post.priceLabel")}</label>
                       <div className="price-input">
                         <span>GY$</span>
                         <input
@@ -263,12 +263,12 @@ export default function EditListingPage() {
                         checked={isFree}
                         onChange={(e) => setIsFree(e.target.checked)}
                       />
-                      List as free
+                      {t("post.listAsFree")}
                     </label>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="locationInput">Location</label>
+                    <label htmlFor="locationInput">{t("post.locationLabel")}</label>
                     <input
                       className="control"
                       id="locationInput"
@@ -279,7 +279,7 @@ export default function EditListingPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="descInput">Description</label>
+                    <label htmlFor="descInput">{t("post.descriptionLabel")}</label>
                     <textarea
                       className="control"
                       id="descInput"
@@ -287,13 +287,11 @@ export default function EditListingPage() {
                       value={description}
                       onChange={(e) => setDescription(stripDigits(e.target.value))}
                     />
-                    <p className="hint">
-                      No phone numbers or other contact details here — buyers message you in-app.
-                    </p>
+                    <p className="hint">{t("post.descriptionHint")}</p>
                   </div>
 
                   <button type="submit" className="btn btn-accent btn-block" disabled={submitting}>
-                    {submitting ? "Saving…" : "Save changes"}
+                    {submitting ? t("common.saving") : t("account.saveChanges")}
                   </button>
                 </form>
               </>

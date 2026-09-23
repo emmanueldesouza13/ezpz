@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Icon from "./Icon";
 import { isPhotoUrl } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Instagram-style Photos/Videos toggle + grid for a seller's media, shown on
 // the listing detail page right below the seller card. Pooled across all of
@@ -17,6 +18,7 @@ export default function ListingMedia({
   videos: string[];
 }) {
   const photos = images.filter(isPhotoUrl);
+  const { t } = useLanguage();
 
   const [tab, setTab] = useState<"photos" | "videos">(photos.length > 0 ? "photos" : "videos");
 
@@ -24,7 +26,7 @@ export default function ListingMedia({
 
   return (
     <div className="media-section">
-      <div className="media-toggle" role="tablist" aria-label="Listing media">
+      <div className="media-toggle" role="tablist" aria-label={t("listingMedia.label")}>
         <button
           type="button"
           role="tab"
@@ -33,7 +35,7 @@ export default function ListingMedia({
           onClick={() => setTab("photos")}
         >
           <Icon name="Grid3x3" />
-          Photos
+          {t("listingMedia.photos")}
         </button>
         <button
           type="button"
@@ -43,7 +45,7 @@ export default function ListingMedia({
           onClick={() => setTab("videos")}
         >
           <Icon name="Video" />
-          Videos
+          {t("listingMedia.videos")}
         </button>
       </div>
 
@@ -53,12 +55,12 @@ export default function ListingMedia({
             {photos.map((url, i) => (
               <div className="media-grid-item" key={url}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Photo ${i + 1}`} />
+                <img src={url} alt={t("editProfile.photoAlt", { n: i + 1 })} />
               </div>
             ))}
           </div>
         ) : (
-          <p className="media-empty">No photos yet.</p>
+          <p className="media-empty">{t("listingMedia.noPhotos")}</p>
         )
       )}
 
@@ -72,7 +74,7 @@ export default function ListingMedia({
             ))}
           </div>
         ) : (
-          <p className="media-empty">No video yet.</p>
+          <p className="media-empty">{t("listingMedia.noVideo")}</p>
         )
       )}
     </div>

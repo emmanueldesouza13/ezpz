@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "./Icon";
+import FeeBanner from "./FeeBanner";
 import { toast } from "@/lib/toast";
-import type { Profile, VerificationRequest } from "@/lib/types";
+import { getSiteSettings } from "@/lib/data";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import type { Profile, Settings, VerificationRequest } from "@/lib/types";
 
 const MAX_MB = 8;
 
 export default function VerifyIdentity({ profile }: { profile: Profile }) {
   const supabase = createClient();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [request, setRequest] = useState<VerificationRequest | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [open, setOpen] = useState(false);
   const [selfiePath, setSelfiePath] = useState<string | null>(null);
   const [idCardPath, setIdCardPath] = useState<string | null>(null);
@@ -21,15 +26,19 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("verification_requests")
-        .select("*")
-        .eq("user_id", profile.id)
-        .maybeSingle();
+      const [{ data }, s] = await Promise.all([
+        supabase
+          .from("verification_requests")
+          .select("*")
+          .eq("user_id", profile.id)
+          .maybeSingle(),
+        getSiteSettings(supabase),
+      ]);
       const row = (data as VerificationRequest) ?? null;
       setRequest(row);
       setSelfiePath(row?.selfie_path ?? null);
       setIdCardPath(row?.id_card_path ?? null);
+      setSettings(s);
       setLoading(false);
     })();
   }, [supabase, profile.id]);
@@ -110,8 +119,13 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
       toast("Couldn't submit — " + error.message);
       return;
     }
-    setRequest(data as VerificationRequest);
-    toast("Verification submitted — we'll review it soon");
+    const row = data as VerificationRequest;
+    setRequest(row);
+    toast(
+      row.fee_status === "pending"
+        ? `Submitted — pay the GY$${fee.toLocaleString()} fee to finish getting your blue tick`
+        : "Verification submitted — we'll review it soon"
+    );
     setOpen(false);
   }
 
@@ -122,14 +136,17 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
       <div className="verify-card verify-approved">
         <Icon name="ShieldCheck" />
         <div className="verify-card-info">
-          <p className="verify-title">You&apos;re verified</p>
-          <p className="verify-sub">Buyers see a Verified badge on your profile and listings.</p>
+          <p className="verify-title">{t("verify.verifiedTitle")}</p>
+          <p className="verify-sub">{t("verify.verifiedSub")}</p>
         </div>
       </div>
     );
   }
 
   const status = request?.status;
+  const fee = settings?.verification_fee ?? 1000;
+  const mmg = settings?.platform_mmg_number ?? null;
+  const feeUnpaid = !!request && request.fee_status === "pending";
 
   return (
     <>
@@ -138,23 +155,35 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
         <div className="verify-card-info">
           <p className="verify-title">
             {status === "pending"
-              ? "Verification submitted"
+              ? t("verify.submittedTitle")
               : status === "rejected"
-              ? "Verification rejected"
-              : "Get verified"}
+              ? t("verify.rejectedTitle")
+              : t("verify.getBlueTick")}
           </p>
           <p className="verify-sub">
             {status === "pending"
-              ? "We're reviewing your selfie or ID. This usually doesn't take long."
+              ? feeUnpaid
+                ? t("verify.reviewingFeeUnpaid")
+                : t("verify.reviewing")
               : status === "rejected"
-              ? request?.rejection_reason || "Please resubmit a clearer photo."
-              : "Upload a selfie or a photo of your ID so buyers know you're really you."}
+              ? request?.rejection_reason || t("verify.rejectedDefault")
+              : t("verify.uploadPrompt", { fee: fee.toLocaleString() })}
           </p>
         </div>
         <button type="button" className="btn btn-line" onClick={openModal}>
-          {request ? "Resubmit" : "Verify"}
+          {request ? t("verify.resubmit") : t("verify.verifyBtn")}
         </button>
       </div>
+
+      {feeUnpaid && (
+        <FeeBanner
+          mmg={mmg}
+          fee={fee}
+          label={t("fees.blueTickLabel")}
+          caption={t("fees.blueTickCaption", { fee: fee.toLocaleString() })}
+          noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: fee.toLocaleString() })}
+        />
+      )}
 
       {open && (
         <div
@@ -167,13 +196,24 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
             <button type="button" className="modal-close" onClick={() => setOpen(false)}>
               <Icon name="X" />
             </button>
-            <h2>Verify your identity</h2>
-            <p className="hint" style={{ marginBottom: 16 }}>
-              Only EzPz admins can see this — it's never shown to buyers or other sellers.
+            <h2>{t("verify.modalTitle")}</h2>
+            <p className="hint" style={{ marginBottom: 12 }}>
+              {t("verify.modalHint")}
             </p>
+            {feeUnpaid && (
+              <div style={{ marginBottom: 16 }}>
+                <FeeBanner
+                  mmg={mmg}
+                  fee={fee}
+                  label={t("fees.blueTickLabel")}
+                  caption={t("fees.blueTickCaption", { fee: fee.toLocaleString() })}
+                  noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: fee.toLocaleString() })}
+                />
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="field">
-                <label>Selfie</label>
+                <label>{t("verify.selfieLabel")}</label>
                 <label
                   className="btn btn-line"
                   style={{ cursor: uploadingSelfie ? "wait" : "pointer", display: "inline-flex" }}
@@ -182,7 +222,7 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                     name={uploadingSelfie ? "Loader2" : "Camera"}
                     className={uploadingSelfie ? "spin" : undefined}
                   />
-                  {uploadingSelfie ? "Uploading…" : selfiePath ? "Selfie added — replace" : "Take or upload a selfie"}
+                  {uploadingSelfie ? t("post.uploading") : selfiePath ? t("verify.selfieAdded") : t("verify.selfieAdd")}
                   <input
                     type="file"
                     accept="image/*"
@@ -195,13 +235,13 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
               </div>
 
               <div className="field" style={{ marginBottom: 20 }}>
-                <label>ID card</label>
+                <label>{t("verify.idLabel")}</label>
                 <label
                   className="btn btn-line"
                   style={{ cursor: uploadingId ? "wait" : "pointer", display: "inline-flex" }}
                 >
                   <Icon name={uploadingId ? "Loader2" : "IdCard"} className={uploadingId ? "spin" : undefined} />
-                  {uploadingId ? "Uploading…" : idCardPath ? "ID added — replace" : "Upload your ID card"}
+                  {uploadingId ? t("post.uploading") : idCardPath ? t("verify.idAdded") : t("verify.idAdd")}
                   <input
                     type="file"
                     accept="image/*"
@@ -210,19 +250,19 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                     style={{ display: "none" }}
                   />
                 </label>
-                <p className="hint">Add at least one — a selfie or a photo of a government ID.</p>
+                <p className="hint">{t("verify.idHint")}</p>
               </div>
 
               <div className="modal-actions">
                 <button type="button" className="btn btn-line" onClick={() => setOpen(false)}>
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-accent"
                   disabled={submitting || uploadingSelfie || uploadingId || (!selfiePath && !idCardPath)}
                 >
-                  {submitting ? "Submitting…" : "Submit for review"}
+                  {submitting ? t("verify.submitting") : t("verify.submit")}
                 </button>
               </div>
             </form>

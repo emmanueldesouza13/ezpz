@@ -147,6 +147,22 @@
   }
   .locale:hover { color: var(--ink); }
   .region-menu { left: 0; min-width: 260px; max-height: 320px; overflow-y: auto; }
+  .lang-switcher {
+    display: flex; align-items: center; gap: 3px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--line);
+    padding-left: 12px;
+  }
+  .lang-switcher-btn {
+    font-size: 0.76rem; font-weight: 700; letter-spacing: 0.01em;
+    padding: 5px 9px; border-radius: 999px;
+    border: 1px solid transparent;
+    background: none; color: var(--ink-faint);
+  }
+  .lang-switcher-btn:hover { color: var(--ink); }
+  .lang-switcher-btn.active {
+    background: var(--brand-tint); color: var(--accent); border-color: var(--brand-tint-line);
+  }
   .search-form {
     flex: 1 1 220px;
     min-width: 0;
@@ -913,6 +929,11 @@
   .icon-nav-btn:hover { background: var(--surface-2); color: var(--ink); }
   .icon-nav-btn svg { width: 17px; height: 17px; }
   .icon-nav-btn.active { background: var(--brand-tint); border-color: var(--brand-tint-line); color: var(--accent); }
+  .icon-nav-badge {
+    position: absolute; top: -1px; right: -1px;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--bad); border: 2px solid var(--surface);
+  }
 
   .distance-filter { position: relative; }
   .distance-menu {
@@ -1074,6 +1095,7 @@
   .chat-input-row {
     display: flex; align-items: flex-end; gap: 9px;
     padding-block: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--line);
     position: sticky; bottom: 0;
     background: var(--paper);
@@ -1109,6 +1131,11 @@
     position: absolute;
     top: 14px; left: 0;
     margin: 0;
+  }
+  .admin-login-wrap > .signin-lang {
+    position: absolute;
+    top: 14px; right: 0;
+    border-left: none; padding-left: 0;
   }
   .admin-login-wrap .icon-circle {
     width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px;
@@ -1175,6 +1202,8 @@
     border: 1px solid var(--line); background: transparent; color: var(--ink);
   }
   .admin-btn:hover { background: var(--surface-2); }
+  .admin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .admin-btn:disabled:hover { background: transparent; }
   .admin-btn.danger { color: var(--bad); border-color: var(--bad); }
   .admin-btn.danger.confirming { background: var(--bad); color: #fff; }
   .admin-empty { text-align: center; color: var(--ink-soft); padding: 40px 10px; font-size: 0.88rem; }
@@ -1198,11 +1227,39 @@
   .avatar-edit-row { display: flex; align-items: center; gap: 16px; }
   .avatar-edit-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
   .avatar-edit-actions .btn { width: auto; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; }
+
+  /* ---------- avatar crop modal ---------- */
+  .crop-frame {
+    position: relative; margin: 0 auto; overflow: hidden;
+    border-radius: 12px; background: var(--surface-2);
+    touch-action: none; cursor: grab;
+  }
+  .crop-frame:active { cursor: grabbing; }
+  .crop-frame-img {
+    position: absolute; max-width: none; pointer-events: none;
+    user-select: none;
+  }
+  .crop-frame-ring {
+    position: absolute; inset: 0; pointer-events: none;
+    border-radius: 50%;
+    box-shadow: 0 0 0 9999px rgba(10,6,9,0.72);
+    outline: 2px solid var(--brand);
+    outline-offset: -1px;
+  }
+  .crop-zoom-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 16px; color: var(--ink-faint);
+  }
+  .crop-zoom-row input[type="range"] {
+    flex: 1; accent-color: var(--brand);
+  }
   .text-btn {
     background: none; border: none; padding: 0; margin: 0;
     font-size: 0.8rem; color: var(--ink-faint); cursor: pointer;
   }
   .text-btn:hover { color: var(--bad); }
+  .text-btn-neutral { color: var(--ink-soft); }
+  .text-btn-neutral:hover { color: var(--brand); }
   .modal-section-title {
     font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
     color: var(--ink-faint); margin: 24px 0 14px; padding-top: 18px; border-top: 1px solid var(--line);
@@ -1232,6 +1289,16 @@
   }
   .control:focus { border-color: var(--brand); }
   textarea.control { resize: vertical; min-height: 110px; }
+
+  .password-input-wrap { position: relative; }
+  .password-input-wrap .control { padding-right: 42px; }
+  .password-toggle {
+    position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 50%; color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .password-toggle:hover { color: var(--ink); background: var(--surface-2); }
 
   .photo-add {
     width: 84px; height: 84px;
@@ -1385,6 +1452,10 @@
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-2);
     padding: 32px 26px;
+  }
+  .age-gate-lang {
+    border-left: none; padding-left: 0;
+    justify-content: center; margin-bottom: 14px;
   }
   .age-gate-card .icon-circle {
     width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 16px;

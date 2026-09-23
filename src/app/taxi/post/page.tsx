@@ -9,12 +9,14 @@ import { createClient } from "@/lib/supabase/client";
 import { getSiteSettings } from "@/lib/data";
 import { toast } from "@/lib/toast";
 import { GUYANA_REGIONS, OTHER_REGION_VALUE } from "@/lib/guyana";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const MAX_PHOTOS = 6;
 
 export default function TaxiPostPage() {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [driverName, setDriverName] = useState("");
@@ -145,19 +147,17 @@ export default function TaxiPostPage() {
             <BackButton />
             {done ? (
               <div className="empty-state">
-                You&#39;re live! Pay GY${fee.toLocaleString()} via MMG to settle your activation
-                fee when you can. Taking you there now…
+                {t("taxi.doneMessage", { fee: fee.toLocaleString() })}
               </div>
             ) : (
               <>
-                <h1>Sign up as a taxi service</h1>
+                <h1>{t("taxi.signUp")}</h1>
                 <p className="lede">
-                  List your car/taxi pickup &amp; drop-off service so riders across Guyana can
-                  find and contact you directly.
+                  {t("taxi.lede")}
                 </p>
                 <form onSubmit={handleSubmit}>
                   <div className="field">
-                    <label>Vehicle photos</label>
+                    <label>{t("taxi.vehiclePhotosLabel")}</label>
                     <div className="swatch-picker">
                       {photos.map((url, i) => (
                         <div className="photo-tile" key={url}>
@@ -166,7 +166,7 @@ export default function TaxiPostPage() {
                           <button
                             type="button"
                             className="photo-tile-remove"
-                            aria-label="Remove photo"
+                            aria-label={t("post.removePhoto")}
                             onClick={() => removePhoto(i)}
                           >
                             <Icon name="X" />
@@ -176,7 +176,7 @@ export default function TaxiPostPage() {
                       {photos.length < MAX_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
-                          {uploadingPhoto ? "Uploading…" : "Add photo"}
+                          {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
                           <input
                             type="file"
                             accept="image/*"
@@ -189,20 +189,20 @@ export default function TaxiPostPage() {
                     </div>
                     {photos.length === 0 ? (
                       <p className="hint">
-                        A clear photo of the car helps riders spot you — up to {MAX_PHOTOS}.
+                        {t("taxi.vehiclePhotosHintEmpty", { max: MAX_PHOTOS })}
                       </p>
                     ) : (
-                      <p className="hint">The first photo is used as the main photo.</p>
+                      <p className="hint">{t("taxi.vehiclePhotosHintSome")}</p>
                     )}
                   </div>
 
                   <div className="field">
-                    <label htmlFor="driverNameInput">Driver / business name</label>
+                    <label htmlFor="driverNameInput">{t("taxi.driverNameLabel")}</label>
                     <input
                       className="control"
                       id="driverNameInput"
                       required
-                      placeholder="e.g. Rico's Taxi Service"
+                      placeholder={t("taxi.driverNamePlaceholder")}
                       value={driverName}
                       onChange={(e) => setDriverName(e.target.value)}
                     />
@@ -210,7 +210,7 @@ export default function TaxiPostPage() {
 
                   <div className="price-row" style={{ marginBottom: 20 }}>
                     <div className="field">
-                      <label htmlFor="vehicleMakeInput">Vehicle make</label>
+                      <label htmlFor="vehicleMakeInput">{t("taxi.vehicleMakeLabel")}</label>
                       <input
                         className="control"
                         id="vehicleMakeInput"
@@ -221,7 +221,7 @@ export default function TaxiPostPage() {
                       />
                     </div>
                     <div className="field">
-                      <label htmlFor="vehicleModelInput">Vehicle model</label>
+                      <label htmlFor="vehicleModelInput">{t("taxi.vehicleModelLabel")}</label>
                       <input
                         className="control"
                         id="vehicleModelInput"
@@ -234,7 +234,7 @@ export default function TaxiPostPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="plateInput">License plate number</label>
+                    <label htmlFor="plateInput">{t("taxi.plateLabel")}</label>
                     <input
                       className="control"
                       id="plateInput"
@@ -244,12 +244,12 @@ export default function TaxiPostPage() {
                       onChange={(e) => setPlate(e.target.value)}
                     />
                     <p className="hint">
-                      Shown to riders so they can confirm they&#39;re getting in the right car.
+                      {t("taxi.plateHint")}
                     </p>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="areaSelect">Service area</label>
+                    <label htmlFor="areaSelect">{t("taxi.areaLabel")}</label>
                     <select
                       className="control"
                       id="areaSelect"
@@ -263,14 +263,14 @@ export default function TaxiPostPage() {
                       }}
                     >
                       <option value="" disabled>
-                        Choose a region
+                        {t("taxi.chooseRegion")}
                       </option>
                       {GUYANA_REGIONS.map((r) => (
                         <option value={r} key={r}>
                           {r}
                         </option>
                       ))}
-                      <option value={OTHER_REGION_VALUE}>Other (type it in)</option>
+                      <option value={OTHER_REGION_VALUE}>{t("taxi.otherTypeIn")}</option>
                     </select>
                     {regionChoice === OTHER_REGION_VALUE && (
                       <input
@@ -278,7 +278,7 @@ export default function TaxiPostPage() {
                         style={{ marginTop: 8 }}
                         required
                         autoFocus
-                        placeholder="e.g. Bartica"
+                        placeholder={t("taxi.otherPlaceholder")}
                         value={serviceArea}
                         onChange={(e) => setServiceArea(e.target.value)}
                       />
@@ -286,7 +286,7 @@ export default function TaxiPostPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="phoneInput">Phone number</label>
+                    <label htmlFor="phoneInput">{t("taxi.phoneLabel")}</label>
                     <input
                       className="control"
                       id="phoneInput"
@@ -299,7 +299,7 @@ export default function TaxiPostPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="mmgInput">Your MMG number</label>
+                    <label htmlFor="mmgInput">{t("taxi.mmgLabel")}</label>
                     <input
                       className="control"
                       id="mmgInput"
@@ -310,17 +310,16 @@ export default function TaxiPostPage() {
                       onChange={(e) => setMmg(e.target.value)}
                     />
                     <p className="hint">
-                      Shown to riders so they can pay you directly. EzPz never holds or processes
-                      payments.
+                      {t("taxi.mmgHint")}
                     </p>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="notesInput">Notes (optional)</label>
+                    <label htmlFor="notesInput">{t("taxi.notesLabel")}</label>
                     <textarea
                       className="control"
                       id="notesInput"
-                      placeholder="Hours, rates, or anything riders should know."
+                      placeholder={t("taxi.notesPlaceholder")}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                     />
@@ -328,12 +327,11 @@ export default function TaxiPostPage() {
 
                   <div className="fee-note">
                     <Icon name="Wallet" size={14} />
-                    Your listing goes live immediately. Signing up costs GY${fee.toLocaleString()}
-                    — you&#39;ll get MMG payment instructions after you publish to settle it.
+                    {t("taxi.feeNote", { fee: fee.toLocaleString() })}
                   </div>
 
                   <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto}>
-                    {submitting ? "Publishing…" : "Publish sign-up"}
+                    {submitting ? t("post.publishing") : t("taxi.publish")}
                   </button>
                 </form>
               </>

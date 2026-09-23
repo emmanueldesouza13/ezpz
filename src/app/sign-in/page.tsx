@@ -5,12 +5,16 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
+import PasswordInput from "@/components/PasswordInput";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 type Mode = "signin" | "signup" | "forgot";
 
 function SignInForm() {
   const supabase = createClient();
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
@@ -69,13 +73,16 @@ function SignInForm() {
     return (
       <div className="admin-login-wrap">
         <BackButton />
+        <LanguageSwitcher className="signin-lang" />
         <div className="icon-circle">
           <Icon name="Mail" />
         </div>
-        <h1>Check your email</h1>
+        <h1>{t("auth.checkEmail")}</h1>
         <p>
-          We sent a link to <strong>{email}</strong>. Tap it to{" "}
-          {mode === "forgot" ? "set a new password" : "finish creating your account"}.
+          {t("auth.emailSentTo", {
+            email,
+            action: mode === "forgot" ? t("auth.actionSetPassword") : t("auth.actionFinishAccount"),
+          })}
         </p>
       </div>
     );
@@ -84,23 +91,24 @@ function SignInForm() {
   return (
     <div className="admin-login-wrap">
       <BackButton />
+      <LanguageSwitcher className="signin-lang" />
       <div className="icon-circle">
         <Icon name={mode === "forgot" ? "KeyRound" : "Mail"} />
       </div>
-      <h1>{mode === "signin" ? "Sign in" : mode === "signup" ? "Create your account" : "Reset password"}</h1>
+      <h1>{mode === "signin" ? t("auth.titleSignIn") : mode === "signup" ? t("auth.titleSignUp") : t("auth.titleForgot")}</h1>
       <p>
-        {mode === "signin" && "Sign in with your email and password."}
-        {mode === "signup" && "Pick a password — no email confirmation needed, you'll be signed in right away."}
-        {mode === "forgot" && "We'll email you a link to set a new password."}
+        {mode === "signin" && t("auth.subSignIn")}
+        {mode === "signup" && t("auth.subSignUp")}
+        {mode === "forgot" && t("auth.subForgot")}
       </p>
       {mode === "signup" && showPasswordWarning && (
         <div className="password-warning">
           <Icon name="AlertTriangle" size={15} />
-          <p>Save or write down your password somewhere safe — if you forget it, you&#39;ll need to reset it.</p>
+          <p>{t("auth.passwordWarning")}</p>
           <button
             type="button"
             className="password-warning-close"
-            aria-label="Dismiss"
+            aria-label={t("auth.dismiss")}
             onClick={() => setShowPasswordWarning(false)}
           >
             <Icon name="X" size={14} />
@@ -109,7 +117,7 @@ function SignInForm() {
       )}
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t("auth.emailLabel")}</label>
           <input
             className="control"
             id="email"
@@ -123,28 +131,26 @@ function SignInForm() {
         </div>
         {mode !== "forgot" && (
           <div className="field">
-            <label htmlFor="password">Password</label>
-            <input
-              className="control"
+            <label htmlFor="password">{t("auth.passwordLabel")}</label>
+            <PasswordInput
               id="password"
-              type="password"
               required
               minLength={6}
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 6 characters"
+              placeholder={t("auth.passwordPlaceholder")}
             />
           </div>
         )}
         <button type="submit" className="btn btn-accent btn-block" disabled={busy}>
           {busy
-            ? "Please wait…"
+            ? t("auth.pleaseWait")
             : mode === "signin"
-              ? "Sign in"
+              ? t("auth.signInBtn")
               : mode === "signup"
-                ? "Create account"
-                : "Send reset link"}
+                ? t("auth.createAccountBtn")
+                : t("auth.sendResetBtn")}
         </button>
         {error && <p className="admin-error">{error}</p>}
       </form>
@@ -152,16 +158,16 @@ function SignInForm() {
         {mode === "signin" && (
           <>
             <button type="button" onClick={() => { setMode("signup"); setError(null); }}>
-              New here? Create an account
+              {t("auth.newHere")}
             </button>
             <button type="button" onClick={() => { setMode("forgot"); setError(null); }}>
-              Forgot password?
+              {t("auth.forgotPassword")}
             </button>
           </>
         )}
         {mode !== "signin" && (
           <button type="button" onClick={() => { setMode("signin"); setError(null); }}>
-            Back to sign in
+            {t("auth.backToSignIn")}
           </button>
         )}
       </div>

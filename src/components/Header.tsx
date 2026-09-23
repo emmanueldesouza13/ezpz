@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSiteSettings } from "@/lib/data";
 import Icon from "./Icon";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const REGIONS = Array.from({ length: 10 }, (_, i) => `Region ${i + 1}`);
 const DEFAULT_REGION_LABEL = "Georgetown, Guyana";
 
 export default function Header() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [region, setRegion] = useState(DEFAULT_REGION_LABEL);
@@ -99,13 +102,13 @@ export default function Header() {
           </button>
           {regionOpen && (
             <div className="distance-menu region-menu">
-              <p className="distance-menu-label">Choose a region</p>
+              <p className="distance-menu-label">{t("header.chooseRegion")}</p>
               <button
                 type="button"
                 className={`distance-menu-item${region === DEFAULT_REGION_LABEL ? " active" : ""}`}
                 onClick={() => selectRegion(null)}
               >
-                All regions
+                {t("header.allRegions")}
               </button>
               {REGIONS.map((r) => (
                 <button
@@ -132,19 +135,20 @@ export default function Header() {
           <input
             name="q"
             type="text"
-            placeholder={isTaxiSection ? "Search taxi services" : "Search"}
+            placeholder={isTaxiSection ? t("header.searchTaxiPlaceholder") : t("header.searchPlaceholder")}
             autoComplete="off"
           />
         </form>
+        <LanguageSwitcher />
         {email && (
           <Link href="/post" className="btn btn-accent">
             <Icon name="Plus" size={15} strokeWidth={2.4} />
-            Post a listing
+            {t("header.postListing")}
           </Link>
         )}
         {!email && (
           <Link href="/sign-in" className="btn btn-line header-account">
-            Sign in
+            {t("header.signIn")}
           </Link>
         )}
       </div>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Icon from "./Icon";
 import { NAV_DEPTH_KEY } from "./NavDepthTracker";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Used to check window.history.length > 1 to decide whether router.back()
 // was safe — but that count includes history entries the browser adds on
@@ -30,6 +31,7 @@ export default function BackButton({
   disableSmartBack?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <button
@@ -60,7 +62,7 @@ export default function BackButton({
       }}
     >
       <Icon name="ArrowLeft" size={16} />
-      Back
+      {t("common.back")}
     </button>
   );
 }

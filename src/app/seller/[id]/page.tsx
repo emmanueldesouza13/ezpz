@@ -6,6 +6,7 @@ import BlueTick from "@/components/BlueTick";
 import Icon from "@/components/Icon";
 import MessageSellerButton from "@/components/MessageSellerButton";
 import ProfileTabs from "./ProfileTabs";
+import T from "@/components/T";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile, getSellerActiveListings, getSellerTaxiServices } from "@/lib/data";
 
@@ -35,9 +36,9 @@ export default async function SellerProfilePage({
         <main>
           <section className="wrap">
             <div className="empty-state">
-              Profile not found.{" "}
+              <T k="seller.notFound" />{" "}
               <Link href="/" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                Back to browse
+                <T k="listing.backToBrowse" />
               </Link>
             </div>
           </section>
@@ -78,18 +79,18 @@ export default async function SellerProfilePage({
             <div className="profile-badge-row">
               <span className="profile-badge">
                 <Icon name="CalendarDays" />
-                Since {new Date(seller.created_at).getFullYear()}
+                <T k="listing.since" vars={{ year: new Date(seller.created_at).getFullYear() }} />
               </span>
               {seller.available && (
                 <span className="profile-badge good">
                   <Icon name="CircleDot" />
-                  Available now
+                  <T k="listing.availableNow" />
                 </span>
               )}
               {seller.verified && (
                 <span className="profile-badge brand">
                   <Icon name="BadgeCheck" />
-                  Verified
+                  <T k="listing.verified" />
                 </span>
               )}
             </div>

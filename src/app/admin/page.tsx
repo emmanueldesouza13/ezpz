@@ -144,6 +144,24 @@ export default function AdminPage() {
     return s === "pending" ? "paid" : s === "paid" ? "waived" : "pending";
   }
 
+  async function setVerificationFeeStatus(v: VerificationRequest, next: "pending" | "paid" | "waived") {
+    const { data, error } = await supabase
+      .from("verification_requests")
+      .update({ fee_status: next, fee_paid_at: next === "paid" ? new Date().toISOString() : null })
+      .eq("id", v.id)
+      .select();
+    if (error) { toast("Couldn't update fee status — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't update — no permission or it's gone"); return; }
+    toast(
+      next === "paid"
+        ? "Fee marked paid — you can approve the blue tick now"
+        : next === "waived"
+        ? "Fee waived — you can approve the blue tick now"
+        : "Fee marked pending"
+    );
+    loadAll();
+  }
+
   async function setListingFeeStatus(l: Listing, next: "pending" | "paid" | "waived") {
     const { data, error } = await supabase
       .from("listings")
@@ -605,6 +623,11 @@ export default function AdminPage() {
                           {v.status === "pending" && <span className="admin-flag off">Pending</span>}
                           {v.status === "approved" && <span className="admin-flag on">Approved</span>}
                           {v.status === "rejected" && <span className="admin-flag off">Rejected</span>}
+                          {v.fee_status !== "pending" ? (
+                            <span className="admin-flag on">Fee {v.fee_status}</span>
+                          ) : (
+                            <span className="admin-flag off">Fee unpaid</span>
+                          )}
                         </div>
                         <div className="admin-row-sub">
                           Submitted {new Date(v.submitted_at).toLocaleDateString()}
@@ -624,8 +647,22 @@ export default function AdminPage() {
                             ID card
                           </button>
                         )}
+                        <button
+                          type="button"
+                          className="admin-btn"
+                          onClick={() => setVerificationFeeStatus(v, nextFeeStatus(v.fee_status))}
+                        >
+                          <Icon name="Wallet" />
+                          {v.fee_status === "pending" ? "Mark fee paid" : v.fee_status === "paid" ? "Mark fee waived" : "Mark fee pending"}
+                        </button>
                         {v.status !== "approved" && (
-                          <button type="button" className="admin-btn" onClick={() => approveVerification(v)}>
+                          <button
+                            type="button"
+                            className="admin-btn"
+                            onClick={() => approveVerification(v)}
+                            disabled={v.fee_status === "pending"}
+                            title={v.fee_status === "pending" ? "Mark the fee paid or waived first" : undefined}
+                          >
                             <Icon name="ShieldCheck" />
                             Approve
                           </button>
@@ -804,6 +841,7 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
   const [fee, setFee] = useState(String(settings?.listing_fee ?? 2000));
   const [taxiMmg, setTaxiMmg] = useState(settings?.taxi_mmg_number ?? "");
   const [taxiFee, setTaxiFee] = useState(String(settings?.taxi_fee ?? 5000));
+  const [verificationFee, setVerificationFee] = useState(String(settings?.verification_fee ?? 1000));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -811,6 +849,7 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
     setFee(String(settings?.listing_fee ?? 2000));
     setTaxiMmg(settings?.taxi_mmg_number ?? "");
     setTaxiFee(String(settings?.taxi_fee ?? 5000));
+    setVerificationFee(String(settings?.verification_fee ?? 1000));
   }, [settings]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -823,6 +862,7 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
         listing_fee: Number(fee) || 0,
         taxi_mmg_number: taxiMmg.trim() || null,
         taxi_fee: Number(taxiFee) || 0,
+        verification_fee: Number(verificationFee) || 0,
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1)
@@ -837,11 +877,12 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
   return (
     <div className="admin-row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
       <div className="admin-row-info" style={{ flex: "1 1 320px" }}>
-        <div className="admin-row-title">Activation fees</div>
+        <div className="admin-row-title">Activation &amp; verification fees</div>
         <div className="admin-row-sub">
           Every new listing or taxi sign-up is hidden until its fee is paid to the matching MMG
-          number below and you mark it paid in the Listings/Taxi tabs. Nothing here charges anyone
-          automatically — sellers and drivers pay you directly, same as buyers pay sellers.
+          number below and you mark it paid in the Listings/Taxi tabs. The blue tick works the same
+          way — sellers pay before you approve them in the Verification tab. Nothing here charges
+          anyone automatically — everyone pays you directly, same as buyers pay sellers.
         </div>
         <form onSubmit={handleSubmit} style={{ marginTop: 14, maxWidth: 360 }}>
           <div className="field">
@@ -886,6 +927,18 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
               value={taxiFee}
               onChange={(e) => setTaxiFee(e.target.value)}
             />
+          </div>
+          <div className="field">
+            <label htmlFor="verificationFeeInput">Blue tick verification fee (GY$)</label>
+            <input
+              className="control"
+              id="verificationFeeInput"
+              type="number"
+              min="0"
+              value={verificationFee}
+              onChange={(e) => setVerificationFee(e.target.value)}
+            />
+            <p className="hint">Paid to the listings MMG number above. Mark it in the Verification tab.</p>
           </div>
           <button type="submit" className="btn btn-accent" disabled={saving}>
             {saving ? "Saving…" : "Save"}

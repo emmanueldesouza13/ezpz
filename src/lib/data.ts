@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Category, Listing, Profile, Conversation, Message, Settings, TaxiService, Review } from "./types";
+import type { Category, Listing, Profile, Conversation, Message, Settings, TaxiService, Review, VerificationRequest } from "./types";
 import { REGION_TOWNS } from "./guyana";
 
 // Thin query helpers shared by server and browser components — pass either
@@ -40,6 +40,7 @@ export async function getSiteSettings(supabase: SupabaseClient): Promise<Setting
       listing_fee: 2000,
       taxi_mmg_number: null,
       taxi_fee: 5000,
+      verification_fee: 1000,
       updated_at: "",
     }
   );
@@ -136,7 +137,7 @@ export async function getListings(
     const towns = REGION_TOWNS[opts.region] ?? [];
     query =
       towns.length > 0
-        ? query.or(towns.map((t) => `location.ilike.${t}`).join(","))
+        ? query.or(towns.map((t) => `location.ilike.%${t}%`).join(","))
         : query.eq("location", "__no_listings_match_this_region__");
   }
 
@@ -323,6 +324,42 @@ export async function getOrCreateConversation(
   return data as Conversation;
 }
 
+// Powers the red dot on the Messages nav icon — true if any conversation
+// has a message from the other participant the caller hasn't read yet.
+export async function getHasUnreadMessages(supabase: SupabaseClient): Promise<boolean> {
+  const { data, error } = await supabase.rpc("has_unread_messages");
+  if (error) {
+    console.error("getHasUnreadMessages error", error);
+    return false;
+  }
+  return Boolean(data);
+}
+
+// Marks the caller's side of a conversation as read "now" — clears the
+// unread badge for it. Safe to call liberally (opening the thread,
+// receiving a message while it's open).
+export async function markConversationRead(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<void> {
+  const { error } = await supabase.rpc("mark_conversation_read", {
+    p_conversation_id: conversationId,
+  });
+  if (error) console.error("markConversationRead error", error);
+}
+
+export async function getMyVerificationRequest(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<VerificationRequest | null> {
+  const { data } = await supabase
+    .from("verification_requests")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data as VerificationRequest) || null;
+}
+
 export async function getMessages(
   supabase: SupabaseClient,
   conversationId: string
@@ -350,5 +387,12 @@ export async function sendMessage(
     console.error("sendMessage error", error);
     return null;
   }
+  // A new message should always surface in both inboxes — otherwise, if
+  // either side had previously deleted this chat, it stays hidden for them
+  // while new messages keep quietly arriving underneath.
+  await supabase
+    .from("conversations")
+    .update({ hidden_for_buyer: false, hidden_for_seller: false })
+    .eq("id", conversationId);
   return data as Message;
 }

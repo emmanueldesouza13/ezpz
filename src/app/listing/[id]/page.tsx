@@ -10,6 +10,7 @@ import EditProfileModal from "@/components/EditProfileModal";
 import Avatar from "@/components/Avatar";
 import ListingMedia from "@/components/ListingMedia";
 import BlueTick from "@/components/BlueTick";
+import T from "@/components/T";
 
 export default async function ListingDetailPage({
   params,
@@ -31,9 +32,9 @@ export default async function ListingDetailPage({
         <main>
           <section className="wrap">
             <div className="empty-state">
-              Listing not found.{" "}
+              <T k="listing.notFound" />{" "}
               <Link href="/" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                Back to browse
+                <T k="listing.backToBrowse" />
               </Link>
             </div>
           </section>
@@ -70,8 +71,8 @@ export default async function ListingDetailPage({
             <div>
               <div className="seller-panel">
                 <div className={`profile-id${isOwner || isAdmin ? " profile-id-solo" : ""}`}>
-                  {isOwner ? (
-                    <EditProfileModal profile={seller!} listing={listing} categories={categories} />
+                  {isOwner && seller ? (
+                    <EditProfileModal profile={seller} listing={listing} categories={categories} />
                   ) : (
                     <div className="profile-avatar-wrap">
                       <Avatar
@@ -82,10 +83,17 @@ export default async function ListingDetailPage({
                       />
                     </div>
                   )}
-                  <div className="profile-name-row">
-                    <h2>{seller?.display_name ?? "Seller"}</h2>
-                    {seller?.verified && <BlueTick size={16} />}
-                  </div>
+                  {isOwner ? (
+                    <div className="profile-name-row">
+                      <h2>{seller?.display_name ?? <T k="listing.sellerFallback" />}</h2>
+                      {seller?.verified && <BlueTick size={16} />}
+                    </div>
+                  ) : (
+                    <Link href={`/seller/${listing.seller_id}`} className="profile-name-row">
+                      <h2>{seller?.display_name ?? <T k="listing.sellerFallback" />}</h2>
+                      {seller?.verified && <BlueTick size={16} />}
+                    </Link>
+                  )}
                   <p className="profile-rating-row">
                     <Icon name="Star" />
                     {(seller?.rating ?? 5).toFixed(1)} ({seller?.rating_count ?? 0} ratings)
@@ -100,18 +108,18 @@ export default async function ListingDetailPage({
                   <div className="profile-badge-row">
                     <span className="profile-badge">
                       <Icon name="CalendarDays" />
-                      Since {seller ? new Date(seller.created_at).getFullYear() : ""}
+                      <T k="listing.since" vars={{ year: seller ? new Date(seller.created_at).getFullYear() : "" }} />
                     </span>
                     {seller?.available && (
                       <span className="profile-badge good">
                         <Icon name="CircleDot" />
-                        Available now
+                        <T k="listing.availableNow" />
                       </span>
                     )}
                     {seller?.verified && (
                       <span className="profile-badge brand">
                         <Icon name="BadgeCheck" />
-                        Verified
+                        <T k="listing.verified" />
                       </span>
                     )}
                   </div>

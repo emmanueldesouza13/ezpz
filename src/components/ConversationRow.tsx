@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { hideConversationForMe, blockConversationPartner } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
 import { fmtChatTime } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // One row in the messages inbox: the conversation link, plus a 3-dot menu
 // with "Delete chat" (hides it from this inbox only) and "Block person"
@@ -27,6 +28,7 @@ export default function ConversationRow({
   onRemoved: (id: string) => void;
 }) {
   const supabase = createClient();
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirming, setConfirming] = useState<"delete" | "block" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -122,18 +124,18 @@ export default function ConversationRow({
         </div>
         <div className="convo-text">
           <div className="convo-top">
-            <span className="convo-name">{other?.display_name ?? "User"}</span>
+            <span className="convo-name">{other?.display_name ?? t("messages.userFallback")}</span>
             <span className="convo-time">{last ? fmtChatTime(last.created_at) : ""}</span>
           </div>
           <p className="convo-listing">{conversation.listing?.title}</p>
-          <p className="convo-snippet">{last?.body ?? "Say hello 👋"}</p>
+          <p className="convo-snippet">{last?.body ?? t("messages.sayHello")}</p>
         </div>
       </Link>
       <div className="convo-menu" ref={menuRef}>
         <button
           type="button"
           className="convo-menu-btn"
-          aria-label="Chat options"
+          aria-label={t("messages.chatOptions")}
           ref={menuBtnRef}
           onClick={toggleMenu}
         >
@@ -155,7 +157,7 @@ export default function ConversationRow({
               onClick={handleDelete}
             >
               <Icon name="Trash2" size={15} />
-              {confirming === "delete" ? "Tap again to confirm" : "Delete chat"}
+              {confirming === "delete" ? t("common.tapAgainConfirm") : t("messages.deleteChat")}
             </button>
             <button
               type="button"
@@ -164,7 +166,7 @@ export default function ConversationRow({
               onClick={handleBlock}
             >
               <Icon name="Ban" size={15} />
-              {confirming === "block" ? "Tap again to confirm" : "Block person"}
+              {confirming === "block" ? t("common.tapAgainConfirm") : t("messages.blockPerson")}
             </button>
           </div>
         )}

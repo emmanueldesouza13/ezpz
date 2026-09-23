@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "./Icon";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { DAY_LABELS, type DaySchedule, type Schedule } from "@/lib/types";
 
 const EMPTY_DAY: DaySchedule = { open: false, from: "09:00", to: "17:00" };
@@ -40,6 +41,7 @@ export default function ScheduleEditor({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [days, setDays] = useState<Record<string, DaySchedule>>(() => normalize(schedule));
   const [note, setNote] = useState(schedule?.note ?? "");
@@ -80,11 +82,11 @@ export default function ScheduleEditor({
     <>
       <div className="tab-fact-row">
         <div className="tab-fact">
-          <strong>Availability</strong>
-          {available ? "Available now" : "Not currently available"}
+          <strong>{t("schedule.availability")}</strong>
+          {available ? t("schedule.availableNow") : t("schedule.notAvailable")}
         </div>
         <div className="tab-fact">
-          <strong>Response rate</strong>
+          <strong>{t("schedule.responseRate")}</strong>
           {responseRate}%
         </div>
       </div>
@@ -92,7 +94,7 @@ export default function ScheduleEditor({
       {isOwner && (
         <button type="button" className="profile-edit-btn" style={{ marginBottom: 16 }} onClick={openModal}>
           <Icon name="Pencil" />
-          {hasHours ? "Edit schedule" : "Set your schedule"}
+          {hasHours ? t("schedule.editSchedule") : t("schedule.setYourSchedule")}
         </button>
       )}
 
@@ -102,9 +104,9 @@ export default function ScheduleEditor({
             const day = liveDays[d.key];
             return (
               <div className="schedule-row" key={d.key}>
-                <span className="schedule-day">{d.label}</span>
+                <span className="schedule-day">{t(`schedule.day.${d.key}`)}</span>
                 <span className={`schedule-hours${day.open ? "" : " closed"}`}>
-                  {day.open ? `${fmtTime(day.from)} – ${fmtTime(day.to)}` : "Closed"}
+                  {day.open ? `${fmtTime(day.from)} – ${fmtTime(day.to)}` : t("schedule.closed")}
                 </span>
               </div>
             );
@@ -113,9 +115,7 @@ export default function ScheduleEditor({
         </div>
       ) : (
         !isOwner && (
-          <div className="tab-empty">
-            No fixed hours posted yet. Message the seller to arrange a time that works for you.
-          </div>
+          <div className="tab-empty">{t("schedule.noFixedHours")}</div>
         )
       )}
 
@@ -130,7 +130,7 @@ export default function ScheduleEditor({
             <button type="button" className="modal-close" onClick={() => setOpen(false)}>
               <Icon name="X" />
             </button>
-            <h2>Your schedule</h2>
+            <h2>{t("schedule.yourSchedule")}</h2>
             <form onSubmit={handleSave}>
               <div className="schedule-edit-list">
                 {DAY_LABELS.map((d) => {
@@ -143,7 +143,7 @@ export default function ScheduleEditor({
                           checked={day.open}
                           onChange={(e) => updateDay(d.key, { open: e.target.checked })}
                         />
-                        {d.label}
+                        {t(`schedule.day.${d.key}`)}
                       </label>
                       <input
                         type="time"
@@ -165,22 +165,22 @@ export default function ScheduleEditor({
                 })}
               </div>
               <div className="field" style={{ marginTop: 16 }}>
-                <label htmlFor="sched-note">Note (optional)</label>
+                <label htmlFor="sched-note">{t("schedule.noteLabel")}</label>
                 <input
                   className="control"
                   id="sched-note"
                   maxLength={120}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="e.g. Closed on public holidays"
+                  placeholder={t("schedule.notePlaceholder")}
                 />
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-line" onClick={() => setOpen(false)}>
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn btn-accent" disabled={saving}>
-                  {saving ? "Saving…" : "Save schedule"}
+                  {saving ? t("common.saving") : t("schedule.saveSchedule")}
                 </button>
               </div>
             </form>

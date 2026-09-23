@@ -4,17 +4,20 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "@/components/Icon";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
-const REASONS = [
-  "Scam or fraud",
-  "Fake or misleading listing",
-  "Inappropriate content",
-  "Spam",
-  "Something else",
+const REASON_KEYS = [
+  "listing.reasonScam",
+  "listing.reasonFake",
+  "listing.reasonInappropriate",
+  "listing.reasonSpam",
+  "listing.reasonOther",
 ];
 
 export default function ReportButton({ listingId }: { listingId: string }) {
   const supabase = createClient();
+  const { t } = useLanguage();
+  const REASONS = REASON_KEYS.map((k) => t(k));
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState(REASONS[0]);
   const [notes, setNotes] = useState("");
@@ -45,7 +48,7 @@ export default function ReportButton({ listingId }: { listingId: string }) {
     <>
       <button type="button" className="report-link" onClick={() => setOpen(true)}>
         <Icon name="Flag" />
-        Report this listing
+        {t("listing.reportThisListing")}
       </button>
 
       {open && (
@@ -59,10 +62,10 @@ export default function ReportButton({ listingId }: { listingId: string }) {
             <button type="button" className="modal-close" onClick={() => setOpen(false)}>
               <Icon name="X" />
             </button>
-            <h2>Report this listing</h2>
+            <h2>{t("listing.reportThisListing")}</h2>
             <form onSubmit={handleSubmit}>
               <div className="field">
-                <label htmlFor="report-reason">Reason</label>
+                <label htmlFor="report-reason">{t("listing.reportReason")}</label>
                 <select
                   className="control"
                   id="report-reason"
@@ -77,21 +80,21 @@ export default function ReportButton({ listingId }: { listingId: string }) {
                 </select>
               </div>
               <div className="field" style={{ marginBottom: 20 }}>
-                <label htmlFor="report-notes">Details (optional)</label>
+                <label htmlFor="report-notes">{t("listing.reportDetails")}</label>
                 <textarea
                   className="control"
                   id="report-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Anything else we should know?"
+                  placeholder={t("listing.reportDetailsPlaceholder")}
                 />
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-line" onClick={() => setOpen(false)}>
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn btn-accent" disabled={submitting}>
-                  {submitting ? "Sending…" : "Send report"}
+                  {submitting ? t("listing.sending") : t("listing.sendReport")}
                 </button>
               </div>
             </form>

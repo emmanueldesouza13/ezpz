@@ -2,8 +2,23 @@
 
 import Icon from "./Icon";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
-export default function FeeBanner({ mmg, fee }: { mmg: string | null; fee: number }) {
+export default function FeeBanner({
+  mmg,
+  fee,
+  label,
+  caption,
+  noMmgCaption,
+}: {
+  mmg: string | null;
+  fee: number;
+  label?: string;
+  caption?: string;
+  noMmgCaption?: string;
+}) {
+  const { t } = useLanguage();
+
   function handleCopy() {
     if (!mmg) return;
     if (navigator.clipboard) {
@@ -20,7 +35,7 @@ export default function FeeBanner({ mmg, fee }: { mmg: string | null; fee: numbe
     <div className="fee-box standalone">
       <div className="fee-label">
         <Icon name="Wallet" size={15} />
-        Activation fee due — your listing is live now
+        {label ?? t("fees.activationDue")}
       </div>
       {mmg ? (
         <>
@@ -28,19 +43,16 @@ export default function FeeBanner({ mmg, fee }: { mmg: string | null; fee: numbe
             <span className="mono">{mmg}</span>
             <button type="button" className="fee-copy" onClick={handleCopy}>
               <Icon name="Copy" size={13} />
-              Copy
+              {t("common.copy")}
             </button>
           </div>
           <p className="fee-caption">
-            Send GY${fee.toLocaleString()} to this MMG number to settle your activation fee. Your
-            listing is already visible to buyers — an admin will mark this paid once it&#39;s
-            received.
+            {caption ?? t("fees.activationCaption", { fee: fee.toLocaleString() })}
           </p>
         </>
       ) : (
         <p className="fee-caption">
-          GY${fee.toLocaleString()} activation fee — the site hasn&#39;t set a payout MMG number
-          yet, so hold off paying until it does.
+          {noMmgCaption ?? t("fees.activationNoMmgCaption", { fee: fee.toLocaleString() })}
         </p>
       )}
     </div>

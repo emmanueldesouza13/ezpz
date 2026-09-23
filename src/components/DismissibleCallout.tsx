@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Icon from "./Icon";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function DismissibleCallout({ children }: { children: React.ReactNode }) {
   const [dismissed, setDismissed] = useState(false);
+  const { t } = useLanguage();
   if (dismissed) return null;
 
   return (
@@ -14,7 +16,7 @@ export default function DismissibleCallout({ children }: { children: React.React
       <button
         type="button"
         className="callout-close"
-        aria-label="Dismiss"
+        aria-label={t("auth.dismiss")}
         onClick={() => setDismissed(true)}
       >
         <Icon name="X" size={14} />

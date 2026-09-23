@@ -5,6 +5,7 @@ import BackButton from "@/components/BackButton";
 import FeeBanner from "@/components/FeeBanner";
 import DismissibleCallout from "@/components/DismissibleCallout";
 import TaxiPhotoSlider from "@/components/TaxiPhotoSlider";
+import T from "@/components/T";
 import { createClient } from "@/lib/supabase/server";
 import { getTaxiServiceById, getSiteSettings, getProfile } from "@/lib/data";
 import { timeAgo } from "@/lib/format";
@@ -30,9 +31,9 @@ export default async function TaxiServiceDetailPage({
         <main>
           <section className="wrap">
             <div className="empty-state">
-              Taxi service not found.{" "}
+              <T k="taxi.notFound" />{" "}
               <Link href="/taxi" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                Back to taxi &amp; rides
+                <T k="taxi.backToTaxi" />
               </Link>
             </div>
           </section>
@@ -56,9 +57,9 @@ export default async function TaxiServiceDetailPage({
             <FeeBanner mmg={settings.taxi_mmg_number} fee={settings.taxi_fee} />
           )}
           <div className="crumbs">
-            <Link href="/">Home</Link>
+            <Link href="/"><T k="taxi.home" /></Link>
             <span>/</span>
-            <Link href="/taxi">Taxi &amp; rides</Link>
+            <Link href="/taxi"><T k="taxi.title" /></Link>
             <span>/</span>
             <span className="current">{service.driver_name}</span>
           </div>
@@ -74,10 +75,10 @@ export default async function TaxiServiceDetailPage({
                 }
                 alt={`${service.vehicle_make} ${service.vehicle_model}`}
               />
-              <p className="section-label">About this service</p>
-              <p className="desc-text">{service.notes || "No additional notes from this driver."}</p>
+              <p className="section-label"><T k="taxi.aboutService" /></p>
+              <p className="desc-text">{service.notes || <T k="taxi.noNotes" />}</p>
               <DismissibleCallout>
-                Confirm the fare and pickup details before you ride.
+                <T k="taxi.confirmFareCallout" />
               </DismissibleCallout>
             </div>
             <div>
@@ -90,13 +91,13 @@ export default async function TaxiServiceDetailPage({
                   </span>
                   <span>
                     <Icon name="Clock" />
-                    Posted {timeAgo(service.created_at)}
+                    <T k="taxi.postedAgo" vars={{ time: timeAgo(service.created_at) }} />
                   </span>
                 </div>
                 <div className="fee-box" style={{ marginBottom: 14 }}>
                   <div className="fee-label">
                     <Icon name="Shield" size={15} />
-                    Confirm this is your ride
+                    <T k="taxi.confirmRide" />
                   </div>
                   <div className="fee-number-row">
                     <span className="mono">{service.plate}</span>
@@ -105,7 +106,7 @@ export default async function TaxiServiceDetailPage({
                 <div className="fee-box">
                   <div className="fee-label">
                     <Icon name="Phone" size={15} />
-                    Contact
+                    <T k="taxi.contact" />
                   </div>
                   <div className="fee-number-row">
                     <span className="mono">{service.phone}</span>
@@ -119,13 +120,13 @@ export default async function TaxiServiceDetailPage({
                       style={{ marginBottom: 10 }}
                     >
                       <Icon name="Pencil" />
-                      Edit listing
+                      <T k="taxi.editListing" />
                     </Link>
                     <RemoveListingButton
                       table="taxi_services"
                       id={service.id}
                       redirectTo="/account"
-                      label="Remove this listing"
+                      labelKey="taxi.removeThisListing"
                     />
                   </>
                 )}

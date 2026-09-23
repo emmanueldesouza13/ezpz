@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import { createClient } from "@/lib/supabase/client";
 import { getSiteSettings } from "@/lib/data";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function Footer() {
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const supabase = createClient();
+  const { t } = useLanguage();
 
   useEffect(() => {
     getSiteSettings(supabase).then((s) => setLogoUrl(s.logo_url));
@@ -22,23 +24,23 @@ export default function Footer() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={logoUrl} alt="EzPz" className="logo-img" style={{ height: 30 }} />
           </Link>
-          <p className="footer-blurb">Local services across Guyana, booked the easy way.</p>
+          <p className="footer-blurb">{t("footer.blurb")}</p>
         </div>
         <div>
-          <h3>Trust &amp; Safety</h3>
+          <h3>{t("footer.trustSafety")}</h3>
           <ul>
-            <li><Link href="/safety">Safety tips</Link></li>
-            <li><Link href="/safety">Report a listing</Link></li>
-            <li><Link href="/safety">Community guidelines</Link></li>
+            <li><Link href="/safety">{t("footer.safetyTips")}</Link></li>
+            <li><Link href="/safety">{t("footer.reportListing")}</Link></li>
+            <li><Link href="/safety">{t("footer.communityGuidelines")}</Link></li>
           </ul>
         </div>
       </div>
       <div className="footer-bottom">
         <div className="wrap">
-          <span>&copy; {new Date().getFullYear()} EzPz. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} EzPz. {t("footer.rights")}</span>
           <span>
             <Icon name="ShieldCheck" size={13} />
-            Verified sellers &middot; In-app messaging &middot; Direct MMG payments
+            {t("footer.tagline")}
           </span>
         </div>
       </div>

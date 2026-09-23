@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Shows once per browser session (resets whenever someone opens the site in
 // a fresh tab or after closing the browser) rather than once ever — normal
@@ -12,6 +14,7 @@ const STORAGE_KEY = "ezpz_age_verified";
 export default function AgeGate({ children }: { children: React.ReactNode }) {
   const [verified, setVerified] = useState(false);
   const [checked, setChecked] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     try {
@@ -38,20 +41,18 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="age-gate">
         <div className="age-gate-card">
+          <LanguageSwitcher className="age-gate-lang" />
           <div className="icon-circle">
             <Icon name="ShieldAlert" size={26} />
           </div>
-          <h1>18+ Only</h1>
-          <p>
-            This website is restricted to users who are 18 years of age or
-            older. Please verify your age to continue.
-          </p>
+          <h1>{t("ageGate.title")}</h1>
+          <p>{t("ageGate.body")}</p>
           <button
             type="button"
             className="btn btn-accent btn-block"
             onClick={handleVerify}
           >
-            Verify Age — I am 18 or older
+            {t("ageGate.verify")}
           </button>
         </div>
       </div>

@@ -11,12 +11,14 @@ import { GRADIENTS, type Category } from "@/lib/types";
 import { toast } from "@/lib/toast";
 import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
 import { stripDigits } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const MAX_PHOTOS = 6;
 
 export default function PostPage() {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -181,18 +183,17 @@ export default function PostPage() {
             <BackButton />
             {done ? (
               <div className="empty-state">
-                Listing is live! Pay GY${fee.toLocaleString()} via MMG to settle your activation
-                fee when you can. Taking you there now…
+                {t("post.doneMessage", { fee: fee.toLocaleString() })}
               </div>
             ) : (
               <>
-                <h1>Post a listing</h1>
+                <h1>{t("post.title")}</h1>
                 <p className="lede">
-                  Clear details and an honest description help you get booked faster.
+                  {t("post.lede")}
                 </p>
                 <form onSubmit={handleSubmit}>
                   <div className="field">
-                    <label>Photos</label>
+                    <label>{t("post.photosLabel")}</label>
                     <div className="swatch-picker">
                       {photos.map((url, i) => (
                         <div className="photo-tile" key={url}>
@@ -201,7 +202,7 @@ export default function PostPage() {
                           <button
                             type="button"
                             className="photo-tile-remove"
-                            aria-label="Remove photo"
+                            aria-label={t("post.removePhoto")}
                             onClick={() => removePhoto(i)}
                           >
                             <Icon name="X" />
@@ -211,7 +212,7 @@ export default function PostPage() {
                       {photos.length < MAX_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
-                          {uploadingPhoto ? "Uploading…" : "Add photo"}
+                          {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
                           <input
                             type="file"
                             accept="image/*"
@@ -224,28 +225,28 @@ export default function PostPage() {
                     </div>
                     {photos.length === 0 ? (
                       <p className="hint">
-                        Snap a photo or pick one from your phone — up to {MAX_PHOTOS}.
+                        {t("post.photosHintEmpty", { max: MAX_PHOTOS })}
                       </p>
                     ) : (
                       <p className="hint">
-                        The first photo is used as the main listing photo.
+                        {t("post.photosHintSome")}
                       </p>
                     )}
                   </div>
 
                   <div className="field">
-                    <label>Video (optional)</label>
+                    <label>{t("post.videoLabel")}</label>
                     {videoUrl ? (
                       <div className="video-tile">
                         <video src={videoUrl} controls playsInline />
                         <button type="button" className="text-btn" onClick={removeVideo}>
-                          Remove video
+                          {t("post.removeVideo")}
                         </button>
                       </div>
                     ) : (
                       <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
                         <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
-                        {uploadingVideo ? "Uploading…" : "Add a short video"}
+                        {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
                         <input
                           type="file"
                           accept="video/*"
@@ -255,12 +256,12 @@ export default function PostPage() {
                       </label>
                     )}
                     <p className="hint">
-                      Show your work in action — up to {MAX_VIDEO_SECONDS} seconds, {MAX_VIDEO_MB}MB max.
+                      {t("post.videoHint", { seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
                     </p>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="titleInput">Name</label>
+                    <label htmlFor="titleInput">{t("post.nameLabel")}</label>
                     <input
                       className="control"
                       id="titleInput"
@@ -271,7 +272,7 @@ export default function PostPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="categorySelect">Category</label>
+                    <label htmlFor="categorySelect">{t("post.categoryLabel")}</label>
                     <select
                       className="control"
                       id="categorySelect"
@@ -289,7 +290,7 @@ export default function PostPage() {
 
                   <div className="price-row" style={{ marginBottom: 20 }}>
                     <div className="field">
-                      <label htmlFor="priceInput">Price</label>
+                      <label htmlFor="priceInput">{t("post.priceLabel")}</label>
                       <div className="price-input">
                         <span>GY$</span>
                         <input
@@ -310,62 +311,60 @@ export default function PostPage() {
                         checked={isFree}
                         onChange={(e) => setIsFree(e.target.checked)}
                       />
-                      List as free
+                      {t("post.listAsFree")}
                     </label>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="locationInput">Location</label>
+                    <label htmlFor="locationInput">{t("post.locationLabel")}</label>
                     <input
                       className="control"
                       id="locationInput"
                       required
-                      placeholder="e.g. Georgetown, Guyana"
+                      placeholder={t("post.locationPlaceholder")}
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     />
                   </div>
 
                   <div className="field">
-                    <label htmlFor="mmgInput">Your MMG number</label>
+                    <label htmlFor="mmgInput">{t("post.mmgLabel")}</label>
                     <input
                       className="control"
                       id="mmgInput"
                       required
                       inputMode="tel"
-                      placeholder="e.g. 642-1187"
+                      placeholder={t("post.mmgPlaceholder")}
                       value={mmg}
                       onChange={(e) => setMmg(e.target.value)}
                     />
                     <p className="hint">
-                      Shown to buyers so they can pay you directly. EzPz never holds or processes
-                      payments.
+                      {t("post.mmgHint")}
                     </p>
                   </div>
 
                   <div className="field">
-                    <label htmlFor="descInput">Description</label>
+                    <label htmlFor="descInput">{t("post.descriptionLabel")}</label>
                     <textarea
                       className="control"
                       id="descInput"
                       required
-                      placeholder="Describe what's included, your experience, and how to book."
+                      placeholder={t("post.descriptionPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(stripDigits(e.target.value))}
                     />
                     <p className="hint">
-                      No phone numbers or other contact details here — buyers message you in-app.
+                      {t("post.descriptionHint")}
                     </p>
                   </div>
 
                   <div className="fee-note">
                     <Icon name="Wallet" size={14} />
-                    Your listing goes live immediately. Posting costs GY${fee.toLocaleString()} —
-                    you&#39;ll get MMG payment instructions after you publish to settle it.
+                    {t("post.feeNote", { fee: fee.toLocaleString() })}
                   </div>
 
                   <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto || uploadingVideo}>
-                    {submitting ? "Publishing…" : "Publish listing"}
+                    {submitting ? t("post.publishing") : t("post.publish")}
                   </button>
                 </form>
               </>

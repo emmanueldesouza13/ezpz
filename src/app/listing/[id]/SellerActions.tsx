@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getOrCreateConversation } from "@/lib/data";
 import Icon from "@/components/Icon";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function SellerActions({
   listingId,
@@ -16,6 +17,7 @@ export default function SellerActions({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function SellerActions({
   return (
     <button type="button" className="btn btn-brand btn-block" onClick={handleMessage}>
       <Icon name="MessageCircle" />
-      Message
+      {t("listing.message")}
     </button>
   );
 }

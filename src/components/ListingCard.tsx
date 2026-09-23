@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Listing } from "@/lib/types";
 import { isPhotoUrl } from "@/lib/format";
 import Icon from "./Icon";
 import BlueTick from "./BlueTick";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function ListingCard({
   listing,
@@ -11,6 +14,7 @@ export default function ListingCard({
   listing: Listing;
   categoryName?: string;
 }) {
+  const { t } = useLanguage();
   const seller = listing.seller;
   const photo = listing.images[0];
   const photoCount = listing.images.filter(isPhotoUrl).length;
@@ -40,7 +44,7 @@ export default function ListingCard({
         {listing.featured && (
           <span className="listing-card-featured">
             <Icon name="Sparkle" />
-            Featured
+            {t("browse.featured")}
           </span>
         )}
       </div>

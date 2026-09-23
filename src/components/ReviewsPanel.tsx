@@ -8,6 +8,7 @@ import { timeAgo } from "@/lib/format";
 import Icon from "./Icon";
 import Avatar from "./Avatar";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Review } from "@/lib/types";
 
 function Stars({ value, size = 13 }: { value: number; size?: number }) {
@@ -36,6 +37,7 @@ export default function ReviewsPanel({
   initialCount: number;
 }) {
   const supabase = createClient();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
@@ -134,21 +136,23 @@ export default function ReviewsPanel({
         <Stars value={avg} size={16} />
       </div>
       <p className="rating-count-line">
-        Based on {count} {count === 1 ? "review" : "reviews"}
+        {t(count === 1 ? "reviews.basedOn_one" : "reviews.basedOn_other", { count })}
       </p>
 
       {userId === sellerId ? null : userId === null ? (
         <div className="review-form-box">
           <p className="hint" style={{ marginBottom: 10 }}>
             <Link href="/sign-in" style={{ color: "var(--brand)", fontWeight: 700 }}>
-              Sign in
+              {t("reviews.signInPrompt")}
             </Link>{" "}
-            to write a review.
+            {t("reviews.signInSuffix")}
           </p>
         </div>
       ) : userId ? (
         <form className="review-form-box" onSubmit={handleSubmit} ref={formRef}>
-          <p className="review-form-label">{myReview ? "Update your review" : "Write a review"}</p>
+          <p className="review-form-label">
+            {myReview ? t("reviews.updateYourReview") : t("reviews.writeReview")}
+          </p>
           <div
             className="star-picker"
             onMouseLeave={() => setHoverRating(0)}
@@ -160,7 +164,7 @@ export default function ReviewsPanel({
                 className="star-picker-btn"
                 onMouseEnter={() => setHoverRating(n)}
                 onClick={() => setRating(n)}
-                aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                aria-label={t(n > 1 ? "reviews.starLabel_other" : "reviews.starLabel_one", { count: n })}
               >
                 <Icon
                   name="Star"
@@ -171,13 +175,13 @@ export default function ReviewsPanel({
           </div>
           <textarea
             className="control"
-            placeholder="Share how the job went (optional)"
+            placeholder={t("reviews.commentPlaceholder")}
             maxLength={500}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
           <button type="submit" className="btn btn-accent btn-block" disabled={saving || rating < 1}>
-            {saving ? "Saving…" : myReview ? "Update review" : "Post review"}
+            {saving ? t("common.saving") : myReview ? t("reviews.updateReview") : t("reviews.postReview")}
           </button>
           {myReview && (
             <button
@@ -188,14 +192,18 @@ export default function ReviewsPanel({
               disabled={deleting}
             >
               <Icon name="Trash2" />
-              {deleting ? "Deleting…" : confirmDelete ? "Tap again to confirm" : "Delete my review"}
+              {deleting
+                ? t("reviews.deleting")
+                : confirmDelete
+                  ? t("common.tapAgainConfirm")
+                  : t("reviews.deleteMyReview")}
             </button>
           )}
         </form>
       ) : null}
 
       {!loading && reviews.length === 0 && (
-        <div className="tab-empty">No written reviews yet for this seller.</div>
+        <div className="tab-empty">{t("reviews.noneYet")}</div>
       )}
 
       {reviews.length > 0 && (
@@ -210,13 +218,15 @@ export default function ReviewsPanel({
               />
               <div className="review-body">
                 <div className="review-head">
-                  <span className="review-name">{r.reviewer?.display_name ?? "EzPz user"}</span>
+                  <span className="review-name">
+                    {r.reviewer?.display_name ?? t("reviews.ezpzUserFallback")}
+                  </span>
                   <Stars value={r.rating} />
                   <span className="review-time">{timeAgo(r.created_at)}</span>
                   {userId && r.reviewer_id === userId && (
                     <button type="button" className="review-edit-link" onClick={focusMyReview}>
                       <Icon name="Pencil" />
-                      Edit
+                      {t("reviews.edit")}
                     </button>
                   )}
                 </div>

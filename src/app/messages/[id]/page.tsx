@@ -8,15 +8,17 @@ import Header from "@/components/Header";
 import Icon from "@/components/Icon";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
-import { getMessages, sendMessage } from "@/lib/data";
+import { getMessages, sendMessage, markConversationRead } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
 import { fmtChatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = usePromise(params);
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [userId, setUserId] = useState<string | null>(null);
   const [convo, setConvo] = useState<Conversation | null | undefined>(undefined);
@@ -40,7 +42,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         .eq("id", id)
         .maybeSingle();
       setConvo((c as Conversation) ?? null);
-      if (c) setMessages(await getMessages(supabase, id));
+      if (c) {
+        setMessages(await getMessages(supabase, id));
+        markConversationRead(supabase, id);
+      }
     })();
   }, [supabase, router, id]);
 
@@ -56,6 +61,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               ? prev
               : [...prev, payload.new as Message]
           );
+          // The thread is open and visibly receiving this message right
+          // now, so it counts as read immediately — keeps the nav badge
+          // from lighting up for a chat the user is actively looking at.
+          markConversationRead(supabase, id);
         }
       )
       .subscribe();
@@ -91,9 +100,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         <main>
           <section className="wrap">
             <div className="inbox-empty">
-              Conversation not found.{" "}
+              {t("messages.notFound")}{" "}
               <Link href="/messages" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                Back to messages
+                {t("messages.backToMessages")}
               </Link>
             </div>
           </section>
@@ -151,7 +160,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             <form className="chat-input-row" onSubmit={handleSend}>
               <textarea
                 rows={1}
-                placeholder="Write a message…"
+                placeholder={t("messages.writePlaceholder")}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -161,7 +170,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   }
                 }}
               />
-              <button type="submit" className="chat-send" aria-label="Send" disabled={sending}>
+              <button type="submit" className="chat-send" aria-label={t("messages.send")} disabled={sending}>
                 <Icon name="Send" />
               </button>
             </form>

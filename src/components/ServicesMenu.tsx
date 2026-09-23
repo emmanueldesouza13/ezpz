@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import type { Category } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function ServicesMenu({
   categories,
@@ -13,6 +14,7 @@ export default function ServicesMenu({
   active?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function ServicesMenu({
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="LayoutGrid" />
-        Services
+        {t("nav.services")}
         <Icon name="ChevronDown" size={14} />
       </button>
       {open && (
@@ -42,7 +44,7 @@ export default function ServicesMenu({
             onClick={() => setOpen(false)}
           >
             <Icon name="LayoutGrid" />
-            All services
+            {t("nav.allServices")}
           </Link>
           {categories.map((c) => (
             <Link

@@ -1,13 +1,27 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ToastHost from "@/components/ToastHost";
 import AgeGate from "@/components/AgeGate";
 import NavDepthTracker from "@/components/NavDepthTracker";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 export const metadata: Metadata = {
   title: "EzPz — Local services, booked the easy way",
   description:
     "A modern, trustworthy services marketplace for Guyana. Verified sellers, in-app messaging, and direct MMG payments — no fees to browse.",
+  appleWebApp: {
+    capable: true,
+    title: "EzPz",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0a0609",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
@@ -24,9 +38,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <NavDepthTracker />
-        <AgeGate>{children}</AgeGate>
-        <ToastHost />
+        <LanguageProvider>
+          <NavDepthTracker />
+          <AgeGate>{children}</AgeGate>
+          <ToastHost />
+        </LanguageProvider>
       </body>
     </html>
   );

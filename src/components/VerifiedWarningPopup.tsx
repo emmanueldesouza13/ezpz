@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Shows once per browser session (resets when the tab/browser is closed and
 // reopened) — a friendly nudge, not a hard gate.
@@ -10,6 +11,7 @@ const MAX_SHOWS = 1;
 const DELAY_MS = 4500; // give the age gate room to close first, so the two don't feel stacked
 
 export default function VerifiedWarningPopup() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -20,8 +22,8 @@ export default function VerifiedWarningPopup() {
       return; // storage unavailable — just skip it
     }
     if (shown >= MAX_SHOWS) return;
-    const t = setTimeout(() => setOpen(true), DELAY_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setOpen(true), DELAY_MS);
+    return () => clearTimeout(timer);
   }, []);
 
   function dismiss() {
@@ -44,17 +46,14 @@ export default function VerifiedWarningPopup() {
       }}
     >
       <div className="modal-card warn-popup-card">
-        <button type="button" className="modal-close" onClick={dismiss} aria-label="Dismiss">
+        <button type="button" className="modal-close" onClick={dismiss} aria-label={t("auth.dismiss")}>
           <Icon name="X" />
         </button>
         <WinkMascot />
-        <h2>Only trust Verified sellers</h2>
-        <p className="warn-popup-text">
-          Look for the <strong>Verified</strong> checkmark before you message a seller or pay
-          anyone. If it&apos;s not there… we warned ya.
-        </p>
+        <h2>{t("verifiedWarning.title")}</h2>
+        <p className="warn-popup-text">{t("verifiedWarning.body")}</p>
         <button type="button" className="btn btn-accent btn-block" onClick={dismiss}>
-          Got it
+          {t("verifiedWarning.gotIt")}
         </button>
       </div>
     </div>

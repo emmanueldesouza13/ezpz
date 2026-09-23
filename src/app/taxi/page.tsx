@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import Header from "@/components/Header";
 import CategoryNav from "@/components/CategoryNav";
 import Icon from "@/components/Icon";
+import TaxiHeading from "@/components/TaxiHeading";
+import T from "@/components/T";
 import { createClient } from "@/lib/supabase/server";
 import { getTaxiServices } from "@/lib/data";
 import type { TaxiService } from "@/lib/types";
@@ -38,13 +40,10 @@ export default async function TaxiPage({
       <main>
         <section className="wrap">
           <div className="browse-head">
-            <div>
-              <h1>Taxi &amp; rides</h1>
-              {q && <p>{services.length} matching &quot;{q}&quot;</p>}
-            </div>
+            <TaxiHeading count={services.length} query={q} />
             <Link href="/taxi/post" className="btn btn-accent">
               <Icon name="Plus" size={15} strokeWidth={2.4} />
-              Sign up as a taxi service
+              <T k="taxi.signUp" />
             </Link>
           </div>
 
@@ -52,9 +51,7 @@ export default async function TaxiPage({
             <div className="region-row" key={region}>
               <div className="region-row-head">
                 <h2>{region}</h2>
-                <p>
-                  {list.length} taxi service{list.length === 1 ? "" : "s"} in this area
-                </p>
+                <T k="taxi.inThisArea" vars={{ count: list.length }} as="p" />
               </div>
               <div className="region-scroll">
                 {list.map((s) => (
@@ -80,11 +77,12 @@ export default async function TaxiPage({
           ))}
 
           {services.length === 0 && (
-            <div className="empty-state">
-              {q
-                ? `No taxi services match "${q}".`
-                : "No taxi services yet — be the first to sign up."}
-            </div>
+            <T
+              k={q ? "taxi.noneMatching" : "taxi.noneYet"}
+              vars={q ? { q } : undefined}
+              as="div"
+              className="empty-state"
+            />
           )}
         </section>
       </main>

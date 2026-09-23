@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "./Icon";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Lets a seller (or admin) soft-delete their own listing/taxi service —
 // sets status to "removed" so it disappears from Browse but stays in the
@@ -12,20 +13,26 @@ import { toast } from "@/lib/toast";
 export default function RemoveListingButton({
   table,
   id,
-  label = "Remove listing",
+  label,
+  labelKey,
   redirectTo,
   onRemoved,
   variant = "block",
 }: {
   table: "listings" | "taxi_services";
   id: string;
+  // Literal, already-translated text — use this from a client component.
   label?: string;
+  // A translation key, resolved here — use this from a server component,
+  // which can't call the translation hook itself.
+  labelKey?: string;
   redirectTo?: string;
   onRemoved?: () => void;
   variant?: "block" | "row";
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState(false);
 
@@ -73,7 +80,11 @@ export default function RemoveListingButton({
       disabled={removing}
     >
       <Icon name="Trash2" />
-      {removing ? "Removing…" : confirming ? "Tap again to confirm" : label}
+      {removing
+        ? t("common.removing")
+        : confirming
+        ? t("common.tapAgainConfirm")
+        : label ?? (labelKey ? t(labelKey) : t("common.removeListing"))}
     </button>
   );
 }

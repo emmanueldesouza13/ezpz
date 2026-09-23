@@ -7,6 +7,7 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { GUYANA_REGIONS, OTHER_REGION_VALUE } from "@/lib/guyana";
 
 const MAX_PHOTOS = 6;
@@ -16,6 +17,7 @@ export default function EditTaxiPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const { t } = useLanguage();
 
   const [checking, setChecking] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -165,7 +167,7 @@ export default function EditTaxiPage() {
         <Header />
         <main>
           <section className="wrap">
-            <div className="empty-state">You can&#39;t edit this listing.</div>
+            <div className="empty-state">{t("editListing.cantEdit")}</div>
           </section>
         </main>
       </>
@@ -180,23 +182,23 @@ export default function EditTaxiPage() {
           <div className="post-wrap">
             <BackButton />
             {done ? (
-              <div className="empty-state">Saved — taking you back to the listing…</div>
+              <div className="empty-state">{t("editListing.saved")}</div>
             ) : (
               <>
-                <h1>Edit taxi service</h1>
-                <p className="lede">Update the details below and save your changes.</p>
+                <h1>{t("editListing.taxiTitle")}</h1>
+                <p className="lede">{t("editListing.lede")}</p>
                 <form onSubmit={handleSubmit}>
                   <div className="field">
-                    <label>Vehicle photos</label>
+                    <label>{t("taxi.vehiclePhotosLabel")}</label>
                     <div className="swatch-picker">
                       {photos.map((url, i) => (
                         <div className="photo-tile" key={url}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={url} alt={`Vehicle photo ${i + 1}`} />
+                          <img src={url} alt={t("taxi.vehiclePhotoAlt", { n: i + 1 })} />
                           <button
                             type="button"
                             className="photo-tile-remove"
-                            aria-label="Remove photo"
+                            aria-label={t("post.removePhoto")}
                             onClick={() => removePhoto(i)}
                           >
                             <Icon name="X" />
@@ -206,7 +208,7 @@ export default function EditTaxiPage() {
                       {photos.length < MAX_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
-                          {uploadingPhoto ? "Uploading…" : "Add photo"}
+                          {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
                           <input
                             type="file"
                             accept="image/*"
@@ -217,11 +219,11 @@ export default function EditTaxiPage() {
                         </label>
                       )}
                     </div>
-                    {photos.length > 0 && <p className="hint">The first photo is used as the main photo.</p>}
+                    {photos.length > 0 && <p className="hint">{t("taxi.vehiclePhotosHintSome")}</p>}
                   </div>
 
                   <div className="field">
-                    <label htmlFor="driverNameInput">Driver / business name</label>
+                    <label htmlFor="driverNameInput">{t("taxi.driverNameLabel")}</label>
                     <input
                       className="control"
                       id="driverNameInput"
@@ -233,7 +235,7 @@ export default function EditTaxiPage() {
 
                   <div className="price-row" style={{ marginBottom: 20 }}>
                     <div className="field">
-                      <label htmlFor="vehicleMakeInput">Vehicle make</label>
+                      <label htmlFor="vehicleMakeInput">{t("taxi.vehicleMakeLabel")}</label>
                       <input
                         className="control"
                         id="vehicleMakeInput"
@@ -243,7 +245,7 @@ export default function EditTaxiPage() {
                       />
                     </div>
                     <div className="field">
-                      <label htmlFor="vehicleModelInput">Vehicle model</label>
+                      <label htmlFor="vehicleModelInput">{t("taxi.vehicleModelLabel")}</label>
                       <input
                         className="control"
                         id="vehicleModelInput"
@@ -255,7 +257,7 @@ export default function EditTaxiPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="plateInput">License plate number</label>
+                    <label htmlFor="plateInput">{t("taxi.plateLabel")}</label>
                     <input
                       className="control"
                       id="plateInput"
@@ -266,7 +268,7 @@ export default function EditTaxiPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="areaSelect">Service area</label>
+                    <label htmlFor="areaSelect">{t("taxi.areaLabel")}</label>
                     <select
                       className="control"
                       id="areaSelect"
@@ -280,21 +282,21 @@ export default function EditTaxiPage() {
                       }}
                     >
                       <option value="" disabled>
-                        Choose a region
+                        {t("taxi.chooseRegion")}
                       </option>
                       {GUYANA_REGIONS.map((r) => (
                         <option value={r} key={r}>
                           {r}
                         </option>
                       ))}
-                      <option value={OTHER_REGION_VALUE}>Other (type it in)</option>
+                      <option value={OTHER_REGION_VALUE}>{t("taxi.otherTypeIn")}</option>
                     </select>
                     {regionChoice === OTHER_REGION_VALUE && (
                       <input
                         className="control"
                         style={{ marginTop: 8 }}
                         required
-                        placeholder="e.g. Bartica"
+                        placeholder={t("taxi.otherPlaceholder")}
                         value={serviceArea}
                         onChange={(e) => setServiceArea(e.target.value)}
                       />
@@ -302,7 +304,7 @@ export default function EditTaxiPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="phoneInput">Phone number</label>
+                    <label htmlFor="phoneInput">{t("taxi.phoneLabel")}</label>
                     <input
                       className="control"
                       id="phoneInput"
@@ -314,7 +316,7 @@ export default function EditTaxiPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="mmgInput">Your MMG number</label>
+                    <label htmlFor="mmgInput">{t("taxi.mmgLabel")}</label>
                     <input
                       className="control"
                       id="mmgInput"
@@ -326,7 +328,7 @@ export default function EditTaxiPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="notesInput">Notes (optional)</label>
+                    <label htmlFor="notesInput">{t("taxi.notesLabel")}</label>
                     <textarea
                       className="control"
                       id="notesInput"
@@ -336,7 +338,7 @@ export default function EditTaxiPage() {
                   </div>
 
                   <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto}>
-                    {submitting ? "Saving…" : "Save changes"}
+                    {submitting ? t("common.saving") : t("account.saveChanges")}
                   </button>
                 </form>
               </>

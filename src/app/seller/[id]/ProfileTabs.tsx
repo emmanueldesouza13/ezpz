@@ -6,13 +6,14 @@ import Icon from "@/components/Icon";
 import ReviewsPanel from "@/components/ReviewsPanel";
 import ScheduleEditor from "@/components/ScheduleEditor";
 import ListingCard from "@/components/ListingCard";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Profile, Listing, TaxiService } from "@/lib/types";
 
 const TABS = [
-  { key: "about", label: "About", icon: "Info" },
-  { key: "reviews", label: "Reviews", icon: "Star" },
-  { key: "schedule", label: "Schedule", icon: "Calendar" },
-  { key: "listings", label: "Listings", icon: "LayoutGrid" },
+  { key: "about", labelKey: "listing.tabAbout", icon: "Info" },
+  { key: "reviews", labelKey: "listing.tabReviews", icon: "Star" },
+  { key: "schedule", labelKey: "listing.tabSchedule", icon: "Calendar" },
+  { key: "listings", labelKey: "seller.tabListings", icon: "LayoutGrid" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -30,21 +31,22 @@ export default function ProfileTabs({
 }) {
   const [tab, setTab] = useState<TabKey>("about");
   const hasListings = listings.length > 0 || taxiServices.length > 0;
+  const { t } = useLanguage();
 
   return (
     <div>
       <div className="tab-bar" role="tablist" aria-label="Profile details">
-        {TABS.map((t) => (
+        {TABS.map((tabDef) => (
           <button
-            key={t.key}
+            key={tabDef.key}
             type="button"
             role="tab"
-            aria-selected={tab === t.key}
-            className={`tab-btn${tab === t.key ? " active" : ""}`}
-            onClick={() => setTab(t.key)}
+            aria-selected={tab === tabDef.key}
+            className={`tab-btn${tab === tabDef.key ? " active" : ""}`}
+            onClick={() => setTab(tabDef.key)}
           >
-            <Icon name={t.icon} />
-            {t.label}
+            <Icon name={tabDef.icon} />
+            {t(tabDef.labelKey)}
           </button>
         ))}
       </div>
@@ -55,19 +57,19 @@ export default function ProfileTabs({
             {seller.location && (
               <div className="tab-fact-row">
                 <div className="tab-fact">
-                  <strong>Location</strong>
+                  <strong>{t("listing.location")}</strong>
                   {seller.location}
                 </div>
               </div>
             )}
             {seller.bio ? (
               <>
-                <p className="section-label">About</p>
+                <p className="section-label">{t("listing.tabAbout")}</p>
                 <p className="desc-text">{seller.bio}</p>
               </>
             ) : (
               <div className="tab-empty">
-                {isOwner ? "You haven't added a bio yet." : "This seller hasn't added a bio yet."}
+                {isOwner ? t("seller.noBioOwner") : t("seller.noBioOther")}
               </div>
             )}
           </>
@@ -122,7 +124,7 @@ export default function ProfileTabs({
                 ))}
               </div>
             )}
-            {!hasListings && <div className="tab-empty">No active listings yet.</div>}
+            {!hasListings && <div className="tab-empty">{t("seller.noActiveListings")}</div>}
           </>
         )}
       </div>

@@ -4,6 +4,8 @@ import CategoryNav from "@/components/CategoryNav";
 import ListingCard from "@/components/ListingCard";
 import FiltersButton from "@/components/FiltersButton";
 import VerifiedWarningPopup from "@/components/VerifiedWarningPopup";
+import BrowseHeading from "@/components/BrowseHeading";
+import T from "@/components/T";
 import { createClient } from "@/lib/supabase/server";
 import { getCategories, getListings } from "@/lib/data";
 
@@ -41,13 +43,7 @@ export default async function BrowsePage({
   });
 
   const cat = category ? categories.find((c) => c.slug === category) : null;
-  const title = cat ? cat.name : "Nearby listings";
   const categoryNames = Object.fromEntries(categories.map((c) => [c.slug, c.name]));
-  const sub =
-    oneEach.length +
-    (oneEach.length === 1 ? " listing" : " listings") +
-    (q ? ` matching "${q}"` : "") +
-    (region ? ` in ${region}` : " across Guyana");
 
   return (
     <>
@@ -57,10 +53,7 @@ export default async function BrowsePage({
       <main>
         <section className="wrap">
           <div className="browse-head">
-            <div>
-              <h1>{title}</h1>
-              <p>{sub}</p>
-            </div>
+            <BrowseHeading categoryName={cat?.name} count={oneEach.length} query={q} region={region} />
             <FiltersButton
               categories={categories}
               current={{ category, q, minPrice, maxPrice, region }}
@@ -72,11 +65,7 @@ export default async function BrowsePage({
             ))}
           </div>
           {oneEach.length === 0 && (
-            <div className="empty-state">
-              {q || category
-                ? "No listings match your search yet."
-                : "No listings yet — be the first to post one."}
-            </div>
+            <T k={q || category ? "browse.noneFiltered" : "browse.noneYet"} as="div" className="empty-state" />
           )}
         </section>
       </main>

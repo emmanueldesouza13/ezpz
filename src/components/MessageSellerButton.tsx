@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getOrCreateConversation } from "@/lib/data";
 import Icon from "@/components/Icon";
 import { toast } from "@/lib/toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Same flow as SellerActions' Message button (used on a listing page), but
 // for a context — like a standalone profile page — where the listing to
@@ -23,6 +24,7 @@ export default function MessageSellerButton({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function MessageSellerButton({
   return (
     <button type="button" className="btn btn-brand btn-block" onClick={handleMessage}>
       <Icon name="MessageCircle" />
-      Message
+      {t("listing.message")}
     </button>
   );
 }

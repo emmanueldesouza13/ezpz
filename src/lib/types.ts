@@ -5,6 +5,7 @@ export type Settings = {
   listing_fee: number;
   taxi_mmg_number: string | null;
   taxi_fee: number;
+  verification_fee: number;
   updated_at: string;
 };
 
@@ -88,6 +89,8 @@ export type VerificationRequest = {
   reviewed_at: string | null;
   reviewed_by: string | null;
   rejection_reason: string | null;
+  fee_status: "pending" | "paid" | "waived";
+  fee_paid_at: string | null;
   user?: Profile;
 };
 

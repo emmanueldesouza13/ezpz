@@ -5,15 +5,16 @@ import Link from "next/link";
 import Icon from "./Icon";
 import ReviewsPanel from "./ReviewsPanel";
 import ScheduleEditor from "./ScheduleEditor";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Profile } from "@/lib/types";
 
 // The profile-level counterpart to listing/[id]/DetailTabs — same tab-bar
 // look, but scoped to the seller rather than one listing (no About tab,
 // since there's no single listing's category/location/description here).
 const TABS = [
-  { key: "reviews", label: "Reviews", icon: "Star" },
-  { key: "schedule", label: "Schedule", icon: "Calendar" },
-  { key: "screening", label: "Screening", icon: "ShieldCheck" },
+  { key: "reviews", labelKey: "listing.tabReviews", icon: "Star" },
+  { key: "schedule", labelKey: "listing.tabSchedule", icon: "Calendar" },
+  { key: "screening", labelKey: "account.tabScreening", icon: "ShieldCheck" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -26,21 +27,22 @@ export default function ProfileTabs({
   isOwner: boolean;
 }) {
   const [tab, setTab] = useState<TabKey>("reviews");
+  const { t } = useLanguage();
 
   return (
     <div style={{ marginTop: 8 }}>
       <div className="tab-bar" role="tablist" aria-label="Profile details">
-        {TABS.map((t) => (
+        {TABS.map((tabDef) => (
           <button
-            key={t.key}
+            key={tabDef.key}
             type="button"
             role="tab"
-            aria-selected={tab === t.key}
-            className={`tab-btn${tab === t.key ? " active" : ""}`}
-            onClick={() => setTab(t.key)}
+            aria-selected={tab === tabDef.key}
+            className={`tab-btn${tab === tabDef.key ? " active" : ""}`}
+            onClick={() => setTab(tabDef.key)}
           >
-            <Icon name={t.icon} />
-            {t.label}
+            <Icon name={tabDef.icon} />
+            {t(tabDef.labelKey)}
           </button>
         ))}
       </div>
@@ -68,19 +70,18 @@ export default function ProfileTabs({
           <>
             <div className="tab-fact-row">
               <div className="tab-fact">
-                <strong>Identity</strong>
-                {profile.verified ? "Verified on EzPz" : "Not yet verified"}
+                <strong>{t("account.identityLabel")}</strong>
+                {profile.verified ? t("account.verifiedOnEzpz") : t("account.notYetVerified")}
               </div>
               <div className="tab-fact">
-                <strong>Member since</strong>
+                <strong>{t("account.memberSince")}</strong>
                 {new Date(profile.created_at).getFullYear()}
               </div>
             </div>
             <div className="tab-empty">
-              EzPz doesn&#39;t run formal background checks yet. Meet in public places and read
-              our{" "}
+              {t("account.screeningPrefix")}{" "}
               <Link href="/safety" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                safety tips
+                {t("account.screeningLinkText")}
               </Link>
               .
             </div>

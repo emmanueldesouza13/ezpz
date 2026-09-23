@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/BackButton";
 import ConversationRow from "@/components/ConversationRow";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { getMyConversations } from "@/lib/data";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Conversation, Message } from "@/lib/types";
 
 export default function MessagesInboxPage() {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [convos, setConvos] = useState<Conversation[]>([]);
@@ -54,11 +57,14 @@ export default function MessagesInboxPage() {
       <main>
         <section className="wrap">
           <div className="inbox-wrap">
-            <BackButton fallback="/" disableSmartBack />
-            <h1 style={{ marginBottom: 18 }}>Messages</h1>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <BackButton fallback="/" disableSmartBack />
+              <LanguageSwitcher />
+            </div>
+            <h1 style={{ marginBottom: 18 }}>{t("messages.title")}</h1>
             {loading ? null : sorted.length === 0 ? (
               <div className="inbox-empty">
-                No conversations yet. Message a seller from any listing to start one.
+                {t("messages.noneYet")}
               </div>
             ) : (
               <div className="card" style={{ overflow: "hidden" }}>
