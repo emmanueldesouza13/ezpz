@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import RemoveListingButton from "@/components/RemoveListingButton";
@@ -12,6 +11,7 @@ import PasswordInput from "@/components/PasswordInput";
 import ProfileTabs from "@/components/ProfileTabs";
 import VerifyIdentity from "@/components/VerifyIdentity";
 import BlueTick from "@/components/BlueTick";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
@@ -88,11 +88,13 @@ export default function AccountPage() {
 
   return (
     <>
-      <Header />
       <main>
         <section className="wrap">
           <div className="post-wrap">
-            <BackButton fallback="/" disableSmartBack />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <BackButton fallback="/" disableSmartBack />
+              <LanguageSwitcher />
+            </div>
             <h1>{t("account.title")}</h1>
             {profile?.verified && <p className="lede">{t("account.verifiedSeller")}</p>}
 
