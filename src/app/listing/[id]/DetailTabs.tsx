@@ -70,7 +70,7 @@ export default function DetailTabs({
             </div>
             <p className="section-label">Description</p>
             <p className="desc-text">{listing.description}</p>
-            <ReportButton />
+            <ReportButton listingId={listing.id} />
           </>
         )}
 

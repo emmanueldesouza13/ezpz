@@ -62,6 +62,19 @@ export type Profile = {
   created_at: string;
 };
 
+export type ReportStatus = "open" | "resolved" | "dismissed";
+
+export type Report = {
+  id: string;
+  listing_id: string;
+  reporter_id: string | null;
+  reason: string;
+  status: ReportStatus;
+  created_at: string;
+  listing?: Listing;
+  reporter?: Profile;
+};
+
 export type VerificationStatus = "pending" | "approved" | "rejected";
 
 export type VerificationRequest = {

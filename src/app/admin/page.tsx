@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Icon from "@/components/Icon";
 import BackButton from "@/components/BackButton";
@@ -10,6 +11,7 @@ import {
   type Category,
   type Listing,
   type Profile,
+  type Report,
   type Settings,
   type TaxiService,
   type VerificationRequest,
@@ -18,7 +20,7 @@ import { formatPrice, isPhotoUrl } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { getSiteSettings } from "@/lib/data";
 
-type Tab = "listings" | "taxi" | "sellers" | "verification" | "categories" | "branding" | "payouts";
+type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts";
 
 const MAX_PHOTOS = 6;
 
@@ -36,6 +38,7 @@ export default function AdminPage() {
   const [taxiServices, setTaxiServices] = useState<TaxiService[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [verifications, setVerifications] = useState<VerificationRequest[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editListing, setEditListing] = useState<Listing | null | "new">(null);
   const [editTaxi, setEditTaxi] = useState<TaxiService | null | "new">(null);
@@ -47,7 +50,7 @@ export default function AdminPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
 
   const loadAll = useCallback(async () => {
-    const [{ data: l }, { data: t }, { data: p }, { data: v }, { data: c }, st] = await Promise.all([
+    const [{ data: l }, { data: t }, { data: p }, { data: v }, { data: r }, { data: c }, st] = await Promise.all([
       supabase.from("listings").select("*, seller:profiles(*)").order("created_at", { ascending: false }),
       supabase.from("taxi_services").select("*").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
@@ -55,6 +58,10 @@ export default function AdminPage() {
         .from("verification_requests")
         .select("*, user:profiles!verification_requests_user_id_fkey(*)")
         .order("submitted_at", { ascending: false }),
+      supabase
+        .from("reports")
+        .select("*, listing:listings(*), reporter:profiles(*)")
+        .order("created_at", { ascending: false }),
       supabase.from("categories").select("*").order("sort_order", { ascending: true }),
       getSiteSettings(supabase),
     ]);
@@ -62,10 +69,29 @@ export default function AdminPage() {
     setTaxiServices((t as TaxiService[]) || []);
     setProfiles((p as Profile[]) || []);
     setVerifications((v as VerificationRequest[]) || []);
+    setReports((r as Report[]) || []);
     setCategories((c as Category[]) || []);
     setLogoUrl(st.logo_url);
     setSettings(st);
   }, [supabase]);
+
+  async function setReportStatus(r: Report, status: "open" | "resolved" | "dismissed") {
+    const { data, error } = await supabase.from("reports").update({ status }).eq("id", r.id).select();
+    if (error) { toast("Couldn't update — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't update — no permission or it's gone"); return; }
+    toast(
+      status === "resolved" ? "Report marked resolved" : status === "dismissed" ? "Report dismissed" : "Report reopened"
+    );
+    loadAll();
+  }
+
+  async function deleteReportForever(r: Report) {
+    const { data, error } = await supabase.from("reports").delete().eq("id", r.id).select();
+    if (error) { toast("Couldn't delete — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't delete — no permission or it's already gone"); return; }
+    toast("Report deleted");
+    loadAll();
+  }
 
   async function viewVerificationDoc(path: string) {
     const { data, error } = await supabase.storage.from("verification").createSignedUrl(path, 300);
@@ -296,7 +322,7 @@ export default function AdminPage() {
               away.
             </p>
             <div className="admin-tabs">
-              {(["listings", "taxi", "sellers", "verification", "categories", "branding", "payouts"] as Tab[]).map((t) => (
+              {(["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts"] as Tab[]).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -311,6 +337,8 @@ export default function AdminPage() {
                     ? "Sellers"
                     : t === "verification"
                     ? `Verification${verifications.filter((v) => v.status === "pending").length > 0 ? ` (${verifications.filter((v) => v.status === "pending").length})` : ""}`
+                    : t === "reports"
+                    ? `Reports${reports.filter((r) => r.status === "open").length > 0 ? ` (${reports.filter((r) => r.status === "open").length})` : ""}`
                     : t === "categories"
                     ? "Categories"
                     : t === "branding"
@@ -608,6 +636,77 @@ export default function AdminPage() {
                             Reject
                           </button>
                         )}
+                      </div>
+                    </div>
+                  ))
+                ))}
+
+              {tab === "reports" &&
+                (reports.length === 0 ? (
+                  <div className="admin-empty">No reports yet.</div>
+                ) : (
+                  reports.map((r) => (
+                    <div className="admin-row" key={r.id}>
+                      <div
+                        className="admin-swatch"
+                        style={{
+                          background: "var(--surface-2)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "var(--bad)",
+                        }}
+                      >
+                        <Icon name="Flag" />
+                      </div>
+                      <div className="admin-row-info">
+                        <div className="admin-row-title">
+                          {r.listing?.title ?? "Listing removed"}
+                          {r.status === "open" && <span className="admin-flag off">Open</span>}
+                          {r.status === "resolved" && <span className="admin-flag on">Resolved</span>}
+                          {r.status === "dismissed" && <span className="admin-flag off">Dismissed</span>}
+                        </div>
+                        <div className="admin-row-sub">
+                          {r.reason} &middot; {r.reporter?.display_name ?? "Anonymous"} &middot;{" "}
+                          {new Date(r.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="admin-row-actions">
+                        {r.listing_id && (
+                          <Link href={`/listing/${r.listing_id}`} target="_blank" className="admin-btn">
+                            <Icon name="ExternalLink" />
+                            View
+                          </Link>
+                        )}
+                        {r.status !== "resolved" && (
+                          <button type="button" className="admin-btn" onClick={() => setReportStatus(r, "resolved")}>
+                            <Icon name="Check" />
+                            Resolve
+                          </button>
+                        )}
+                        {r.status !== "dismissed" && (
+                          <button type="button" className="admin-btn" onClick={() => setReportStatus(r, "dismissed")}>
+                            <Icon name="EyeOff" />
+                            Dismiss
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className={`admin-btn danger${confirmingId === `report:${r.id}` ? " confirming" : ""}`}
+                          onClick={() => {
+                            const key = `report:${r.id}`;
+                            if (confirmingId !== key) {
+                              setConfirmingId(key);
+                              setTimeout(() => setConfirmingId((cur) => (cur === key ? null : cur)), 3000);
+                              return;
+                            }
+                            setConfirmingId(null);
+                            deleteReportForever(r);
+                          }}
+                        >
+                          <Icon name="X" />
+                          {confirmingId === `report:${r.id}` ? "Confirm delete?" : "Delete"}
+                        </button>
                       </div>
                     </div>
                   ))
