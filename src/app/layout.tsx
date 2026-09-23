@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ToastHost from "@/components/ToastHost";
 import AgeGate from "@/components/AgeGate";
+import NavDepthTracker from "@/components/NavDepthTracker";
 
 export const metadata: Metadata = {
   title: "EzPz — Local services, booked the easy way",
@@ -23,6 +24,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <NavDepthTracker />
         <AgeGate>{children}</AgeGate>
         <ToastHost />
       </body>
