@@ -85,7 +85,17 @@ export async function getListings(
     .order("created_at", { ascending: false });
 
   if (opts.category) query = query.eq("category", opts.category);
-  if (opts.q) query = query.ilike("title", `%${opts.q}%`);
+  if (opts.q) {
+    const term = opts.q.trim();
+    if (term) {
+      // Commas/parens have special meaning in PostgREST's .or() filter
+      // syntax, so strip them from the raw search term before building it.
+      const safe = term.replace(/[,()]/g, "");
+      query = query.or(
+        `title.ilike.%${safe}%,location.ilike.%${safe}%,description.ilike.%${safe}%`
+      );
+    }
+  }
   if (opts.minPrice != null) query = query.gte("price", opts.minPrice);
   if (opts.maxPrice != null) query = query.lte("price", opts.maxPrice);
   if (opts.region) {
