@@ -2,20 +2,54 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSiteSettings } from "@/lib/data";
 import Icon from "./Icon";
 
 const REGIONS = Array.from({ length: 10 }, (_, i) => `Region ${i + 1}`);
+const DEFAULT_REGION_LABEL = "Georgetown, Guyana";
 
 export default function Header() {
   const [email, setEmail] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState("/logo.png");
-  const [region, setRegion] = useState("Georgetown, Guyana");
+  const [region, setRegion] = useState(DEFAULT_REGION_LABEL);
   const [regionOpen, setRegionOpen] = useState(false);
   const regionRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const supabase = createClient();
+  const router = useRouter();
+
+  // Reflect whatever region (if any) is already in the URL — read manually
+  // instead of via useSearchParams() so pages that render Header can stay
+  // statically prerendered.
+  useEffect(() => {
+    try {
+      const r = new URLSearchParams(window.location.search).get("region");
+      if (r && REGIONS.includes(r)) setRegion(r);
+    } catch {
+      // ignore — just fall back to the default label
+    }
+  }, []);
+
+  // Picking a region always sends the buyer to the browse feed filtered to
+  // it, whatever page the header happens to be on; picking "All regions"
+  // clears the filter. Other active filters (search, category, price) are
+  // preserved.
+  function selectRegion(r: string | null) {
+    setRegion(r ?? DEFAULT_REGION_LABEL);
+    setRegionOpen(false);
+    let params: URLSearchParams;
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch {
+      params = new URLSearchParams();
+    }
+    if (r) params.set("region", r);
+    else params.delete("region");
+    const qs = params.toString();
+    router.push(qs ? `/?${qs}` : "/");
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -64,15 +98,19 @@ export default function Header() {
           {regionOpen && (
             <div className="distance-menu region-menu">
               <p className="distance-menu-label">Choose a region</p>
+              <button
+                type="button"
+                className={`distance-menu-item${region === DEFAULT_REGION_LABEL ? " active" : ""}`}
+                onClick={() => selectRegion(null)}
+              >
+                All regions
+              </button>
               {REGIONS.map((r) => (
                 <button
                   type="button"
                   key={r}
                   className={`distance-menu-item${region === r ? " active" : ""}`}
-                  onClick={() => {
-                    setRegion(r);
-                    setRegionOpen(false);
-                  }}
+                  onClick={() => selectRegion(r)}
                 >
                   {r}
                 </button>

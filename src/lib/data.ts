@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Category, Listing, Profile, Conversation, Message, Settings, TaxiService, Review } from "./types";
+import { REGION_TOWNS } from "./guyana";
 
 // Thin query helpers shared by server and browser components — pass either
 // createClient() from lib/supabase/server or lib/supabase/client.
@@ -74,6 +75,7 @@ export async function getListings(
     q?: string | null;
     minPrice?: number | null;
     maxPrice?: number | null;
+    region?: string | null;
   } = {}
 ): Promise<Listing[]> {
   let query = supabase
@@ -86,6 +88,13 @@ export async function getListings(
   if (opts.q) query = query.ilike("title", `%${opts.q}%`);
   if (opts.minPrice != null) query = query.gte("price", opts.minPrice);
   if (opts.maxPrice != null) query = query.lte("price", opts.maxPrice);
+  if (opts.region) {
+    const towns = REGION_TOWNS[opts.region] ?? [];
+    query =
+      towns.length > 0
+        ? query.or(towns.map((t) => `location.ilike.${t}`).join(","))
+        : query.eq("location", "__no_listings_match_this_region__");
+  }
 
   const { data, error } = await query;
   if (error) {

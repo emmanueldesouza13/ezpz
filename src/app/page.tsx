@@ -10,9 +10,15 @@ import { getCategories, getListings } from "@/lib/data";
 export default async function BrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string; minPrice?: string; maxPrice?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    q?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    region?: string;
+  }>;
 }) {
-  const { category, q, minPrice, maxPrice } = await searchParams;
+  const { category, q, minPrice, maxPrice, region } = await searchParams;
   const supabase = await createClient();
   const [listings, categories] = await Promise.all([
     getListings(supabase, {
@@ -20,6 +26,7 @@ export default async function BrowsePage({
       q,
       minPrice: minPrice ? Number(minPrice) : null,
       maxPrice: maxPrice ? Number(maxPrice) : null,
+      region,
     }),
     getCategories(supabase),
   ]);
@@ -40,7 +47,7 @@ export default async function BrowsePage({
     oneEach.length +
     (oneEach.length === 1 ? " listing" : " listings") +
     (q ? ` matching "${q}"` : "") +
-    " across Guyana";
+    (region ? ` in ${region}` : " across Guyana");
 
   return (
     <>
@@ -56,7 +63,7 @@ export default async function BrowsePage({
             </div>
             <FiltersButton
               categories={categories}
-              current={{ category, q, minPrice, maxPrice }}
+              current={{ category, q, minPrice, maxPrice, region }}
             />
           </div>
           <div className="listing-grid">

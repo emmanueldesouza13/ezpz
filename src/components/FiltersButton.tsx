@@ -21,7 +21,7 @@ export default function FiltersButton({
   current,
 }: {
   categories: Category[];
-  current: { category?: string; q?: string; minPrice?: string; maxPrice?: string };
+  current: { category?: string; q?: string; minPrice?: string; maxPrice?: string; region?: string };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -38,6 +38,7 @@ export default function FiltersButton({
     if (category) params.set("category", category);
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
+    if (current.region) params.set("region", current.region);
     setOpen(false);
     router.push(params.toString() ? `/?${params.toString()}` : "/");
   }
