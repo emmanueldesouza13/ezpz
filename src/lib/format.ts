@@ -29,3 +29,11 @@ export function fmtChatTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
+
+// Strips digits as someone types a listing description, so phone numbers
+// and other numeric contact info can't be slipped in to route buyers around
+// in-app messaging. Covers typing and pasting alike, since both go through
+// the same onChange.
+export function stripDigits(value: string): string {
+  return value.replace(/[0-9]/g, "");
+}

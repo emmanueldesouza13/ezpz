@@ -10,6 +10,7 @@ import { getCategories, getSiteSettings } from "@/lib/data";
 import { GRADIENTS, type Category } from "@/lib/types";
 import { toast } from "@/lib/toast";
 import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
+import { stripDigits } from "@/lib/format";
 
 const MAX_PHOTOS = 6;
 
@@ -350,8 +351,11 @@ export default function PostPage() {
                       required
                       placeholder="Describe what's included, your experience, and how to book."
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(e) => setDescription(stripDigits(e.target.value))}
                     />
+                    <p className="hint">
+                      No phone numbers or other contact details here — buyers message you in-app.
+                    </p>
                   </div>
 
                   <div className="fee-note">

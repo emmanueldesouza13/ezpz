@@ -8,7 +8,7 @@ import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
 import { getCategories } from "@/lib/data";
 import { GRADIENTS, type Category } from "@/lib/types";
-import { isPhotoUrl } from "@/lib/format";
+import { isPhotoUrl, stripDigits } from "@/lib/format";
 import { toast } from "@/lib/toast";
 
 const MAX_PHOTOS = 6;
@@ -285,8 +285,11 @@ export default function EditListingPage() {
                       id="descInput"
                       required
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(e) => setDescription(stripDigits(e.target.value))}
                     />
+                    <p className="hint">
+                      No phone numbers or other contact details here — buyers message you in-app.
+                    </p>
                   </div>
 
                   <button type="submit" className="btn btn-accent btn-block" disabled={submitting}>
