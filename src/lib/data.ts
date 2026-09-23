@@ -206,9 +206,48 @@ export async function getMyConversations(
   const { data } = await supabase
     .from("conversations")
     .select("*, listing:listings(*), buyer:profiles!conversations_buyer_id_fkey(*), seller:profiles!conversations_seller_id_fkey(*)")
-    .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+    // Skip conversations the viewer deleted from their own inbox (the other
+    // side's copy is unaffected — deleting is one-sided).
+    .or(
+      `and(buyer_id.eq.${userId},hidden_for_buyer.eq.false),and(seller_id.eq.${userId},hidden_for_seller.eq.false)`
+    )
     .order("created_at", { ascending: false });
   return (data as Conversation[]) || [];
+}
+
+// Hides a conversation from the caller's own inbox only — the other
+// participant still sees it and can still message. Backed by a
+// SECURITY DEFINER RPC so a participant can flip their own hidden flag
+// without being able to touch anything else on the row.
+export async function hideConversationForMe(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<boolean> {
+  const { error } = await supabase.rpc("hide_conversation_for_me", {
+    p_conversation_id: conversationId,
+  });
+  if (error) {
+    console.error("hideConversationForMe error", error);
+    return false;
+  }
+  return true;
+}
+
+// Hides the conversation for the caller AND blocks the other participant —
+// blocked users can't start a new conversation or send messages to each
+// other in either direction from this point on.
+export async function blockConversationPartner(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<boolean> {
+  const { error } = await supabase.rpc("block_conversation_partner", {
+    p_conversation_id: conversationId,
+  });
+  if (error) {
+    console.error("blockConversationPartner error", error);
+    return false;
+  }
+  return true;
 }
 
 export async function getOrCreateConversation(
@@ -223,7 +262,18 @@ export async function getOrCreateConversation(
     .eq("listing_id", listingId)
     .eq("buyer_id", buyerId)
     .maybeSingle();
-  if (existing) return existing as Conversation;
+  if (existing) {
+    // Messaging again after deleting the chat should bring it back into
+    // the buyer's inbox instead of leaving it hidden with new messages
+    // silently piling up in it.
+    if (existing.hidden_for_buyer) {
+      await supabase
+        .from("conversations")
+        .update({ hidden_for_buyer: false })
+        .eq("id", existing.id);
+    }
+    return existing as Conversation;
+  }
 
   const { data, error } = await supabase
     .from("conversations")

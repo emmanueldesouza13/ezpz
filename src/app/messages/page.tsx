@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
-import Avatar from "@/components/Avatar";
+import ConversationRow from "@/components/ConversationRow";
 import { createClient } from "@/lib/supabase/client";
 import { getMyConversations } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
-import { fmtChatTime } from "@/lib/format";
 
 export default function MessagesInboxPage() {
   const supabase = createClient();
@@ -66,33 +64,15 @@ export default function MessagesInboxPage() {
               </div>
             ) : (
               <div className="card" style={{ overflow: "hidden" }}>
-                {sorted.map((c) => {
-                  const isBuyer = c.buyer_id === userId;
-                  const other = isBuyer ? c.seller : c.buyer;
-                  const last = lastByConvo[c.id];
-                  return (
-                    <Link href={`/messages/${c.id}`} className="convo-row" key={c.id}>
-                      <div className="avatar-wrap">
-                        <Avatar
-                          url={other?.avatar_url}
-                          color={other?.avatar_color}
-                          name={other?.display_name}
-                          className="avatar"
-                        />
-                      </div>
-                      <div className="convo-text">
-                        <div className="convo-top">
-                          <span className="convo-name">{other?.display_name ?? "User"}</span>
-                          <span className="convo-time">
-                            {last ? fmtChatTime(last.created_at) : ""}
-                          </span>
-                        </div>
-                        <p className="convo-listing">{c.listing?.title}</p>
-                        <p className="convo-snippet">{last?.body ?? "Say hello 👋"}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {sorted.map((c) => (
+                  <ConversationRow
+                    key={c.id}
+                    conversation={c}
+                    userId={userId}
+                    last={lastByConvo[c.id]}
+                    onRemoved={(id) => setConvos((prev) => prev.filter((cv) => cv.id !== id))}
+                  />
+                ))}
               </div>
             )}
           </div>

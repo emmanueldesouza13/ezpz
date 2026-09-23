@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getMessages, sendMessage } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
 import { fmtChatTime } from "@/lib/format";
+import { toast } from "@/lib/toast";
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = usePromise(params);
@@ -77,6 +78,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     if (msg) {
       setInput("");
       setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+    } else {
+      toast("Message couldn't be sent — you may be blocked in this chat");
     }
   }
 

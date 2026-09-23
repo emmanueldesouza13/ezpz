@@ -963,13 +963,18 @@
   /* ---------- inbox ---------- */
   .inbox-wrap { max-width: 720px; padding-top: 26px; padding-bottom: 56px; }
   .convo-row {
-    display: flex; align-items: center; gap: 13px;
-    padding: 14px;
+    display: flex; align-items: center; gap: 4px;
     text-align: left; width: 100%;
     border-bottom: 1px solid var(--line-soft);
+    position: relative;
   }
   .convo-row:hover { background: var(--surface-2); }
   .convo-row:first-child { border-top: 1px solid var(--line-soft); }
+  .convo-row-link {
+    display: flex; align-items: center; gap: 13px;
+    padding: 14px;
+    min-width: 0; flex: 1;
+  }
   .convo-text { min-width: 0; flex: 1; }
   .convo-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .convo-name { font-size: 0.9rem; font-weight: 700; }
@@ -981,6 +986,25 @@
   }
   .convo-snippet.unread { color: var(--ink); font-weight: 600; }
   .convo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+  /* ---------- inbox row menu (delete chat / block person) ---------- */
+  .convo-menu { position: relative; flex-shrink: 0; margin-right: 8px; }
+  .convo-menu-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0;
+    border: none; border-radius: 50%;
+    background: transparent; color: var(--ink-faint);
+  }
+  .convo-menu-btn:hover { background: var(--surface-2); color: var(--ink); }
+  .convo-menu-dropdown {
+    top: calc(100% + 4px); left: auto; right: 0;
+    min-width: 168px;
+  }
+  .convo-menu-dropdown .distance-menu-item {
+    display: flex; align-items: center; gap: 9px;
+  }
+  .convo-menu-dropdown .distance-menu-item.danger { color: var(--bad); }
+  .convo-menu-dropdown .distance-menu-item.danger:hover { background: var(--bad); color: #fff; }
 
   /* ---------- chat thread ---------- */
   .chat-wrap {
