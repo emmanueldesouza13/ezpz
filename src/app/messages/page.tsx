@@ -79,7 +79,6 @@ export default function MessagesInboxPage() {
                           name={other?.display_name}
                           className="avatar"
                         />
-                        {other?.available && <span className="avail-dot" />}
                       </div>
                       <div className="convo-text">
                         <div className="convo-top">

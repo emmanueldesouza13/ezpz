@@ -80,7 +80,6 @@ export default async function ListingDetailPage({
                         name={seller?.display_name}
                         className="profile-avatar"
                       />
-                      {seller?.available && <span className="profile-avail-dot" />}
                     </div>
                   )}
                   <div className="profile-name-row">

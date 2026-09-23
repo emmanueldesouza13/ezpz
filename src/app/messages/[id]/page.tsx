@@ -120,7 +120,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   className="avatar"
                   style={{ width: 34, height: 34, fontSize: "0.85rem" }}
                 />
-                {other?.available && <span className="avail-dot" style={{ width: 9, height: 9 }} />}
               </div>
               <div>
                 <div className="chat-head-name">{other?.display_name ?? "User"}</div>

@@ -57,7 +57,6 @@ export default function ListingCard({
             <Icon name="MapPin" />
             {listing.location}
           </span>
-          {seller?.available && <span className="listing-card-avail-dot" title="Available now" />}
         </div>
       </div>
     </Link>
