@@ -56,7 +56,7 @@ export default function MessagesInboxPage() {
       <main>
         <section className="wrap">
           <div className="inbox-wrap">
-            <BackButton />
+            <BackButton fallback="/" disableSmartBack />
             <h1 style={{ marginBottom: 18 }}>Messages</h1>
             {loading ? null : sorted.length === 0 ? (
               <div className="inbox-empty">

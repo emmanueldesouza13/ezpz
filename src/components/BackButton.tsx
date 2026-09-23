@@ -17,7 +17,18 @@ import { NAV_DEPTH_KEY } from "./NavDepthTracker";
 // after asking for it, this checks a moment later whether the page actually
 // changed — if not, it self-heals by sending the person to `fallback`
 // instead of leaving them stuck on a dead button.
-export default function BackButton({ fallback = "/" }: { fallback?: string }) {
+export default function BackButton({
+  fallback = "/",
+  disableSmartBack = false,
+}: {
+  fallback?: string;
+  // For a page that's a natural section root (like the messages inbox):
+  // router.back() can bounce into whatever this page happened to be pushed
+  // on top of last (e.g. a specific chat you closed to get here), which
+  // reads as "Back" looping you right back into it. Skip the history
+  // guesswork entirely and always go straight to `fallback`.
+  disableSmartBack?: boolean;
+}) {
   const router = useRouter();
 
   return (
@@ -25,6 +36,10 @@ export default function BackButton({ fallback = "/" }: { fallback?: string }) {
       type="button"
       className="page-back"
       onClick={() => {
+        if (disableSmartBack) {
+          router.push(fallback);
+          return;
+        }
         let depth = 0;
         try {
           depth = Number(sessionStorage.getItem(NAV_DEPTH_KEY) || "0");
