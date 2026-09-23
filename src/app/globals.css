@@ -988,6 +988,7 @@
     padding-top: 18px;
     padding-bottom: 24px;
     display: flex; flex-direction: column;
+    min-height: calc(100dvh - var(--header-h, 132px));
   }
   .chat-head {
     display: flex; align-items: center; gap: 11px;
@@ -1002,7 +1003,8 @@
   .chat-head-name { font-size: 0.94rem; font-weight: 700; }
   .chat-head-listing { font-size: 0.76rem; color: var(--ink-faint); }
   .chat-scroll {
-    height: min(42vh, 380px);
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-block: 18px;
     display: flex; flex-direction: column; gap: 10px;
@@ -1044,6 +1046,9 @@
     display: flex; align-items: flex-end; gap: 9px;
     padding-block: 12px;
     border-top: 1px solid var(--line);
+    position: sticky; bottom: 0;
+    background: var(--paper);
+    flex-shrink: 0;
   }
   .chat-input-row textarea {
     flex: 1; resize: none; max-height: 100px;
