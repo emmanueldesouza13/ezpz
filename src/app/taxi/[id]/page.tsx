@@ -90,7 +90,7 @@ export default async function TaxiServiceDetailPage({
                   </span>
                   <span>
                     <Icon name="Clock" />
-                    {timeAgo(service.created_at)}
+                    Posted {timeAgo(service.created_at)}
                   </span>
                 </div>
                 <div className="fee-box" style={{ marginBottom: 14 }}>
