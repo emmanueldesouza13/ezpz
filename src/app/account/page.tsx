@@ -104,17 +104,19 @@ export default function AccountPage() {
                 <div className="profile-badge-row">
                   <span className="profile-badge">
                     <Icon name="CalendarDays" />
-                    Since {new Date(profile.created_at).getFullYear()}
+                    {t("listing.since", { year: new Date(profile.created_at).getFullYear() })}
                   </span>
+                  {profile.available && (
+                    <span className="profile-badge good">
+                      <Icon name="CircleDot" />
+                      {t("listing.availableNow")}
+                    </span>
+                  )}
                 </div>
                 <div className="profile-name-row">
                   <h2>{profile.display_name}</h2>
                   {profile.verified && <BlueTick size={16} />}
                 </div>
-                <p className="profile-rating-row">
-                  <Icon name="Star" />
-                  {(profile.rating ?? 5).toFixed(1)} ({profile.rating_count ?? 0} ratings)
-                </p>
                 {profile.location && (
                   <p className="profile-location-row">
                     <Icon name="MapPin" />
@@ -122,49 +124,44 @@ export default function AccountPage() {
                   </p>
                 )}
                 {profile.bio && <p className="profile-bio">{profile.bio}</p>}
-                {profile.available && (
-                  <div className="profile-badge-row">
-                    <span className="profile-badge good">
-                      <Icon name="CircleDot" />
-                      Available now
-                    </span>
-                  </div>
-                )}
                 <VerifyIdentity profile={profile} />
                 <ProfileTabs profile={profile} isOwner />
               </div>
             )}
 
-            <form onSubmit={handleSaveMmg}>
-              <div className="field">
-                <label htmlFor="mmgInput">{t("account.mmgLabel")}</label>
-                <input className="control" id="mmgInput" value={mmg} onChange={(e) => setMmg(e.target.value)} placeholder="e.g. 642-1187" />
-                <p className="hint">{t("account.mmgHint")}</p>
-              </div>
-              <button type="submit" className="btn btn-accent btn-block" disabled={saving}>
-                {saving ? t("common.saving") : t("account.saveChanges")}
+            <h1 style={{ marginTop: 32 }}>{t("account.settingsHeading")}</h1>
+            <div className="review-form-box">
+              <form onSubmit={handleSaveMmg}>
+                <div className="field">
+                  <label htmlFor="mmgInput">{t("account.mmgLabel")}</label>
+                  <input className="control" id="mmgInput" value={mmg} onChange={(e) => setMmg(e.target.value)} placeholder="e.g. 642-1187" />
+                  <p className="hint">{t("account.mmgHint")}</p>
+                </div>
+                <button type="submit" className="btn btn-accent btn-block" disabled={saving}>
+                  {saving ? t("common.saving") : t("account.saveChanges")}
+                </button>
+              </form>
+              <form onSubmit={handleSetPassword} style={{ marginTop: 20 }}>
+                <div className="field">
+                  <label htmlFor="newPasswordInput">{t("account.setPasswordLabel")}</label>
+                  <PasswordInput
+                    id="newPasswordInput"
+                    minLength={6}
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={t("auth.passwordPlaceholder")}
+                  />
+                  <p className="hint">{t("account.setPasswordHint")}</p>
+                </div>
+                <button type="submit" className="btn btn-line btn-block" disabled={savingPassword || newPassword.length < 6}>
+                  {savingPassword ? t("common.saving") : t("account.savePassword")}
+                </button>
+              </form>
+              <button type="button" className="btn btn-line btn-block" style={{ marginTop: 20 }} onClick={handleSignOut}>
+                {t("common.signOut")}
               </button>
-            </form>
-            <form onSubmit={handleSetPassword} style={{ marginTop: 20 }}>
-              <div className="field">
-                <label htmlFor="newPasswordInput">{t("account.setPasswordLabel")}</label>
-                <PasswordInput
-                  id="newPasswordInput"
-                  minLength={6}
-                  autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder={t("auth.passwordPlaceholder")}
-                />
-                <p className="hint">{t("account.setPasswordHint")}</p>
-              </div>
-              <button type="submit" className="btn btn-line btn-block" disabled={savingPassword || newPassword.length < 6}>
-                {savingPassword ? t("common.saving") : t("account.savePassword")}
-              </button>
-            </form>
-            <button type="button" className="btn btn-line btn-block" style={{ marginTop: 12 }} onClick={handleSignOut}>
-              {t("common.signOut")}
-            </button>
+            </div>
 
             {(myListings.length > 0 || myTaxi.length > 0) && (
               <>

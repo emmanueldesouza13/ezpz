@@ -177,6 +177,7 @@ export const translations = {
     account: {
       title: "Your account",
       verifiedSeller: "Verified seller",
+      settingsHeading: "Account settings",
       mmgLabel: "MMG number",
       mmgHint: "Used on any listing you post, so buyers can pay you directly.",
       saveChanges: "Save changes",
@@ -580,6 +581,7 @@ export const translations = {
     account: {
       title: "Tu cuenta",
       verifiedSeller: "Vendedor verificado",
+      settingsHeading: "Configuración de la cuenta",
       mmgLabel: "Número MMG",
       mmgHint: "Se usa en cualquier anuncio que publiques, para que los compradores te paguen directamente.",
       saveChanges: "Guardar cambios",
