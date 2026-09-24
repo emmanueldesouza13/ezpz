@@ -25,6 +25,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mmg, setMmg] = useState("");
+  const [savedMmg, setSavedMmg] = useState("");
   const [saving, setSaving] = useState(false);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [myTaxi, setMyTaxi] = useState<TaxiService[]>([]);
@@ -38,6 +39,7 @@ export default function AccountPage() {
       if (profileRow) {
         setProfile(profileRow as Profile);
         setMmg(profileRow.mmg_number ?? "");
+        setSavedMmg(profileRow.mmg_number ?? "");
       }
       const [listings, taxi] = await Promise.all([
         getMyListings(supabase, data.user.id),
@@ -53,14 +55,20 @@ export default function AccountPage() {
     e.preventDefault();
     const { data } = await supabase.auth.getUser();
     if (!data.user) return;
+    const trimmed = mmg.trim();
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ mmg_number: mmg.trim() || null })
+      .update({ mmg_number: trimmed || null })
       .eq("id", data.user.id);
     setSaving(false);
-    if (error) toast("Couldn't save — try again");
-    else toast("Saved");
+    if (error) {
+      toast("Couldn't save — try again");
+    } else {
+      setMmg(trimmed);
+      setSavedMmg(trimmed);
+      toast("Saved");
+    }
   }
 
   async function handleSignOut() {
@@ -121,7 +129,7 @@ export default function AccountPage() {
                   <input className="control" id="mmgInput" value={mmg} onChange={(e) => setMmg(e.target.value)} placeholder="e.g. 642-1187" />
                   <p className="hint">{t("account.mmgHint")}</p>
                 </div>
-                <button type="submit" className="btn btn-accent btn-block" disabled={saving}>
+                <button type="submit" className="btn btn-accent btn-block" disabled={saving || mmg.trim() === savedMmg.trim()}>
                   {saving ? t("common.saving") : t("account.saveChanges")}
                 </button>
               </form>

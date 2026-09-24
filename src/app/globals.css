@@ -191,6 +191,8 @@
     white-space: nowrap;
   }
   .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:disabled:active { transform: none; }
   .btn-accent {
     background: var(--accent); color: var(--on-accent);
     box-shadow: var(--shadow-1);
