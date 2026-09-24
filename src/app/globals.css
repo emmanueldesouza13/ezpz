@@ -95,7 +95,8 @@
   /* ---------- header ---------- */
   .site-header {
     position: sticky;
-    top: env(safe-area-inset-top, 0px);
+    top: 0;
+    padding-top: env(safe-area-inset-top, 0px);
     z-index: 40;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     backdrop-filter: blur(10px);
