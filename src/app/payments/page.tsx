@@ -59,9 +59,6 @@ export default function PaymentsPage() {
               <LanguageSwitcher />
             </div>
             <h1>{t("payments.title")}</h1>
-            <p className="lede">
-              {t("payments.lede")}
-            </p>
 
             <h2 style={{ marginTop: 24 }}>{t("payments.feesYouOwe")}</h2>
             {allPaidUp ? (
