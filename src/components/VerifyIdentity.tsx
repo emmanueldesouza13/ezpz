@@ -241,9 +241,6 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
               {t("verify.stepVerified")}
             </div>
           </div>
-          <button type="button" className="btn btn-line btn-block verify-progress-resubmit" onClick={openModal}>
-            {t("verify.resubmit")}
-          </button>
         </div>
       )}
 

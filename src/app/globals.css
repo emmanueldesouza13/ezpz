@@ -914,7 +914,6 @@
   .verify-step-active { color: var(--ink); }
   .verify-step-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: verify-dot-pulse 1.4s ease-in-out infinite; }
   @keyframes verify-dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .verify-progress-resubmit { margin-top: 16px; }
 
   .verify-photo-preview {
     border: 1px solid var(--line); border-radius: var(--radius-card);
