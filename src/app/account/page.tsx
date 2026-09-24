@@ -69,10 +69,12 @@ export default function AccountPage() {
               <div className="profile-id" style={{ marginBottom: 20 }}>
                 <EditProfileModal profile={profile} onSaved={setProfile} />
                 <div className="profile-badge-row">
-                  <span className="profile-badge">
-                    <Icon name="CalendarDays" />
-                    {t("listing.since", { year: new Date(profile.created_at).getFullYear() })}
-                  </span>
+                  {!profile.is_admin && (
+                    <span className="profile-badge">
+                      <Icon name="CalendarDays" />
+                      {t("listing.since", { year: new Date(profile.created_at).getFullYear() })}
+                    </span>
+                  )}
                   {profile.available && (
                     <span className="profile-badge good">
                       <Icon name="CircleDot" />
