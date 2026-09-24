@@ -40,7 +40,7 @@ export default function VerifiedWarningPopup() {
 
   return (
     <div
-      className="modal-backdrop"
+      className="modal-backdrop warn-popup-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) dismiss();
       }}
