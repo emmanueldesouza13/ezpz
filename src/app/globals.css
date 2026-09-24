@@ -1252,6 +1252,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .admin-login-wrap .icon-circle svg { width: 24px; height: 24px; }
+  .admin-login-wrap.admin-login-inline { padding-top: 20px; padding-bottom: 10px; }
   .admin-login-wrap h1 { font-size: 1.25rem; margin-bottom: 6px; }
   .admin-login-wrap p { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.5; }
   .admin-login-wrap form { text-align: left; }

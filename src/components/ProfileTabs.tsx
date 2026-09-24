@@ -5,19 +5,19 @@ import Link from "next/link";
 import Icon from "./Icon";
 import ReviewsPanel from "./ReviewsPanel";
 import ScheduleEditor from "./ScheduleEditor";
+import AdminTools from "./AdminTools";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Profile } from "@/lib/types";
 
 // The profile-level counterpart to listing/[id]/DetailTabs — same tab-bar
 // look, but scoped to the seller rather than one listing (no About tab,
 // since there's no single listing's category/location/description here).
-const TABS = [
-  { key: "reviews", labelKey: "listing.tabReviews", icon: "Star" },
-  { key: "schedule", labelKey: "listing.tabSchedule", icon: "Calendar" },
-  { key: "screening", labelKey: "account.tabScreening", icon: "ShieldCheck" },
-] as const;
-
-type TabKey = (typeof TABS)[number]["key"];
+//
+// The admin viewing their OWN profile gets "Maintenance" (the full admin
+// toolset — same component the standalone /admin page uses) in place of
+// "Schedule". Gated on isOwner as well as is_admin, so nobody viewing the
+// admin's public profile ever sees that tab, let alone its contents.
+type TabKey = "reviews" | "schedule" | "maintenance" | "screening";
 
 export default function ProfileTabs({
   profile,
@@ -26,13 +26,26 @@ export default function ProfileTabs({
   profile: Profile;
   isOwner: boolean;
 }) {
-  const [tab, setTab] = useState<TabKey>("reviews");
+  const showMaintenance = isOwner && profile.is_admin;
   const { t } = useLanguage();
+  const [tab, setTab] = useState<TabKey>("reviews");
+
+  const tabs: { key: TabKey; label: string; icon: string }[] = showMaintenance
+    ? [
+        { key: "reviews", label: t("listing.tabReviews"), icon: "Star" },
+        { key: "maintenance", label: "Maintenance", icon: "Wrench" },
+        { key: "screening", label: t("account.tabScreening"), icon: "ShieldCheck" },
+      ]
+    : [
+        { key: "reviews", label: t("listing.tabReviews"), icon: "Star" },
+        { key: "schedule", label: t("listing.tabSchedule"), icon: "Calendar" },
+        { key: "screening", label: t("account.tabScreening"), icon: "ShieldCheck" },
+      ];
 
   return (
     <div style={{ marginTop: 8 }}>
       <div className="tab-bar" role="tablist" aria-label="Profile details">
-        {TABS.map((tabDef) => (
+        {tabs.map((tabDef) => (
           <button
             key={tabDef.key}
             type="button"
@@ -42,7 +55,7 @@ export default function ProfileTabs({
             onClick={() => setTab(tabDef.key)}
           >
             <Icon name={tabDef.icon} />
-            {t(tabDef.labelKey)}
+            {tabDef.label}
           </button>
         ))}
       </div>
@@ -56,7 +69,7 @@ export default function ProfileTabs({
           />
         )}
 
-        {tab === "schedule" && (
+        {tab === "schedule" && !showMaintenance && (
           <ScheduleEditor
             sellerId={profile.id}
             isOwner={isOwner}
@@ -65,6 +78,8 @@ export default function ProfileTabs({
             responseRate={profile.response_rate ?? 90}
           />
         )}
+
+        {tab === "maintenance" && showMaintenance && <AdminTools />}
 
         {tab === "screening" && (
           <>
