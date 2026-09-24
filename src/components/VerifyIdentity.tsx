@@ -167,6 +167,10 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
 
   if (loading) return null;
 
+  // The admin account gets its own red tick unconditionally (see BlueTick) —
+  // it has nothing to verify, so don't show the seller verification flow.
+  if (profile.is_admin) return null;
+
   if (profile.verified) {
     return (
       <div className="verify-card verify-approved">
