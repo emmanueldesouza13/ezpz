@@ -18,7 +18,7 @@ export type TaxiService = {
   plate: string;
   service_area: string;
   phone: string;
-  mmg_number: string;
+  mmg_number: string | null;
   notes: string;
   photo_url: string | null;
   photos: string[];

@@ -25,7 +25,6 @@ export default function TaxiPostPage() {
   const [regionChoice, setRegionChoice] = useState("");
   const [serviceArea, setServiceArea] = useState("");
   const [phone, setPhone] = useState("");
-  const [mmg, setMmg] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -50,11 +49,10 @@ export default function TaxiPostPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name, mmg_number")
+        .select("display_name")
         .eq("id", data.user.id)
         .maybeSingle();
       if (profile?.display_name) setDriverName(profile.display_name);
-      if (profile?.mmg_number) setMmg(profile.mmg_number);
 
       const settings = await getSiteSettings(supabase);
       setFee(settings.taxi_fee);
@@ -93,8 +91,7 @@ export default function TaxiPostPage() {
       !vehicleModel.trim() ||
       !plate.trim() ||
       !serviceArea.trim() ||
-      !phone.trim() ||
-      !mmg.trim()
+      !phone.trim()
     ) {
       toast("Fill in all required fields");
       return;
@@ -117,7 +114,6 @@ export default function TaxiPostPage() {
         plate: plate.trim(),
         service_area: serviceArea.trim(),
         phone: phone.trim(),
-        mmg_number: mmg.trim(),
         notes: notes.trim(),
         photo_url: photos[0] ?? null,
         photos,
@@ -294,22 +290,6 @@ export default function TaxiPostPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="mmgInput">{t("taxi.mmgLabel")}</label>
-                    <input
-                      className="control"
-                      id="mmgInput"
-                      required
-                      inputMode="tel"
-                      placeholder="e.g. 642-1187"
-                      value={mmg}
-                      onChange={(e) => setMmg(e.target.value)}
-                    />
-                    <p className="hint">
-                      {t("taxi.mmgHint")}
-                    </p>
                   </div>
 
                   <div className="field">

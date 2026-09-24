@@ -27,7 +27,6 @@ export default function EditTaxiPage() {
   const [regionChoice, setRegionChoice] = useState("");
   const [serviceArea, setServiceArea] = useState("");
   const [phone, setPhone] = useState("");
-  const [mmg, setMmg] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -69,7 +68,6 @@ export default function EditTaxiPage() {
         GUYANA_REGIONS.includes(service.service_area) ? service.service_area : OTHER_REGION_VALUE
       );
       setPhone(service.phone);
-      setMmg(service.mmg_number);
       setNotes(service.notes || "");
       setPhotos(
         Array.isArray(service.photos) && service.photos.length > 0
@@ -114,8 +112,7 @@ export default function EditTaxiPage() {
       !vehicleModel.trim() ||
       !plate.trim() ||
       !serviceArea.trim() ||
-      !phone.trim() ||
-      !mmg.trim()
+      !phone.trim()
     ) {
       toast("Fill in all required fields");
       return;
@@ -130,7 +127,6 @@ export default function EditTaxiPage() {
         plate: plate.trim(),
         service_area: serviceArea.trim(),
         phone: phone.trim(),
-        mmg_number: mmg.trim(),
         notes: notes.trim(),
         photo_url: photos[0] ?? null,
         photos,
@@ -304,18 +300,6 @@ export default function EditTaxiPage() {
                       inputMode="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="mmgInput">{t("taxi.mmgLabel")}</label>
-                    <input
-                      className="control"
-                      id="mmgInput"
-                      required
-                      inputMode="tel"
-                      value={mmg}
-                      onChange={(e) => setMmg(e.target.value)}
                     />
                   </div>
 

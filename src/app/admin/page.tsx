@@ -577,7 +577,8 @@ export default function AdminPage() {
                         </div>
                         <div className="admin-row-sub">
                           {t.vehicle_make} {t.vehicle_model} &middot; Plate {t.plate} &middot;{" "}
-                          {t.service_area} &middot; MMG {t.mmg_number}
+                          {t.service_area}
+                          {t.mmg_number && <> &middot; MMG {t.mmg_number}</>}
                         </div>
                       </div>
                       <div className="admin-row-actions">
@@ -1377,7 +1378,6 @@ function TaxiModal({
       !plate.trim() ||
       !serviceArea.trim() ||
       !phone.trim() ||
-      !mmg.trim() ||
       (!service && !ownerId)
     ) {
       toast("Fill in all required fields");
@@ -1391,7 +1391,7 @@ function TaxiModal({
       plate: plate.trim(),
       service_area: serviceArea.trim(),
       phone: phone.trim(),
-      mmg_number: mmg.trim(),
+      mmg_number: mmg.trim() || null,
       notes: notes.trim(),
     };
     const { data, error } = service
@@ -1444,8 +1444,8 @@ function TaxiModal({
           <input className="control" required value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="field">
-          <label>MMG number</label>
-          <input className="control" required value={mmg} onChange={(e) => setMmg(e.target.value)} placeholder="e.g. 642-1187" />
+          <label>MMG number (optional)</label>
+          <input className="control" value={mmg} onChange={(e) => setMmg(e.target.value)} placeholder="e.g. 642-1187" />
         </div>
         <div className="field">
           <label>Notes</label>

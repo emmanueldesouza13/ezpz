@@ -32,7 +32,6 @@ export default function PostPage() {
   const [price, setPrice] = useState("");
   const [isFree, setIsFree] = useState(false);
   const [location, setLocation] = useState("");
-  const [mmg, setMmg] = useState("");
   const [description, setDescription] = useState("");
   const [swatch, setSwatch] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -109,13 +108,6 @@ export default function PostPage() {
       setCategories(cats);
       if (cats[0]) setCategory(cats[0].slug);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("mmg_number")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      if (profile?.mmg_number) setMmg(profile.mmg_number);
-
       const settings = await getSiteSettings(supabase);
       setFee(settings.listing_fee);
     })();
@@ -123,7 +115,7 @@ export default function PostPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !location.trim() || !description.trim() || !mmg.trim()) {
+    if (!title.trim() || !location.trim() || !description.trim()) {
       toast("Fill in all required fields");
       return;
     }
@@ -134,8 +126,6 @@ export default function PostPage() {
       router.push("/sign-in?next=/post");
       return;
     }
-
-    await supabase.from("profiles").update({ mmg_number: mmg.trim() }).eq("id", user.id);
 
     const { data: listing, error } = await supabase
       .from("listings")
@@ -324,22 +314,6 @@ export default function PostPage() {
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     />
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="mmgInput">{t("post.mmgLabel")}</label>
-                    <input
-                      className="control"
-                      id="mmgInput"
-                      required
-                      inputMode="tel"
-                      placeholder={t("post.mmgPlaceholder")}
-                      value={mmg}
-                      onChange={(e) => setMmg(e.target.value)}
-                    />
-                    <p className="hint">
-                      {t("post.mmgHint")}
-                    </p>
                   </div>
 
                   <div className="field">

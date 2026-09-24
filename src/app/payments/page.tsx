@@ -4,13 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
-import Icon from "@/components/Icon";
 import FeeBanner from "@/components/FeeBanner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices, getMyVerificationRequest, getSiteSettings } from "@/lib/data";
 import type { Listing, TaxiService, Settings, VerificationRequest } from "@/lib/types";
-import { toast } from "@/lib/toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function PaymentsPage() {
@@ -18,7 +16,6 @@ export default function PaymentsPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
-  const [mmg, setMmg] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [myListings, setMyListings] = useState<Listing[]>([]);
@@ -30,13 +27,12 @@ export default function PaymentsPage() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) { router.push("/sign-in?next=/payments"); return; }
       const [{ data: profile }, s, listings, taxi, verification] = await Promise.all([
-        supabase.from("profiles").select("mmg_number, verified").eq("id", data.user.id).maybeSingle(),
+        supabase.from("profiles").select("verified").eq("id", data.user.id).maybeSingle(),
         getSiteSettings(supabase),
         getMyListings(supabase, data.user.id),
         getMyTaxiServices(supabase, data.user.id),
         getMyVerificationRequest(supabase, data.user.id),
       ]);
-      setMmg(profile?.mmg_number ?? null);
       setVerified(profile?.verified ?? false);
       setSettings(s);
       setMyListings(listings);
@@ -45,17 +41,6 @@ export default function PaymentsPage() {
       setLoading(false);
     })();
   }, [supabase, router]);
-
-  function handleCopy(number: string) {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(number).then(
-        () => toast("MMG number copied — " + number),
-        () => toast("MMG number: " + number)
-      );
-    } else {
-      toast("MMG number: " + number);
-    }
-  }
 
   if (loading) return null;
 
@@ -78,41 +63,7 @@ export default function PaymentsPage() {
               {t("payments.lede")}
             </p>
 
-            <h2 style={{ marginTop: 24 }}>{t("payments.payoutNumber")}</h2>
-            {mmg ? (
-              <div className="fee-box standalone">
-                <div className="fee-label">
-                  <Icon name="Wallet" size={15} />
-                  {t("payments.buyersPayHere")}
-                </div>
-                <div className="fee-number-row">
-                  <span className="mono">{mmg}</span>
-                  <button type="button" className="fee-copy" onClick={() => handleCopy(mmg)}>
-                    <Icon name="Copy" size={13} />
-                    {t("common.copy")}
-                  </button>
-                </div>
-                <p className="fee-caption">
-                  {t("payments.shownOnListing")}{" "}
-                  <Link href="/account" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                    {t("payments.changeInAccount")}
-                  </Link>
-                  .
-                </p>
-              </div>
-            ) : (
-              <div className="fee-box standalone">
-                <p className="fee-caption">
-                  {t("payments.noMmgYet")}{" "}
-                  <Link href="/account" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                    {t("payments.addOneInAccount")}
-                  </Link>
-                  .
-                </p>
-              </div>
-            )}
-
-            <h2 style={{ marginTop: 28 }}>{t("payments.feesYouOwe")}</h2>
+            <h2 style={{ marginTop: 24 }}>{t("payments.feesYouOwe")}</h2>
             {allPaidUp ? (
               <div className="empty-state">{t("payments.allPaidUp")}</div>
             ) : (
