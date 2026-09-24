@@ -19,7 +19,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
           onClick={() => setLang(l.code)}
           aria-pressed={lang === l.code}
         >
-          {l.code.toUpperCase()}
+          {l.label}
         </button>
       ))}
     </div>
