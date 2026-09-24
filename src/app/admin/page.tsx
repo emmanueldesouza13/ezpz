@@ -399,7 +399,57 @@ export default function AdminPage() {
               ))}
             </div>
 
-            {tab === "payouts" && <PayoutsPanel settings={settings} onSaved={loadAll} />}
+            {tab === "payouts" && (
+              <>
+                <PayoutsPanel settings={settings} onSaved={loadAll} />
+                <h2 style={{ marginTop: 32 }}>Blue tick fee approvals</h2>
+                {verifications.filter((v) => v.status === "pending").length === 0 ? (
+                  <div className="admin-empty">No pending blue tick requests.</div>
+                ) : (
+                  verifications
+                    .filter((v) => v.status === "pending")
+                    .map((v) => (
+                      <div className="admin-row" key={v.id}>
+                        <div
+                          className="admin-swatch"
+                          style={{
+                            background: v.user?.avatar_color || "var(--surface-2)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                          }}
+                        >
+                          <Icon name="ShieldQuestion" />
+                        </div>
+                        <div className="admin-row-info">
+                          <div className="admin-row-title">
+                            {v.user?.display_name ?? "Unknown seller"}
+                            {v.fee_status !== "pending" ? (
+                              <span className="admin-flag on">Fee {v.fee_status}</span>
+                            ) : (
+                              <span className="admin-flag off">Fee unpaid</span>
+                            )}
+                          </div>
+                          <div className="admin-row-sub">
+                            Submitted {new Date(v.submitted_at).toLocaleDateString()}
+                          </div>
+                          <div className="admin-code-line">
+                            <span className="admin-code-label">MMG payment code</span>
+                            <span className="mono admin-code-value">{v.payment_code}</span>
+                          </div>
+                        </div>
+                        <div className="admin-row-actions">
+                          <button type="button" className="admin-btn" onClick={() => openVerificationReview(v)}>
+                            <Icon name="Eye" />
+                            Review
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </>
+            )}
 
             {tab === "branding" && (
               <div className="admin-row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
