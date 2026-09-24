@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
-import { getCategories, getSiteSettings, getOccupyingListing } from "@/lib/data";
+import { getCategories, getOccupyingListing } from "@/lib/data";
 import { GRADIENTS, type Category } from "@/lib/types";
 import { toast } from "@/lib/toast";
 import {
@@ -40,7 +40,6 @@ export default function PostPage() {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [fee, setFee] = useState(2000);
 
   async function handlePhotoFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -107,9 +106,6 @@ export default function PostPage() {
       const cats = await getCategories(supabase);
       setCategories(cats);
       if (cats[0]) setCategory(cats[0].slug);
-
-      const settings = await getSiteSettings(supabase);
-      setFee(settings.listing_fee);
     })();
   }, [supabase, router]);
 
@@ -139,6 +135,9 @@ export default function PostPage() {
         location: location.trim(),
         images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
         videos,
+        // Listings are free to post — never hidden behind a fee, unlike
+        // taxi sign-ups and blue-tick verification.
+        fee_status: "waived",
       })
       .select("id")
       .single();
@@ -163,7 +162,7 @@ export default function PostPage() {
             <BackButton />
             {done ? (
               <div className="empty-state">
-                {t("post.doneMessage", { fee: fee.toLocaleString() })}
+                {t("post.doneMessage")}
               </div>
             ) : (
               <>
@@ -333,7 +332,7 @@ export default function PostPage() {
 
                   <div className="fee-note">
                     <Icon name="Wallet" size={14} />
-                    {t("post.feeNote", { fee: fee.toLocaleString() })}
+                    {t("post.feeNote")}
                   </div>
 
                   <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto || uploadingVideo}>

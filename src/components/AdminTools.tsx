@@ -199,24 +199,6 @@ export default function AdminTools() {
     loadAll();
   }
 
-  async function setListingFeeStatus(l: Listing, next: "pending" | "paid" | "waived") {
-    const { data, error } = await supabase
-      .from("listings")
-      .update({ fee_status: next, fee_paid_at: next === "paid" ? new Date().toISOString() : null })
-      .eq("id", l.id)
-      .select();
-    if (error) { toast("Couldn't update fee status — " + error.message); return; }
-    if (!data || data.length === 0) { toast("Couldn't update — no permission or the listing is gone"); return; }
-    toast(
-      next === "paid"
-        ? "Fee marked paid — listing is now live"
-        : next === "waived"
-        ? "Fee waived — listing is now live"
-        : "Fee marked pending — hidden from browse"
-    );
-    loadAll();
-  }
-
   async function setTaxiFeeStatus(t: TaxiService, next: "pending" | "paid" | "waived") {
     const { data, error } = await supabase
       .from("taxi_services")
@@ -496,11 +478,6 @@ export default function AdminTools() {
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           {l.title}
-                          {l.fee_status !== "pending" ? (
-                            <span className="admin-flag on">Fee {l.fee_status}</span>
-                          ) : (
-                            <span className="admin-flag off">Fee pending</span>
-                          )}
                           {l.status !== "active" && <span className="admin-flag off">{l.status}</span>}
                         </div>
                         <div className="admin-row-sub">
@@ -509,10 +486,6 @@ export default function AdminTools() {
                         </div>
                       </div>
                       <div className="admin-row-actions">
-                        <button type="button" className="admin-btn" onClick={() => setListingFeeStatus(l, nextFeeStatus(l.fee_status))}>
-                          <Icon name="Wallet" />
-                          {l.fee_status === "pending" ? "Mark fee paid" : l.fee_status === "paid" ? "Mark fee waived" : "Mark fee pending"}
-                        </button>
                         <button type="button" className="admin-btn" onClick={() => setEditListing(l)}>
                           <Icon name="Pencil" />
                           Edit
@@ -994,7 +967,6 @@ export default function AdminTools() {
 function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSaved: () => void }) {
   const supabase = createClient();
   const [mmg, setMmg] = useState(settings?.platform_mmg_number ?? "");
-  const [fee, setFee] = useState(String(settings?.listing_fee ?? 2000));
   const [taxiMmg, setTaxiMmg] = useState(settings?.taxi_mmg_number ?? "");
   const [taxiFee, setTaxiFee] = useState(String(settings?.taxi_fee ?? 5000));
   const [verificationFee, setVerificationFee] = useState(String(settings?.verification_fee ?? 2000));
@@ -1002,7 +974,6 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
 
   useEffect(() => {
     setMmg(settings?.platform_mmg_number ?? "");
-    setFee(String(settings?.listing_fee ?? 2000));
     setTaxiMmg(settings?.taxi_mmg_number ?? "");
     setTaxiFee(String(settings?.taxi_fee ?? 5000));
     setVerificationFee(String(settings?.verification_fee ?? 2000));
@@ -1015,7 +986,6 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
       .from("settings")
       .update({
         platform_mmg_number: mmg.trim() || null,
-        listing_fee: Number(fee) || 0,
         taxi_mmg_number: taxiMmg.trim() || null,
         taxi_fee: Number(taxiFee) || 0,
         verification_fee: Number(verificationFee) || 0,
@@ -1035,31 +1005,20 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
       <div className="admin-row-info" style={{ flex: "1 1 320px" }}>
         <div className="admin-row-title">Activation &amp; verification fees</div>
         <div className="admin-row-sub">
-          Every new listing or taxi sign-up is hidden until its fee is paid to the matching MMG
-          number below and you mark it paid in the Listings/Taxi tabs. The blue tick works the same
-          way — sellers pay before you approve them in the Verification tab. Nothing here charges
-          anyone automatically — everyone pays you directly, same as buyers pay sellers.
+          Listings are free to post. A new taxi sign-up is hidden until its fee is paid to the
+          matching MMG number below and you mark it paid in the Taxi tab. The blue tick works the
+          same way — sellers pay before you approve them in the Verification tab. Nothing here
+          charges anyone automatically — everyone pays you directly, same as buyers pay sellers.
         </div>
         <form onSubmit={handleSubmit} style={{ marginTop: 14, maxWidth: 360 }}>
           <div className="field">
-            <label htmlFor="platformMmgInput">Listings — your MMG number</label>
+            <label htmlFor="platformMmgInput">Blue tick verification — your MMG number</label>
             <input
               className="control"
               id="platformMmgInput"
               placeholder="e.g. 642-1187"
               value={mmg}
               onChange={(e) => setMmg(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="feeInput">Fee per listing (GY$)</label>
-            <input
-              className="control"
-              id="feeInput"
-              type="number"
-              min="0"
-              value={fee}
-              onChange={(e) => setFee(e.target.value)}
             />
           </div>
           <div className="field">
@@ -1094,7 +1053,7 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
               value={verificationFee}
               onChange={(e) => setVerificationFee(e.target.value)}
             />
-            <p className="hint">Paid to the listings MMG number above. Mark it in the Verification tab.</p>
+            <p className="hint">Paid to the blue tick MMG number above. Mark it in the Verification tab.</p>
           </div>
           <button type="submit" className="btn btn-accent" disabled={saving}>
             {saving ? "Saving…" : "Save"}

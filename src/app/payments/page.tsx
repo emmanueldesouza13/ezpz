@@ -7,8 +7,8 @@ import BackButton from "@/components/BackButton";
 import FeeBanner from "@/components/FeeBanner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
-import { getMyListings, getMyTaxiServices, getMyVerificationRequest, getSiteSettings } from "@/lib/data";
-import type { Listing, TaxiService, Settings, VerificationRequest } from "@/lib/types";
+import { getMyTaxiServices, getMyVerificationRequest, getSiteSettings } from "@/lib/data";
+import type { TaxiService, Settings, VerificationRequest } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function PaymentsPage() {
@@ -19,7 +19,6 @@ export default function PaymentsPage() {
   const [verified, setVerified] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [myListings, setMyListings] = useState<Listing[]>([]);
   const [myTaxi, setMyTaxi] = useState<TaxiService[]>([]);
   const [myVerification, setMyVerification] = useState<VerificationRequest | null>(null);
 
@@ -27,17 +26,15 @@ export default function PaymentsPage() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) { router.push("/sign-in?next=/payments"); return; }
-      const [{ data: profile }, s, listings, taxi, verification] = await Promise.all([
+      const [{ data: profile }, s, taxi, verification] = await Promise.all([
         supabase.from("profiles").select("verified, is_admin").eq("id", data.user.id).maybeSingle(),
         getSiteSettings(supabase),
-        getMyListings(supabase, data.user.id),
         getMyTaxiServices(supabase, data.user.id),
         getMyVerificationRequest(supabase, data.user.id),
       ]);
       setVerified(profile?.verified ?? false);
       setIsAdmin(profile?.is_admin ?? false);
       setSettings(s);
-      setMyListings(listings);
       setMyTaxi(taxi);
       setMyVerification(verification);
       setLoading(false);
@@ -46,12 +43,13 @@ export default function PaymentsPage() {
 
   if (loading) return null;
 
-  // The admin account collects fees, it doesn't owe them — never show it a
-  // fee due on its own listings/taxi services/verification.
-  const pendingListings = isAdmin ? [] : myListings.filter((l) => l.fee_status === "pending");
+  // Listings are free to post, so they never owe a fee here — only taxi
+  // sign-ups and blue-tick verification do. The admin account collects
+  // fees, it doesn't owe them — never show it a fee due on its own taxi
+  // services/verification.
   const pendingTaxi = isAdmin ? [] : myTaxi.filter((t) => t.fee_status === "pending");
   const pendingVerification = !isAdmin && !verified && myVerification && myVerification.fee_status === "pending";
-  const allPaidUp = pendingListings.length === 0 && pendingTaxi.length === 0 && !pendingVerification;
+  const allPaidUp = pendingTaxi.length === 0 && !pendingVerification;
 
   return (
     <>
@@ -69,17 +67,6 @@ export default function PaymentsPage() {
               <div className="empty-state">{t("payments.allPaidUp")}</div>
             ) : (
               <>
-                {pendingListings.map((l) => (
-                  <div key={l.id} style={{ marginBottom: 14 }}>
-                    <p className="admin-row-title" style={{ marginBottom: 6 }}>
-                      <Link href={`/listing/${l.id}`}>{l.title}</Link>
-                    </p>
-                    <FeeBanner
-                      mmg={settings?.platform_mmg_number ?? null}
-                      fee={settings?.listing_fee ?? 2000}
-                    />
-                  </div>
-                ))}
                 {pendingTaxi.map((svc) => (
                   <div key={svc.id} style={{ marginBottom: 14 }}>
                     <p className="admin-row-title" style={{ marginBottom: 6 }}>

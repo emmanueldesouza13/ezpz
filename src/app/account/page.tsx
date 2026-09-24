@@ -118,9 +118,6 @@ export default function AccountPage() {
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           <Link href={`/listing/${l.id}`}>{l.title}</Link>
-                          {!profile?.is_admin && l.fee_status === "pending" && (
-                            <span className="admin-flag off">{t("account.feePending")}</span>
-                          )}
                         </div>
                         <div className="admin-row-sub">
                           {formatPrice(l.price, l.is_free)} &middot; {l.location}
