@@ -126,16 +126,6 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
     }
   }
 
-  function removeSelfie() {
-    setPreview("selfie", null);
-    setSelfiePath(null);
-  }
-
-  function removeId() {
-    setPreview("id", null);
-    setIdCardPath(null);
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selfiePath && !idCardPath) {
@@ -301,7 +291,7 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                     <img src={selfiePreview} alt={t("verify.selfiePreviewAlt")} />
                     <div className="verify-photo-actions">
                       <label
-                        className="btn btn-line"
+                        className="btn btn-line btn-block"
                         style={{ cursor: uploadingSelfie ? "wait" : "pointer", display: "inline-flex" }}
                       >
                         <Icon
@@ -318,15 +308,6 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                           style={{ display: "none" }}
                         />
                       </label>
-                      <button
-                        type="button"
-                        className="btn btn-line"
-                        onClick={removeSelfie}
-                        disabled={uploadingSelfie}
-                      >
-                        <Icon name="Trash2" />
-                        {t("verify.removePhoto")}
-                      </button>
                     </div>
                   </div>
                 ) : (
@@ -358,7 +339,7 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                     <img src={idPreview} alt={t("verify.idPreviewAlt")} />
                     <div className="verify-photo-actions">
                       <label
-                        className="btn btn-line"
+                        className="btn btn-line btn-block"
                         style={{ cursor: uploadingId ? "wait" : "pointer", display: "inline-flex" }}
                       >
                         <Icon name={uploadingId ? "Loader2" : "RotateCcw"} className={uploadingId ? "spin" : undefined} />
@@ -371,10 +352,6 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                           style={{ display: "none" }}
                         />
                       </label>
-                      <button type="button" className="btn btn-line" onClick={removeId} disabled={uploadingId}>
-                        <Icon name="Trash2" />
-                        {t("verify.removePhoto")}
-                      </button>
                     </div>
                   </div>
                 ) : (
