@@ -235,15 +235,6 @@ export default function AdminTools() {
     loadAll();
   }
 
-  async function toggleTaxiStatus(t: TaxiService) {
-    const next = t.status === "active" ? "removed" : "active";
-    const { data, error } = await supabase.from("taxi_services").update({ status: next }).eq("id", t.id).select();
-    if (error) { toast("Couldn't update — " + error.message); return; }
-    if (!data || data.length === 0) { toast("Couldn't update — no permission or the service is gone"); return; }
-    toast(next === "removed" ? "Taxi service removed" : "Taxi service restored");
-    loadAll();
-  }
-
   async function deleteListingForever(l: Listing) {
     const { data, error } = await supabase.from("listings").delete().eq("id", l.id).select();
     if (error) { toast("Couldn't delete — " + error.message); return; }
@@ -307,15 +298,6 @@ export default function AdminTools() {
       setPhase("ready");
     })();
   }, [supabase, loadAll]);
-
-  async function toggleListingStatus(l: Listing) {
-    const next = l.status === "active" ? "removed" : "active";
-    const { data, error } = await supabase.from("listings").update({ status: next }).eq("id", l.id).select();
-    if (error) { toast("Couldn't update — " + error.message); return; }
-    if (!data || data.length === 0) { toast("Couldn't update — no permission or the listing is gone"); return; }
-    toast(next === "removed" ? "Listing removed" : "Listing restored");
-    loadAll();
-  }
 
   async function toggleFeatured(l: Listing) {
     const { data, error } = await supabase.from("listings").update({ featured: !l.featured }).eq("id", l.id).select();
@@ -549,14 +531,6 @@ export default function AdminTools() {
                         </button>
                         <button
                           type="button"
-                          className="admin-btn danger"
-                          onClick={() => toggleListingStatus(l)}
-                        >
-                          <Icon name="Trash2" />
-                          {l.status === "active" ? "Remove" : "Restore"}
-                        </button>
-                        <button
-                          type="button"
                           className={`admin-btn danger${confirmingId === `listing:${l.id}` ? " confirming" : ""}`}
                           onClick={() => {
                             const key = `listing:${l.id}`;
@@ -570,7 +544,7 @@ export default function AdminTools() {
                           }}
                         >
                           <Icon name="X" />
-                          {confirmingId === `listing:${l.id}` ? "Confirm delete?" : "Delete forever"}
+                          {confirmingId === `listing:${l.id}` ? "Confirm delete?" : "Delete"}
                         </button>
                       </div>
                     </div>
@@ -633,14 +607,6 @@ export default function AdminTools() {
                         </button>
                         <button
                           type="button"
-                          className="admin-btn danger"
-                          onClick={() => toggleTaxiStatus(t)}
-                        >
-                          <Icon name="Trash2" />
-                          {t.status === "active" ? "Remove" : "Restore"}
-                        </button>
-                        <button
-                          type="button"
                           className={`admin-btn danger${confirmingId === `taxi:${t.id}` ? " confirming" : ""}`}
                           onClick={() => {
                             const key = `taxi:${t.id}`;
@@ -654,7 +620,7 @@ export default function AdminTools() {
                           }}
                         >
                           <Icon name="X" />
-                          {confirmingId === `taxi:${t.id}` ? "Confirm delete?" : "Delete forever"}
+                          {confirmingId === `taxi:${t.id}` ? "Confirm delete?" : "Delete"}
                         </button>
                       </div>
                     </div>
