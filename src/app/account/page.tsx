@@ -142,7 +142,7 @@ export default function AccountPage() {
                   {myListings.map((l) => (
                     <div className="admin-row" key={l.id}>
                       <div
-                        className="admin-swatch"
+                        className="admin-swatch my-listing-thumb"
                         style={isPhotoUrl(l.images[0]) ? undefined : { background: l.images[0] }}
                       >
                         {isPhotoUrl(l.images[0]) && (
@@ -180,7 +180,7 @@ export default function AccountPage() {
                     return (
                     <div className="admin-row" key={svc.id}>
                       <div
-                        className="admin-swatch"
+                        className="admin-swatch my-listing-thumb"
                         style={!taxiPhoto ? { display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" } : undefined}
                       >
                         {taxiPhoto ? (
