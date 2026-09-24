@@ -370,10 +370,6 @@ export default function AdminTools({
               <span className="admin-flag off">Off</span>
             )}
           </div>
-          <div className="admin-row-sub">
-            Blurs every photo and bio/description across the whole site, everywhere — turn
-            this on before sharing your screen or a screenshot with anyone during maintenance.
-          </div>
         </div>
         <div className="admin-row-actions">
           <button
