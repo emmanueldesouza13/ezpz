@@ -1424,7 +1424,7 @@
   .check-inline input { width: 16px; height: 16px; accent-color: var(--brand); }
 
   /* ---------- post form ---------- */
-  .post-wrap { max-width: 640px; padding-top: 26px; padding-bottom: 60px; }
+  .post-wrap { max-width: 640px; margin: 0 auto; padding-top: 26px; padding-bottom: 60px; }
   .post-wrap > p.lede { color: var(--ink-soft); font-size: 0.88rem; margin: 4px 0 26px; }
   .field { margin-bottom: 20px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 7px; }
