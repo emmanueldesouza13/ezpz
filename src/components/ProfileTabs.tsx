@@ -13,10 +13,15 @@ import type { Profile } from "@/lib/types";
 // look, but scoped to the seller rather than one listing (no About tab,
 // since there's no single listing's category/location/description here).
 //
-// The admin viewing their OWN profile gets "Maintenance" (the full admin
-// toolset — same component the standalone /admin page uses) in place of
-// "Schedule". Gated on isOwner as well as is_admin, so nobody viewing the
-// admin's public profile ever sees that tab, let alone its contents.
+// This component only ever renders the signed-in user's own account
+// page, so isOwner is effectively always true here — it's still checked
+// alongside is_admin (rather than is_admin alone) as a safety net in
+// case that ever changes. The admin viewing their own profile gets
+// "Maintenance" (the full admin toolset — same component the standalone
+// /admin page uses) in place of "Schedule", and loses "Reviews"
+// entirely — the admin account doesn't list anything, so there's
+// nothing to review; it's just a reach-out point for people to message
+// with concerns.
 type TabKey = "reviews" | "schedule" | "maintenance" | "screening";
 
 export default function ProfileTabs({
@@ -28,11 +33,10 @@ export default function ProfileTabs({
 }) {
   const showMaintenance = isOwner && profile.is_admin;
   const { t } = useLanguage();
-  const [tab, setTab] = useState<TabKey>("reviews");
+  const [tab, setTab] = useState<TabKey>(showMaintenance ? "maintenance" : "reviews");
 
   const tabs: { key: TabKey; label: string; icon: string }[] = showMaintenance
     ? [
-        { key: "reviews", label: t("listing.tabReviews"), icon: "Star" },
         { key: "maintenance", label: "Maintenance", icon: "Wrench" },
         { key: "screening", label: t("account.tabScreening"), icon: "ShieldCheck" },
       ]
@@ -61,7 +65,7 @@ export default function ProfileTabs({
       </div>
 
       <div className="tab-panel">
-        {tab === "reviews" && (
+        {tab === "reviews" && !showMaintenance && (
           <ReviewsPanel
             sellerId={profile.id}
             initialRating={profile.rating ?? 5}
