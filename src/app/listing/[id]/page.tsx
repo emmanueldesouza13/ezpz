@@ -86,12 +86,20 @@ export default async function ListingDetailPage({
                   {isOwner ? (
                     <div className="profile-name-row">
                       <h2>{seller?.display_name ?? <T k="listing.sellerFallback" />}</h2>
-                      {seller?.verified && <BlueTick size={16} />}
+                      {seller?.is_admin ? (
+                        <BlueTick size={16} admin />
+                      ) : (
+                        seller?.verified && <BlueTick size={16} />
+                      )}
                     </div>
                   ) : (
                     <Link href={`/seller/${listing.seller_id}`} className="profile-name-row">
                       <h2>{seller?.display_name ?? <T k="listing.sellerFallback" />}</h2>
-                      {seller?.verified && <BlueTick size={16} />}
+                      {seller?.is_admin ? (
+                        <BlueTick size={16} admin />
+                      ) : (
+                        seller?.verified && <BlueTick size={16} />
+                      )}
                     </Link>
                   )}
                   <p className="profile-rating-row">

@@ -53,7 +53,7 @@ export default function ListingCard({
           <span className="listing-card-meta-line listing-card-seller">
             <Icon name="User" />
             {seller.display_name}
-            {seller.verified && <BlueTick size={12} />}
+            {seller.is_admin ? <BlueTick size={12} admin /> : seller.verified && <BlueTick size={12} />}
           </span>
         )}
         <div className="listing-card-meta">

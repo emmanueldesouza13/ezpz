@@ -70,7 +70,7 @@ export default async function SellerProfilePage({
             </div>
             <div className="profile-name-row">
               <h2>{seller.display_name}</h2>
-              {seller.verified && <BlueTick size={16} />}
+              {seller.is_admin ? <BlueTick size={16} admin /> : seller.verified && <BlueTick size={16} />}
             </div>
             <p className="profile-rating-row">
               <Icon name="Star" />

@@ -82,7 +82,7 @@ export default function AccountPage() {
                 </div>
                 <div className="profile-name-row">
                   <h2>{profile.display_name}</h2>
-                  {profile.verified && <BlueTick size={16} />}
+                  {profile.is_admin ? <BlueTick size={16} admin /> : profile.verified && <BlueTick size={16} />}
                 </div>
                 {profile.location && (
                   <p className="profile-location-row">
