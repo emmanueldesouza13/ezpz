@@ -60,7 +60,7 @@ export default function AccountPage() {
           <div className="post-wrap account-wrap">
             <div className="page-top-row">
               <BackButton fallback="/" disableSmartBack />
-              <LanguageSwitcher />
+              {!profile?.is_admin && <LanguageSwitcher />}
             </div>
             <h1>{t("account.title")}</h1>
             {profile?.verified && <p className="lede">{t("account.verifiedSeller")}</p>}
