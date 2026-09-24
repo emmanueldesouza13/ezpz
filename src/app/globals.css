@@ -1294,6 +1294,33 @@
   .admin-code-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); }
   .admin-code-value { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; color: var(--accent); }
   .admin-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .admin-verify-modal { max-width: 560px; }
+  .admin-verify-facts {
+    display: flex; flex-wrap: wrap; gap: 8px 22px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: var(--radius-card); padding: 12px 14px;
+  }
+  .admin-verify-fact { display: flex; flex-direction: column; gap: 2px; font-size: 0.82rem; }
+  .admin-verify-fact span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); }
+  .admin-code-row-big {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: var(--radius-control); padding: 11px 14px;
+  }
+  .admin-code-row-big .mono { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.06em; color: var(--accent); }
+  .admin-verify-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .admin-verify-photo-label { font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); margin-bottom: 6px; }
+  .admin-verify-photo img {
+    display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover;
+    border-radius: var(--radius-card); border: 1px solid var(--line);
+  }
+  .admin-verify-photo-empty {
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 3 / 4; border-radius: var(--radius-card); border: 1px dashed var(--line);
+    color: var(--ink-faint); font-size: 0.76rem; text-align: center; padding: 10px;
+  }
+  .admin-verify-fee-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .admin-btn {
     font-size: 0.78rem; font-weight: 700; padding: 7px 12px; border-radius: 999px;
     border: 1px solid var(--line); background: transparent; color: var(--ink);
@@ -1303,6 +1330,7 @@
   .admin-btn:disabled:hover { background: transparent; }
   .admin-btn.danger { color: var(--bad); border-color: var(--bad); }
   .admin-btn.danger.confirming { background: var(--bad); color: #fff; }
+  .admin-btn.active { background: var(--brand-tint); color: var(--accent); border-color: var(--brand-tint-line); }
   .admin-empty { text-align: center; color: var(--ink-soft); padding: 40px 10px; font-size: 0.88rem; }
   @media (max-width: 480px) {
     .admin-row { flex-wrap: wrap; }

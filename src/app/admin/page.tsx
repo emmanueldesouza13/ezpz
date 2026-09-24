@@ -48,6 +48,10 @@ export default function AdminPage() {
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [reviewing, setReviewing] = useState<VerificationRequest | null>(null);
+  const [reviewSelfieUrl, setReviewSelfieUrl] = useState<string | null>(null);
+  const [reviewIdUrl, setReviewIdUrl] = useState<string | null>(null);
+  const [loadingReviewDocs, setLoadingReviewDocs] = useState(false);
 
   const loadAll = useCallback(async () => {
     const [{ data: l }, { data: t }, { data: p }, { data: v }, { data: r }, { data: c }, st] = await Promise.all([
@@ -104,13 +108,28 @@ export default function AdminPage() {
     }
   }
 
-  async function viewVerificationDoc(path: string) {
-    const { data, error } = await supabase.storage.from("verification").createSignedUrl(path, 300);
-    if (error || !data?.signedUrl) {
-      toast("Couldn't open that file — " + (error?.message ?? "try again"));
-      return;
-    }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  async function openVerificationReview(v: VerificationRequest) {
+    setReviewing(v);
+    setReviewSelfieUrl(null);
+    setReviewIdUrl(null);
+    setLoadingReviewDocs(true);
+    const [selfie, id] = await Promise.all([
+      v.selfie_path
+        ? supabase.storage.from("verification").createSignedUrl(v.selfie_path, 300)
+        : Promise.resolve({ data: null, error: null }),
+      v.id_card_path
+        ? supabase.storage.from("verification").createSignedUrl(v.id_card_path, 300)
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+    setReviewSelfieUrl(selfie.data?.signedUrl ?? null);
+    setReviewIdUrl(id.data?.signedUrl ?? null);
+    setLoadingReviewDocs(false);
+  }
+
+  function closeVerificationReview() {
+    setReviewing(null);
+    setReviewSelfieUrl(null);
+    setReviewIdUrl(null);
   }
 
   async function approveVerification(v: VerificationRequest) {
@@ -128,6 +147,7 @@ export default function AdminPage() {
     if (error) { toast("Couldn't approve — " + error.message); return; }
     if (!data || data.length === 0) { toast("Couldn't approve — no permission or it's gone"); return; }
     toast(`${v.user?.display_name ?? "Seller"} is now verified`);
+    closeVerificationReview();
     loadAll();
   }
 
@@ -148,6 +168,7 @@ export default function AdminPage() {
     if (error) { toast("Couldn't reject — " + error.message); return; }
     if (!data || data.length === 0) { toast("Couldn't reject — no permission or it's gone"); return; }
     toast("Verification rejected");
+    closeVerificationReview();
     loadAll();
   }
 
@@ -163,6 +184,8 @@ export default function AdminPage() {
       .select();
     if (error) { toast("Couldn't update fee status — " + error.message); return; }
     if (!data || data.length === 0) { toast("Couldn't update — no permission or it's gone"); return; }
+    const updated = data[0] as VerificationRequest;
+    setReviewing((cur) => (cur && cur.id === v.id ? { ...cur, ...updated } : cur));
     toast(
       next === "paid"
         ? "Fee marked paid — you can approve the blue tick now"
@@ -650,50 +673,10 @@ export default function AdminPage() {
                         </div>
                       </div>
                       <div className="admin-row-actions">
-                        {v.selfie_path && (
-                          <button type="button" className="admin-btn" onClick={() => viewVerificationDoc(v.selfie_path!)}>
-                            <Icon name="Camera" />
-                            Selfie
-                          </button>
-                        )}
-                        {v.id_card_path && (
-                          <button type="button" className="admin-btn" onClick={() => viewVerificationDoc(v.id_card_path!)}>
-                            <Icon name="IdCard" />
-                            ID card
-                          </button>
-                        )}
-                        {v.fee_status === "pending" && (
-                          <button type="button" className="admin-btn" onClick={() => copyVerificationCode(v.payment_code)}>
-                            <Icon name="Copy" />
-                            Copy code
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="admin-btn"
-                          onClick={() => setVerificationFeeStatus(v, nextFeeStatus(v.fee_status))}
-                        >
-                          <Icon name="Wallet" />
-                          {v.fee_status === "pending" ? "Mark fee paid" : v.fee_status === "paid" ? "Mark fee waived" : "Mark fee pending"}
+                        <button type="button" className="admin-btn" onClick={() => openVerificationReview(v)}>
+                          <Icon name="Eye" />
+                          Review
                         </button>
-                        {v.status !== "approved" && (
-                          <button
-                            type="button"
-                            className="admin-btn"
-                            onClick={() => approveVerification(v)}
-                            disabled={v.fee_status === "pending"}
-                            title={v.fee_status === "pending" ? "Mark the fee paid or waived first" : undefined}
-                          >
-                            <Icon name="ShieldCheck" />
-                            Approve
-                          </button>
-                        )}
-                        {v.status !== "rejected" && (
-                          <button type="button" className="admin-btn danger" onClick={() => rejectVerification(v)}>
-                            <Icon name="ShieldX" />
-                            Reject
-                          </button>
-                        )}
                       </div>
                     </div>
                   ))
@@ -851,6 +834,145 @@ export default function AdminPage() {
           onClose={() => setEditCategory(null)}
           onSaved={() => { setEditCategory(null); loadAll(); }}
         />
+      )}
+
+      {reviewing && (
+        <div
+          className="modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeVerificationReview();
+          }}
+        >
+          <div className="modal-card admin-verify-modal">
+            <button type="button" className="modal-close" onClick={closeVerificationReview}>
+              <Icon name="X" />
+            </button>
+            <h2>{reviewing.user?.display_name ?? "Unknown seller"}</h2>
+
+            <div className="admin-row-title" style={{ marginBottom: 6 }}>
+              {reviewing.status === "pending" && <span className="admin-flag off">Pending</span>}
+              {reviewing.status === "approved" && <span className="admin-flag on">Approved</span>}
+              {reviewing.status === "rejected" && <span className="admin-flag off">Rejected</span>}
+              {reviewing.fee_status !== "pending" ? (
+                <span className="admin-flag on">Fee {reviewing.fee_status}</span>
+              ) : (
+                <span className="admin-flag off">Fee unpaid</span>
+              )}
+            </div>
+            <p className="hint" style={{ marginBottom: 16 }}>
+              Submitted {new Date(reviewing.submitted_at).toLocaleString()}
+              {reviewing.status === "rejected" && reviewing.rejection_reason ? ` · ${reviewing.rejection_reason}` : ""}
+            </p>
+
+            <div className="admin-verify-facts">
+              <div className="admin-verify-fact">
+                <span>Location</span>
+                <strong>{reviewing.user?.location || "—"}</strong>
+              </div>
+              <div className="admin-verify-fact">
+                <span>MMG on file</span>
+                <strong>{reviewing.user?.mmg_number || "—"}</strong>
+              </div>
+              <div className="admin-verify-fact">
+                <span>Member since</span>
+                <strong>{reviewing.user ? new Date(reviewing.user.created_at).getFullYear() : "—"}</strong>
+              </div>
+            </div>
+
+            <p className="modal-section-title" style={{ marginTop: 20 }}>MMG payment code</p>
+            <div className="admin-code-row-big">
+              <span className="mono">{reviewing.payment_code}</span>
+              <button type="button" className="admin-btn" onClick={() => copyVerificationCode(reviewing.payment_code)}>
+                <Icon name="Copy" />
+                Copy
+              </button>
+            </div>
+
+            <p className="modal-section-title">Photos</p>
+            <div className="admin-verify-photos">
+              <div className="admin-verify-photo">
+                <p className="admin-verify-photo-label">Selfie</p>
+                {loadingReviewDocs ? (
+                  <div className="admin-verify-photo-empty">
+                    <Icon name="Loader2" className="spin" />
+                  </div>
+                ) : reviewSelfieUrl ? (
+                  <a href={reviewSelfieUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={reviewSelfieUrl} alt="Selfie" />
+                  </a>
+                ) : (
+                  <div className="admin-verify-photo-empty">Not submitted</div>
+                )}
+              </div>
+              <div className="admin-verify-photo">
+                <p className="admin-verify-photo-label">ID card</p>
+                {loadingReviewDocs ? (
+                  <div className="admin-verify-photo-empty">
+                    <Icon name="Loader2" className="spin" />
+                  </div>
+                ) : reviewIdUrl ? (
+                  <a href={reviewIdUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={reviewIdUrl} alt="ID card" />
+                  </a>
+                ) : (
+                  <div className="admin-verify-photo-empty">Not submitted</div>
+                )}
+              </div>
+            </div>
+
+            <p className="modal-section-title">Payment</p>
+            <div className="admin-verify-fee-actions">
+              <button
+                type="button"
+                className={`admin-btn${reviewing.fee_status === "paid" ? " active" : ""}`}
+                onClick={() => setVerificationFeeStatus(reviewing, "paid")}
+              >
+                <Icon name="CheckCheck" />
+                Confirm payment received
+              </button>
+              <button
+                type="button"
+                className={`admin-btn${reviewing.fee_status === "waived" ? " active" : ""}`}
+                onClick={() => setVerificationFeeStatus(reviewing, "waived")}
+              >
+                <Icon name="HandCoins" />
+                Waive fee
+              </button>
+              {reviewing.fee_status !== "pending" && (
+                <button type="button" className="admin-btn" onClick={() => setVerificationFeeStatus(reviewing, "pending")}>
+                  <Icon name="Undo2" />
+                  Mark unpaid
+                </button>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              {reviewing.status !== "rejected" && (
+                <button
+                  type="button"
+                  className="btn btn-line"
+                  style={{ color: "#c0392b", borderColor: "#c0392b" }}
+                  onClick={() => rejectVerification(reviewing)}
+                >
+                  <Icon name="ShieldX" />
+                  Reject
+                </button>
+              )}
+              {reviewing.status !== "approved" && (
+                <button
+                  type="button"
+                  className="btn btn-accent"
+                  onClick={() => approveVerification(reviewing)}
+                  disabled={reviewing.fee_status === "pending"}
+                  title={reviewing.fee_status === "pending" ? "Confirm the payment or waive the fee first" : undefined}
+                >
+                  <Icon name="ShieldCheck" />
+                  Approve — grant blue tick
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
