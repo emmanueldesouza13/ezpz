@@ -98,7 +98,7 @@ export default function AccountPage() {
               </div>
             )}
 
-            {(myListings.length > 0 || myTaxi.length > 0) && (
+            {!profile?.is_admin && (myListings.length > 0 || myTaxi.length > 0) && (
               <>
                 <h1 style={{ marginTop: 32 }}>{t("account.myListings")}</h1>
                 <div className="admin-list">
@@ -116,7 +116,7 @@ export default function AccountPage() {
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           <Link href={`/listing/${l.id}`}>{l.title}</Link>
-                          {l.fee_status === "pending" && (
+                          {!profile?.is_admin && l.fee_status === "pending" && (
                             <span className="admin-flag off">{t("account.feePending")}</span>
                           )}
                         </div>
@@ -156,7 +156,7 @@ export default function AccountPage() {
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           <Link href={`/taxi/${svc.id}`}>{svc.driver_name}</Link>
-                          {svc.fee_status === "pending" && (
+                          {!profile?.is_admin && svc.fee_status === "pending" && (
                             <span className="admin-flag off">{t("account.feePending")}</span>
                           )}
                         </div>

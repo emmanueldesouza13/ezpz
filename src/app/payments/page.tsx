@@ -17,6 +17,7 @@ export default function PaymentsPage() {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [verified, setVerified] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [myTaxi, setMyTaxi] = useState<TaxiService[]>([]);
@@ -27,13 +28,14 @@ export default function PaymentsPage() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) { router.push("/sign-in?next=/payments"); return; }
       const [{ data: profile }, s, listings, taxi, verification] = await Promise.all([
-        supabase.from("profiles").select("verified").eq("id", data.user.id).maybeSingle(),
+        supabase.from("profiles").select("verified, is_admin").eq("id", data.user.id).maybeSingle(),
         getSiteSettings(supabase),
         getMyListings(supabase, data.user.id),
         getMyTaxiServices(supabase, data.user.id),
         getMyVerificationRequest(supabase, data.user.id),
       ]);
       setVerified(profile?.verified ?? false);
+      setIsAdmin(profile?.is_admin ?? false);
       setSettings(s);
       setMyListings(listings);
       setMyTaxi(taxi);
@@ -44,9 +46,11 @@ export default function PaymentsPage() {
 
   if (loading) return null;
 
-  const pendingListings = myListings.filter((l) => l.fee_status === "pending");
-  const pendingTaxi = myTaxi.filter((t) => t.fee_status === "pending");
-  const pendingVerification = !verified && myVerification && myVerification.fee_status === "pending";
+  // The admin account collects fees, it doesn't owe them — never show it a
+  // fee due on its own listings/taxi services/verification.
+  const pendingListings = isAdmin ? [] : myListings.filter((l) => l.fee_status === "pending");
+  const pendingTaxi = isAdmin ? [] : myTaxi.filter((t) => t.fee_status === "pending");
+  const pendingVerification = !isAdmin && !verified && myVerification && myVerification.fee_status === "pending";
   const allPaidUp = pendingListings.length === 0 && pendingTaxi.length === 0 && !pendingVerification;
 
   return (
