@@ -44,6 +44,8 @@ export async function getSiteSettings(supabase: SupabaseClient): Promise<Setting
       updated_at: "",
       announcement: null,
       announcement_updated_at: null,
+      privacy_blur: false,
+      maintenance_mode: false,
     }
   );
 }
@@ -115,8 +117,6 @@ export async function getListings(
   opts: {
     category?: string | null;
     q?: string | null;
-    minPrice?: number | null;
-    maxPrice?: number | null;
     region?: string | null;
   } = {}
 ): Promise<Listing[]> {
@@ -133,8 +133,6 @@ export async function getListings(
       query = applyWordSearch(query, term, ["title", "location", "description"]);
     }
   }
-  if (opts.minPrice != null) query = query.gte("price", opts.minPrice);
-  if (opts.maxPrice != null) query = query.lte("price", opts.maxPrice);
   if (opts.region) {
     const towns = REGION_TOWNS[opts.region] ?? [];
     query =

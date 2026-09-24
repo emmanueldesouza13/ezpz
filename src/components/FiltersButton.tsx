@@ -11,22 +11,18 @@ export default function FiltersButton({
   current,
 }: {
   categories: Category[];
-  current: { category?: string; q?: string; minPrice?: string; maxPrice?: string; region?: string };
+  current: { category?: string; q?: string; region?: string };
 }) {
   const router = useRouter();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [keywords, setKeywords] = useState(current.q ?? "");
   const [category, setCategory] = useState(current.category ?? "");
-  const [minPrice, setMinPrice] = useState(current.minPrice ?? "");
-  const [maxPrice, setMaxPrice] = useState(current.maxPrice ?? "");
 
   function apply() {
     const params = new URLSearchParams();
     if (keywords.trim()) params.set("q", keywords.trim());
     if (category) params.set("category", category);
-    if (minPrice) params.set("minPrice", minPrice);
-    if (maxPrice) params.set("maxPrice", maxPrice);
     if (current.region) params.set("region", current.region);
     setOpen(false);
     router.push(params.toString() ? `/?${params.toString()}` : "/");
@@ -35,8 +31,6 @@ export default function FiltersButton({
   function clearAll() {
     setKeywords("");
     setCategory("");
-    setMinPrice("");
-    setMaxPrice("");
     setOpen(false);
     router.push("/");
   }
@@ -68,32 +62,6 @@ export default function FiltersButton({
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
               />
-            </div>
-
-            <div className="field">
-              <label>{t("filters.hourlyRate")}</label>
-              <div className="price-row">
-                <div className="field" style={{ marginBottom: 0 }}>
-                  <input
-                    className="control"
-                    type="number"
-                    min="0"
-                    placeholder={t("filters.min")}
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                  />
-                </div>
-                <div className="field" style={{ marginBottom: 0 }}>
-                  <input
-                    className="control"
-                    type="number"
-                    min="0"
-                    placeholder={t("filters.max")}
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                  />
-                </div>
-              </div>
             </div>
 
             <div className="modal-actions">

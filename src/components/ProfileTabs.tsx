@@ -5,7 +5,7 @@ import Link from "next/link";
 import Icon from "./Icon";
 import ReviewsPanel from "./ReviewsPanel";
 import ScheduleEditor from "./ScheduleEditor";
-import AdminTools from "./AdminTools";
+import AdminTools, { type Tab as AdminTab } from "./AdminTools";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Profile } from "@/lib/types";
 
@@ -17,11 +17,20 @@ import type { Profile } from "@/lib/types";
 // page, so isOwner is effectively always true here — it's still checked
 // alongside is_admin (rather than is_admin alone) as a safety net in
 // case that ever changes. The admin viewing their own profile gets
-// "Maintenance" (the full admin toolset — same component the standalone
-// /admin page uses) in place of "Schedule", and loses "Reviews"
-// entirely — the admin account doesn't list anything, so there's
-// nothing to review; it's just a reach-out point for people to message
-// with concerns.
+// "Maintenance" and "Screening" in place of "Schedule", and loses
+// "Reviews" entirely — the admin account doesn't list anything, so
+// there's nothing to review; it's just a reach-out point for people to
+// message with concerns.
+//
+// Maintenance vs. Screening is a split of the same AdminTools component
+// by which tabs it shows: Maintenance keeps site content & config
+// (listings, taxi, sellers, categories, branding, broadcast), Screening
+// holds the trust & safety / money tools (verification, reports,
+// payouts) — kept separate from the site-wide privacy-blur/shut-down
+// controls, which only render once, inside Maintenance.
+const MAINTENANCE_TABS: AdminTab[] = ["listings", "taxi", "sellers", "categories", "branding", "broadcast"];
+const SCREENING_TABS: AdminTab[] = ["verification", "reports", "payouts"];
+
 type TabKey = "reviews" | "schedule" | "maintenance" | "screening";
 
 export default function ProfileTabs({
@@ -83,9 +92,11 @@ export default function ProfileTabs({
           />
         )}
 
-        {tab === "maintenance" && showMaintenance && <AdminTools />}
+        {tab === "maintenance" && showMaintenance && <AdminTools tabs={MAINTENANCE_TABS} />}
 
-        {tab === "screening" && (
+        {tab === "screening" && showMaintenance && <AdminTools tabs={SCREENING_TABS} showSiteControls={false} />}
+
+        {tab === "screening" && !showMaintenance && (
           <>
             <div className="tab-fact-row">
               <div className="tab-fact">

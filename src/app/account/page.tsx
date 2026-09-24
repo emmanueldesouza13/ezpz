@@ -13,7 +13,7 @@ import BlueTick from "@/components/BlueTick";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
-import { formatPrice, isPhotoUrl } from "@/lib/format";
+import { isPhotoUrl } from "@/lib/format";
 import type { Listing, Profile, TaxiService } from "@/lib/types";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -119,9 +119,7 @@ export default function AccountPage() {
                         <div className="admin-row-title">
                           <Link href={`/listing/${l.id}`}>{l.title}</Link>
                         </div>
-                        <div className="admin-row-sub">
-                          {formatPrice(l.price, l.is_free)} &middot; {l.location}
-                        </div>
+                        <div className="admin-row-sub">{l.location}</div>
                       </div>
                       <div className="admin-row-actions">
                         <Link href={`/listing/${l.id}/edit`} className="admin-btn">

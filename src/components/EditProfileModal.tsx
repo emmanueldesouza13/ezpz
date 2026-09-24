@@ -49,8 +49,6 @@ export default function EditProfileModal({
   // listing fields
   const [lTitle, setLTitle] = useState("");
   const [lCategory, setLCategory] = useState("");
-  const [lPrice, setLPrice] = useState("");
-  const [lIsFree, setLIsFree] = useState(false);
   const [lLocation, setLLocation] = useState("");
   const [lDescription, setLDescription] = useState("");
   const [lSwatch, setLSwatch] = useState(0);
@@ -72,8 +70,6 @@ export default function EditProfileModal({
     if (listing) {
       setLTitle(listing.title);
       setLCategory(listing.category);
-      setLPrice(listing.is_free ? "" : String(listing.price));
-      setLIsFree(listing.is_free);
       setLLocation(listing.location);
       setLDescription(listing.description);
       const uploaded: string[] = (listing.images || []).filter(isPhotoUrl);
@@ -213,8 +209,6 @@ export default function EditProfileModal({
           .update({
             title: lTitle.trim(),
             description: lDescription.trim(),
-            price: lIsFree ? 0 : Number(lPrice) || 0,
-            is_free: lIsFree,
             category: lCategory,
             location: lLocation.trim(),
             images: lPhotos.length > 0 ? lPhotos : [GRADIENTS[lSwatch]],
@@ -465,33 +459,6 @@ export default function EditProfileModal({
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <div className="price-row" style={{ marginBottom: 20 }}>
-                    <div className="field">
-                      <label htmlFor="ep-l-price">{t("post.priceLabel")}</label>
-                      <div className="price-input">
-                        <span>GY$</span>
-                        <input
-                          className="control"
-                          id="ep-l-price"
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          disabled={lIsFree}
-                          value={lPrice}
-                          onChange={(e) => setLPrice(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <label className="check-row">
-                      <input
-                        type="checkbox"
-                        checked={lIsFree}
-                        onChange={(e) => setLIsFree(e.target.checked)}
-                      />
-                      {t("post.listAsFree")}
-                    </label>
                   </div>
 
                   <div className="field">

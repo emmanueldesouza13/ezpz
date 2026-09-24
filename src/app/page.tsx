@@ -15,21 +15,13 @@ export default async function BrowsePage({
   searchParams: Promise<{
     category?: string;
     q?: string;
-    minPrice?: string;
-    maxPrice?: string;
     region?: string;
   }>;
 }) {
-  const { category, q, minPrice, maxPrice, region } = await searchParams;
+  const { category, q, region } = await searchParams;
   const supabase = await createClient();
   const [listings, categories] = await Promise.all([
-    getListings(supabase, {
-      category,
-      q,
-      minPrice: minPrice ? Number(minPrice) : null,
-      maxPrice: maxPrice ? Number(maxPrice) : null,
-      region,
-    }),
+    getListings(supabase, { category, q, region }),
     getCategories(supabase),
   ]);
 
@@ -56,7 +48,7 @@ export default async function BrowsePage({
             <BrowseHeading categoryName={cat?.name} count={oneEach.length} query={q} region={region} />
             <FiltersButton
               categories={categories}
-              current={{ category, q, minPrice, maxPrice, region }}
+              current={{ category, q, region }}
             />
           </div>
           <div className="listing-grid">

@@ -4,11 +4,6 @@ export function isPhotoUrl(v: string): boolean {
   return v.startsWith("http://") || v.startsWith("https://");
 }
 
-export function formatPrice(price: number, isFree?: boolean): string {
-  if (isFree || price === 0) return "Free";
-  return "GY$" + Number(price).toLocaleString("en-US");
-}
-
 export function timeAgo(iso: string): string {
   const then = new Date(iso).getTime();
   const now = Date.now();

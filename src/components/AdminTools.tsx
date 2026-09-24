@@ -14,12 +14,14 @@ import {
   type TaxiService,
   type VerificationRequest,
 } from "@/lib/types";
-import { formatPrice, isPhotoUrl } from "@/lib/format";
+import { isPhotoUrl } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { getSiteSettings } from "@/lib/data";
 import { MAX_LISTING_PHOTOS, uploadListingPhoto } from "@/lib/media";
 
-type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts" | "broadcast";
+export type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts" | "broadcast";
+
+const ALL_TABS: Tab[] = ["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts", "broadcast"];
 
 const CATEGORY_ICONS = [
   "Briefcase", "Wrench", "Home", "Car", "Dumbbell", "MapPin", "Star", "Shield", "Clock", "MessageCircle",
@@ -28,15 +30,26 @@ const CATEGORY_ICONS = [
 ];
 
 // The admin toolset itself — tabs, lists, and every edit modal. Rendered
-// both by the standalone /admin route and by the "Maintenance" tab on the
-// admin's own account page, so there's one copy of this logic to maintain.
-// Owns its own auth/is_admin check (defense in depth) and renders a plain
-// inline message rather than a full page when that check fails, since a
-// consumer may already be embedding this inside its own page chrome.
-export default function AdminTools() {
+// by the standalone /admin route (unrestricted — every tab) and, on the
+// admin's own account page, by both the "Maintenance" tab (site content &
+// config: listings, taxi, sellers, categories, branding, broadcast) and
+// the "Screening" tab (trust & safety: verification, reports, payouts) —
+// so there's one copy of this logic to maintain, scoped by the `tabs`
+// prop rather than duplicated. Owns its own auth/is_admin check (defense
+// in depth) and renders a plain inline message rather than a full page
+// when that check fails, since a consumer may already be embedding this
+// inside its own page chrome.
+export default function AdminTools({
+  tabs: allowedTabs,
+  showSiteControls = true,
+}: {
+  tabs?: Tab[];
+  showSiteControls?: boolean;
+} = {}) {
   const supabase = createClient();
+  const visibleTabs = allowedTabs ?? ALL_TABS;
   const [phase, setPhase] = useState<"checking" | "signedout" | "forbidden" | "ready">("checking");
-  const [tab, setTab] = useState<Tab>("listings");
+  const [tab, setTab] = useState<Tab>(visibleTabs[0] ?? "listings");
   const [listings, setListings] = useState<Listing[]>([]);
   const [taxiServices, setTaxiServices] = useState<TaxiService[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -175,10 +188,6 @@ export default function AdminTools() {
     loadAll();
   }
 
-  function nextFeeStatus(s: "pending" | "paid" | "waived"): "pending" | "paid" | "waived" {
-    return s === "pending" ? "paid" : s === "paid" ? "waived" : "pending";
-  }
-
   async function setVerificationFeeStatus(v: VerificationRequest, next: "pending" | "paid" | "waived") {
     const { data, error } = await supabase
       .from("verification_requests")
@@ -281,6 +290,39 @@ export default function AdminTools() {
     })();
   }, [supabase, loadAll]);
 
+  async function togglePrivacyBlur() {
+    const next = !(settings?.privacy_blur ?? false);
+    const { data, error } = await supabase
+      .from("settings")
+      .update({ privacy_blur: next, updated_at: new Date().toISOString() })
+      .eq("id", 1)
+      .select();
+    if (error) { toast("Couldn't update — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't update — no permission to update settings"); return; }
+    setSettings((cur) => (cur ? { ...cur, privacy_blur: next } : cur));
+    toast(next ? "Privacy blur is on — live across the site now" : "Privacy blur is off");
+  }
+
+  async function toggleMaintenanceMode() {
+    const next = !(settings?.maintenance_mode ?? false);
+    // Require privacy blur to already be on before the site can be shut
+    // down — the intended order is blur first (so nothing sensitive is on
+    // screen), then shut the site down to work on it.
+    if (next && !settings?.privacy_blur) {
+      toast("Turn on privacy blur first, then shut down the site");
+      return;
+    }
+    const { data, error } = await supabase
+      .from("settings")
+      .update({ maintenance_mode: next, updated_at: new Date().toISOString() })
+      .eq("id", 1)
+      .select();
+    if (error) { toast("Couldn't update — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't update — no permission to update settings"); return; }
+    setSettings((cur) => (cur ? { ...cur, maintenance_mode: next } : cur));
+    toast(next ? "Site is shut down — only your admin account can browse it now" : "Site is back up");
+  }
+
   async function deleteCategory(c: Category) {
     const usedBy = listings.filter((l) => l.category === c.slug && l.status === "active").length;
     if (usedBy > 0) { toast(`Can't delete — ${usedBy} listing${usedBy === 1 ? "" : "s"} use this category`); return; }
@@ -316,8 +358,71 @@ export default function AdminTools() {
         Changes here write straight to the live database and show up across the site right
         away.
       </p>
+      {showSiteControls && (
+      <>
+      <div className="admin-row" style={{ marginBottom: 18 }}>
+        <div className="admin-row-info">
+          <div className="admin-row-title">
+            Privacy blur
+            {settings?.privacy_blur ? (
+              <span className="admin-flag on">On</span>
+            ) : (
+              <span className="admin-flag off">Off</span>
+            )}
+          </div>
+          <div className="admin-row-sub">
+            Blurs every photo and bio/description across the whole site, everywhere — turn
+            this on before sharing your screen or a screenshot with anyone during maintenance.
+          </div>
+        </div>
+        <div className="admin-row-actions">
+          <button
+            type="button"
+            className={`btn ${settings?.privacy_blur ? "btn-accent" : "btn-line"}`}
+            onClick={togglePrivacyBlur}
+          >
+            <Icon name={settings?.privacy_blur ? "EyeOff" : "Eye"} />
+            {settings?.privacy_blur ? "Turn off" : "Turn on"}
+          </button>
+        </div>
+      </div>
+      <div className="admin-row" style={{ marginBottom: 18 }}>
+        <div className="admin-row-info">
+          <div className="admin-row-title">
+            Shut down site
+            {settings?.maintenance_mode ? (
+              <span className="admin-flag on">On</span>
+            ) : (
+              <span className="admin-flag off">Off</span>
+            )}
+          </div>
+          <div className="admin-row-sub">
+            Everyone except your admin account sees an &quot;under maintenance&quot; page
+            instead of the real site — you can still browse it (blurred) to make changes.
+            {!settings?.privacy_blur && !settings?.maintenance_mode && " Turn on privacy blur first."}
+          </div>
+        </div>
+        <div className="admin-row-actions">
+          <button
+            type="button"
+            className={`btn ${settings?.maintenance_mode ? "btn-accent" : "btn-line"}`}
+            onClick={toggleMaintenanceMode}
+            disabled={!settings?.maintenance_mode && !settings?.privacy_blur}
+            title={
+              !settings?.maintenance_mode && !settings?.privacy_blur
+                ? "Turn on privacy blur first, then shut down the site"
+                : undefined
+            }
+          >
+            <Icon name={settings?.maintenance_mode ? "PowerOff" : "Power"} />
+            {settings?.maintenance_mode ? "Turn off" : "Turn on"}
+          </button>
+        </div>
+      </div>
+      </>
+      )}
       <div className="admin-tabs">
-        {(["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts", "broadcast"] as Tab[]).map((t) => (
+        {visibleTabs.map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -481,8 +586,7 @@ export default function AdminTools() {
                           {l.status !== "active" && <span className="admin-flag off">{l.status}</span>}
                         </div>
                         <div className="admin-row-sub">
-                          {formatPrice(l.price, l.is_free)} &middot; {l.location} &middot;{" "}
-                          {l.seller?.display_name ?? "Unknown"}
+                          {l.location} &middot; {l.seller?.display_name ?? "Unknown"}
                         </div>
                       </div>
                       <div className="admin-row-actions">
@@ -558,10 +662,30 @@ export default function AdminTools() {
                         </div>
                       </div>
                       <div className="admin-row-actions">
-                        <button type="button" className="admin-btn" onClick={() => setTaxiFeeStatus(t, nextFeeStatus(t.fee_status))}>
-                          <Icon name="Wallet" />
-                          {t.fee_status === "pending" ? "Mark fee paid" : t.fee_status === "paid" ? "Mark fee waived" : "Mark fee pending"}
+                        <button
+                          type="button"
+                          className={`admin-btn${t.fee_status === "paid" ? " active" : ""}`}
+                          onClick={() => setTaxiFeeStatus(t, "paid")}
+                        >
+                          <Icon name="CheckCheck" />
+                          Mark paid
                         </button>
+                        <button
+                          type="button"
+                          className={`admin-btn${t.fee_status === "waived" ? " active" : ""}`}
+                          onClick={() => setTaxiFeeStatus(t, "waived")}
+                        >
+                          <Icon name="HandCoins" />
+                          Waive
+                        </button>
+                        {t.fee_status !== "pending" && (
+                          // Undo — puts the fee back to pending without having to
+                          // cycle through the other status first.
+                          <button type="button" className="admin-btn" onClick={() => setTaxiFeeStatus(t, "pending")}>
+                            <Icon name="Undo2" />
+                            Mark pending
+                          </button>
+                        )}
                         <button type="button" className="admin-btn" onClick={() => setEditTaxi(t)}>
                           <Icon name="Pencil" />
                           Edit
@@ -1179,14 +1303,8 @@ function ListingModal({
   const [ownerId, setOwnerId] = useState(listing?.seller_id ?? "");
   const [title, setTitle] = useState(listing?.title ?? "");
   const [category, setCategory] = useState(listing?.category ?? categories[0]?.slug ?? "");
-  const [price, setPrice] = useState(listing ? String(listing.price) : "");
-  const [isFree, setIsFree] = useState(listing?.is_free ?? false);
   const [location, setLocation] = useState(listing?.location ?? "");
   const [description, setDescription] = useState(listing?.description ?? "");
-  const [swatch, setSwatch] = useState(() => {
-    const idx = listing ? GRADIENTS.indexOf(listing.images[0]) : 0;
-    return idx >= 0 ? idx : 0;
-  });
   const [photos, setPhotos] = useState<string[]>(() => (listing ? listing.images.filter(isPhotoUrl) : []));
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1223,9 +1341,9 @@ function ListingModal({
     }
     setSaving(true);
     const vals = {
-      title: title.trim(), category, price: isFree ? 0 : Number(price) || 0,
-      is_free: isFree, location: location.trim(), description: description.trim(),
-      images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
+      title: title.trim(), category,
+      location: location.trim(), description: description.trim(),
+      images: photos.length > 0 ? photos : [GRADIENTS[0]],
     };
     const { data, error } = listing
       ? await supabase.from("listings").update(vals).eq("id", listing.id).select()
@@ -1260,19 +1378,6 @@ function ListingModal({
             {categories.map((c) => <option value={c.slug} key={c.slug}>{c.name}</option>)}
           </select>
         </div>
-        <div className="price-row" style={{ marginBottom: 20 }}>
-          <div className="field">
-            <label>Price</label>
-            <div className="price-input">
-              <span>GY$</span>
-              <input className="control" type="number" min="0" disabled={isFree} value={price} onChange={(e) => setPrice(e.target.value)} />
-            </div>
-          </div>
-          <label className="check-row">
-            <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} />
-            List as free
-          </label>
-        </div>
         <div className="field">
           <label>Location</label>
           <input className="control" required value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -1303,15 +1408,7 @@ function ListingModal({
             )}
           </div>
           {photos.length === 0 ? (
-            <>
-              <p className="hint">Upload real photos, or pick a placeholder color below.</p>
-              <div className="swatch-picker" style={{ marginTop: 10 }}>
-                {GRADIENTS.map((g, i) => (
-                  <button type="button" key={i} className={`swatch-btn${swatch === i ? " selected" : ""}`}
-                    style={{ background: g }} onClick={() => setSwatch(i)} />
-                ))}
-              </div>
-            </>
+            <p className="hint">Upload real photos.</p>
           ) : (
             <p className="hint">The first photo is used as the main listing photo.</p>
           )}
@@ -1337,7 +1434,6 @@ function SellerModal({
   const [name, setName] = useState(profile.display_name);
   const [avatarColor, setAvatarColor] = useState(profile.avatar_color);
   const [verified, setVerified] = useState(profile.verified);
-  const [isAdmin, setIsAdmin] = useState(profile.is_admin);
   const [mmg, setMmg] = useState(profile.mmg_number ?? "");
   const [rating, setRating] = useState(String(profile.rating));
   const [ratingCount, setRatingCount] = useState(String(profile.rating_count));
@@ -1347,9 +1443,11 @@ function SellerModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    // Admin access is never editable from here — it's set directly in the
+    // database, on purpose, to keep the app down to a single admin account.
     const { data, error } = await supabase.from("profiles").update({
       display_name: name.trim(), avatar_color: avatarColor.trim() || profile.avatar_color,
-      verified, is_admin: isAdmin, mmg_number: mmg.trim() || null,
+      verified, mmg_number: mmg.trim() || null,
       rating: Number(rating) || 0, rating_count: Number(ratingCount) || 0,
       response_rate: Number(responseRate) || 0,
     }).eq("id", profile.id).select();
@@ -1371,8 +1469,7 @@ function SellerModal({
           <label>Avatar color</label>
           <input className="control" value={avatarColor} onChange={(e) => setAvatarColor(e.target.value)} placeholder="#a72c53" />
         </div>
-        <label className="check-inline"><input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} /> Verified seller</label>
-        <label className="check-inline" style={{ marginBottom: 16 }}><input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} /> Admin access</label>
+        <label className="check-inline" style={{ marginBottom: 16 }}><input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} /> Verified seller</label>
         <div className="field">
           <label>MMG number</label>
           <input className="control" value={mmg} onChange={(e) => setMmg(e.target.value)} placeholder="e.g. 642-1187" />

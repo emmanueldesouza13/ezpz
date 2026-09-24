@@ -3,6 +3,7 @@ import "./globals.css";
 import ToastHost from "@/components/ToastHost";
 import AgeGate from "@/components/AgeGate";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import PrivacyBlurGate from "@/components/PrivacyBlurGate";
 import NavDepthTracker from "@/components/NavDepthTracker";
 import LastPathTracker, { LAST_PATH_KEY } from "@/components/LastPathTracker";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
@@ -52,6 +53,7 @@ export default function RootLayout({
           <NavDepthTracker />
           <LastPathTracker />
           <AgeGate>
+            <PrivacyBlurGate />
             <AnnouncementBanner />
             {children}
           </AgeGate>

@@ -29,8 +29,6 @@ export default function PostPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
-  const [isFree, setIsFree] = useState(false);
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [swatch, setSwatch] = useState(0);
@@ -129,8 +127,6 @@ export default function PostPage() {
         seller_id: user.id,
         title: title.trim(),
         description: description.trim(),
-        price: isFree ? 0 : Number(price) || 0,
-        is_free: isFree,
         category,
         location: location.trim(),
         images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
@@ -274,33 +270,6 @@ export default function PostPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <div className="price-row" style={{ marginBottom: 20 }}>
-                    <div className="field">
-                      <label htmlFor="priceInput">{t("post.priceLabel")}</label>
-                      <div className="price-input">
-                        <span>GY$</span>
-                        <input
-                          className="control"
-                          id="priceInput"
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          disabled={isFree}
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <label className="check-row">
-                      <input
-                        type="checkbox"
-                        checked={isFree}
-                        onChange={(e) => setIsFree(e.target.checked)}
-                      />
-                      {t("post.listAsFree")}
-                    </label>
                   </div>
 
                   <div className="field">

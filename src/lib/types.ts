@@ -9,6 +9,8 @@ export type Settings = {
   updated_at: string;
   announcement: string | null;
   announcement_updated_at: string | null;
+  privacy_blur: boolean;
+  maintenance_mode: boolean;
 };
 
 export type TaxiService = {
@@ -123,8 +125,6 @@ export type Listing = {
   seller_id: string;
   title: string;
   description: string;
-  price: number;
-  is_free: boolean;
   category: string;
   location: string;
   images: string[]; // uploaded photo public URLs, or (for older/no-photo listings) a CSS gradient string from the preset palette

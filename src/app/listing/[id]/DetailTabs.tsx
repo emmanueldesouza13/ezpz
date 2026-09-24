@@ -5,7 +5,7 @@ import Icon from "@/components/Icon";
 import ReportButton from "./ReportButton";
 import ReviewsPanel from "@/components/ReviewsPanel";
 import ScheduleEditor from "@/components/ScheduleEditor";
-import { timeAgo, formatPrice } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { Listing } from "@/lib/types";
 
@@ -53,10 +53,6 @@ export default function DetailTabs({
           <>
             {seller?.bio && <p className="desc-text" style={{ marginBottom: 18 }}>{seller.bio}</p>}
             <div className="tab-fact-row">
-              <div className="tab-fact">
-                <strong>{t("listing.rate")}</strong>
-                {formatPrice(listing.price, listing.is_free)}
-              </div>
               <div className="tab-fact">
                 <strong>{t("listing.location")}</strong>
                 {seller?.location || listing.location}
