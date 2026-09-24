@@ -972,6 +972,20 @@
   .fee-copy:hover { text-decoration: underline; }
   .fee-caption { font-size: 0.74rem; color: var(--ink-faint); line-height: 1.55; margin-top: 9px; }
 
+  .fee-code-box { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .fee-code-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: var(--radius-control); padding: 10px 13px;
+  }
+  .fee-code-label {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-faint); flex-shrink: 0;
+  }
+  .fee-code-value {
+    flex: 1; font-size: 1rem; font-weight: 800; letter-spacing: 0.06em; color: var(--accent);
+  }
+
   .fee-note {
     display: flex; align-items: center; gap: 7px;
     font-size: 0.78rem; color: var(--ink-soft);
@@ -1270,6 +1284,13 @@
   .admin-flag { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; }
   .admin-flag.on { background: var(--brand-tint); color: var(--accent); border: 1px solid var(--brand-tint-line); }
   .admin-flag.off { background: var(--surface-2); color: var(--ink-faint); border: 1px solid var(--line); }
+  .admin-code-line {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 999px; padding: 3px 10px 3px 10px;
+  }
+  .admin-code-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); }
+  .admin-code-value { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; color: var(--accent); }
   .admin-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .admin-btn {
     font-size: 0.78rem; font-weight: 700; padding: 7px 12px; border-radius: 999px;

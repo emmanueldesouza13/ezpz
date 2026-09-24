@@ -251,6 +251,7 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
           label={t("fees.blueTickLabel")}
           caption={t("fees.blueTickCaption", { fee: fee.toLocaleString() })}
           noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: fee.toLocaleString() })}
+          code={request?.payment_code}
         />
       )}
 
@@ -277,6 +278,7 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
                   label={t("fees.blueTickLabel")}
                   caption={t("fees.blueTickCaption", { fee: fee.toLocaleString() })}
                   noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: fee.toLocaleString() })}
+                  code={request?.payment_code}
                 />
               </div>
             )}

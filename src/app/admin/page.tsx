@@ -93,6 +93,17 @@ export default function AdminPage() {
     loadAll();
   }
 
+  function copyVerificationCode(code: string) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(
+        () => toast("Code copied — " + code),
+        () => toast("Code: " + code)
+      );
+    } else {
+      toast("Code: " + code);
+    }
+  }
+
   async function viewVerificationDoc(path: string) {
     const { data, error } = await supabase.storage.from("verification").createSignedUrl(path, 300);
     if (error || !data?.signedUrl) {
@@ -633,6 +644,10 @@ export default function AdminPage() {
                           Submitted {new Date(v.submitted_at).toLocaleDateString()}
                           {v.status === "rejected" && v.rejection_reason ? ` · ${v.rejection_reason}` : ""}
                         </div>
+                        <div className="admin-code-line">
+                          <span className="admin-code-label">MMG payment code</span>
+                          <span className="mono admin-code-value">{v.payment_code}</span>
+                        </div>
                       </div>
                       <div className="admin-row-actions">
                         {v.selfie_path && (
@@ -645,6 +660,12 @@ export default function AdminPage() {
                           <button type="button" className="admin-btn" onClick={() => viewVerificationDoc(v.id_card_path!)}>
                             <Icon name="IdCard" />
                             ID card
+                          </button>
+                        )}
+                        {v.fee_status === "pending" && (
+                          <button type="button" className="admin-btn" onClick={() => copyVerificationCode(v.payment_code)}>
+                            <Icon name="Copy" />
+                            Copy code
                           </button>
                         )}
                         <button

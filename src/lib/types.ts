@@ -91,6 +91,7 @@ export type VerificationRequest = {
   rejection_reason: string | null;
   fee_status: "pending" | "paid" | "waived";
   fee_paid_at: string | null;
+  payment_code: string;
   user?: Profile;
 };
 

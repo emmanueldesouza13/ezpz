@@ -10,12 +10,14 @@ export default function FeeBanner({
   label,
   caption,
   noMmgCaption,
+  code,
 }: {
   mmg: string | null;
   fee: number;
   label?: string;
   caption?: string;
   noMmgCaption?: string;
+  code?: string;
 }) {
   const { t } = useLanguage();
 
@@ -28,6 +30,18 @@ export default function FeeBanner({
       );
     } else {
       toast("MMG number: " + mmg);
+    }
+  }
+
+  function handleCopyCode() {
+    if (!code) return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(
+        () => toast(t("fees.referenceCopied", { code })),
+        () => toast(code)
+      );
+    } else {
+      toast(code);
     }
   }
 
@@ -49,6 +63,19 @@ export default function FeeBanner({
           <p className="fee-caption">
             {caption ?? t("fees.activationCaption", { fee: fee.toLocaleString() })}
           </p>
+          {code && (
+            <div className="fee-code-box">
+              <div className="fee-code-row">
+                <span className="fee-code-label">{t("fees.referenceLabel")}</span>
+                <span className="fee-code-value mono">{code}</span>
+                <button type="button" className="fee-copy" onClick={handleCopyCode}>
+                  <Icon name="Copy" size={13} />
+                  {t("common.copy")}
+                </button>
+              </div>
+              <p className="fee-caption">{t("fees.referenceHint")}</p>
+            </div>
+          )}
         </>
       ) : (
         <p className="fee-caption">

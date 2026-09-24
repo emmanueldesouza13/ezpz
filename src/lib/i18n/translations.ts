@@ -236,6 +236,9 @@ export const translations = {
       blueTickLabel: "Blue tick fee — one-time",
       blueTickCaption: "Send GY${fee} to this MMG number for your blue tick. We'll approve it once payment and your photos are both confirmed.",
       blueTickNoMmgCaption: "GY${fee} blue tick fee — the site hasn't set a payout MMG number yet, so hold off paying until it does.",
+      referenceLabel: "Your code",
+      referenceHint: "Put this code in the MMG payment note so we can match your payment to your account.",
+      referenceCopied: "Code copied — {code}",
     },
     verify: {
       verifiedTitle: "You're verified",
@@ -648,6 +651,9 @@ export const translations = {
       blueTickLabel: "Cuota de la insignia azul — pago único",
       blueTickCaption: "Envía GY${fee} a este número MMG para tu insignia azul. La aprobaremos en cuanto se confirmen el pago y tus fotos.",
       blueTickNoMmgCaption: "Cuota de la insignia azul de GY${fee} — el sitio aún no configuró un número MMG de cobro, así que espera antes de pagar.",
+      referenceLabel: "Tu código",
+      referenceHint: "Incluye este código en la nota del pago MMG para que podamos relacionar tu pago con tu cuenta.",
+      referenceCopied: "Código copiado — {code}",
     },
     verify: {
       verifiedTitle: "Estás verificado",

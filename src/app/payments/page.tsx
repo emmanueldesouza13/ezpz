@@ -150,6 +150,7 @@ export default function PaymentsPage() {
                       label={t("fees.blueTickLabel")}
                       caption={t("fees.blueTickCaption", { fee: (settings?.verification_fee ?? 2000).toLocaleString() })}
                       noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: (settings?.verification_fee ?? 2000).toLocaleString() })}
+                      code={myVerification?.payment_code}
                     />
                   </div>
                 )}
