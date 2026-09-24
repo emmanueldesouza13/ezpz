@@ -841,7 +841,7 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
   const [fee, setFee] = useState(String(settings?.listing_fee ?? 2000));
   const [taxiMmg, setTaxiMmg] = useState(settings?.taxi_mmg_number ?? "");
   const [taxiFee, setTaxiFee] = useState(String(settings?.taxi_fee ?? 5000));
-  const [verificationFee, setVerificationFee] = useState(String(settings?.verification_fee ?? 1000));
+  const [verificationFee, setVerificationFee] = useState(String(settings?.verification_fee ?? 2000));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -849,7 +849,7 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
     setFee(String(settings?.listing_fee ?? 2000));
     setTaxiMmg(settings?.taxi_mmg_number ?? "");
     setTaxiFee(String(settings?.taxi_fee ?? 5000));
-    setVerificationFee(String(settings?.verification_fee ?? 1000));
+    setVerificationFee(String(settings?.verification_fee ?? 2000));
   }, [settings]);
 
   async function handleSubmit(e: React.FormEvent) {

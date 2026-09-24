@@ -146,10 +146,10 @@ export default function PaymentsPage() {
                     </p>
                     <FeeBanner
                       mmg={settings?.platform_mmg_number ?? null}
-                      fee={settings?.verification_fee ?? 1000}
+                      fee={settings?.verification_fee ?? 2000}
                       label={t("fees.blueTickLabel")}
-                      caption={t("fees.blueTickCaption", { fee: (settings?.verification_fee ?? 1000).toLocaleString() })}
-                      noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: (settings?.verification_fee ?? 1000).toLocaleString() })}
+                      caption={t("fees.blueTickCaption", { fee: (settings?.verification_fee ?? 2000).toLocaleString() })}
+                      noMmgCaption={t("fees.blueTickNoMmgCaption", { fee: (settings?.verification_fee ?? 2000).toLocaleString() })}
                     />
                   </div>
                 )}

@@ -180,7 +180,7 @@ export default function VerifyIdentity({ profile }: { profile: Profile }) {
   }
 
   const status = request?.status;
-  const fee = settings?.verification_fee ?? 1000;
+  const fee = settings?.verification_fee ?? 2000;
   const mmg = settings?.platform_mmg_number ?? null;
   const feeUnpaid = !!request && request.fee_status === "pending";
 
