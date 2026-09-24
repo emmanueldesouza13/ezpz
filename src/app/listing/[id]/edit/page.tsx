@@ -11,8 +11,14 @@ import { GRADIENTS, type Category } from "@/lib/types";
 import { isPhotoUrl, stripDigits } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-
-const MAX_PHOTOS = 6;
+import {
+  MAX_LISTING_PHOTOS,
+  MAX_LISTING_VIDEOS,
+  MAX_VIDEO_SECONDS,
+  MAX_VIDEO_MB,
+  uploadListingPhoto,
+  uploadListingVideo,
+} from "@/lib/media";
 
 export default function EditListingPage() {
   const supabase = createClient();
@@ -33,6 +39,8 @@ export default function EditListingPage() {
   const [swatch, setSwatch] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [videos, setVideos] = useState<string[]>([]);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -76,6 +84,7 @@ export default function EditListingPage() {
         const gi = GRADIENTS.indexOf(listing.images?.[0]);
         setSwatch(gi >= 0 ? gi : 0);
       }
+      setVideos(listing.videos ?? []);
       setChecking(false);
     })();
   }, [supabase, router, id]);
@@ -84,24 +93,17 @@ export default function EditListingPage() {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (files.length === 0) return;
-    const room = MAX_PHOTOS - photos.length;
-    if (room <= 0) { toast(`You can add up to ${MAX_PHOTOS} photos`); return; }
+    const room = MAX_LISTING_PHOTOS - photos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_LISTING_PHOTOS} photos`); return; }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) return;
     setUploadingPhoto(true);
     const uploaded: string[] = [];
     for (const file of files.slice(0, room)) {
-      if (!file.type.startsWith("image/")) { toast(`${file.name} isn't an image — skipped`); continue; }
-      if (file.size > 8 * 1024 * 1024) { toast(`${file.name} is too large — 8MB max`); continue; }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("listings")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) { toast(`Couldn't upload ${file.name} — ${upErr.message}`); continue; }
-      const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-      uploaded.push(pub.publicUrl);
+      const result = await uploadListingPhoto(supabase, user.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
     }
     setUploadingPhoto(false);
     if (uploaded.length > 0) setPhotos((p) => [...p, ...uploaded]);
@@ -109,6 +111,30 @@ export default function EditListingPage() {
 
   function removePhoto(i: number) {
     setPhotos((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  async function handleVideoFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    const room = MAX_LISTING_VIDEOS - videos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_LISTING_VIDEOS} videos`); return; }
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+    if (!user) return;
+    setUploadingVideo(true);
+    const uploaded: string[] = [];
+    for (const file of files.slice(0, room)) {
+      const result = await uploadListingVideo(supabase, user.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
+    }
+    setUploadingVideo(false);
+    if (uploaded.length > 0) setVideos((v) => [...v, ...uploaded]);
+  }
+
+  function removeVideo(i: number) {
+    setVideos((v) => v.filter((_, idx) => idx !== i));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -128,6 +154,7 @@ export default function EditListingPage() {
         category,
         location: location.trim(),
         images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
+        videos,
       })
       .eq("id", id)
       .select();
@@ -191,7 +218,7 @@ export default function EditListingPage() {
                           </button>
                         </div>
                       ))}
-                      {photos.length < MAX_PHOTOS && (
+                      {photos.length < MAX_LISTING_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
                           {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
@@ -206,10 +233,45 @@ export default function EditListingPage() {
                       )}
                     </div>
                     {photos.length === 0 ? (
-                      <p className="hint">{t("post.photosHintEmpty", { max: MAX_PHOTOS })}</p>
+                      <p className="hint">{t("post.photosHintEmpty", { max: MAX_LISTING_PHOTOS })}</p>
                     ) : (
                       <p className="hint">{t("post.photosHintSome")}</p>
                     )}
+                  </div>
+
+                  <div className="field">
+                    <label>{t("post.videoLabel")}</label>
+                    <div className="swatch-picker">
+                      {videos.map((url, i) => (
+                        <div className="video-tile video-grid-tile" key={url}>
+                          <video src={url} playsInline muted />
+                          <button
+                            type="button"
+                            className="photo-tile-remove"
+                            aria-label={t("post.removeVideo")}
+                            onClick={() => removeVideo(i)}
+                          >
+                            <Icon name="X" />
+                          </button>
+                        </div>
+                      ))}
+                      {videos.length < MAX_LISTING_VIDEOS && (
+                        <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
+                          <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
+                          {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
+                          <input
+                            type="file"
+                            accept="video/*"
+                            multiple
+                            onChange={handleVideoFiles}
+                            disabled={uploadingVideo}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <p className="hint">
+                      {t("post.videoHint", { max: MAX_LISTING_VIDEOS, seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
+                    </p>
                   </div>
 
                   <div className="field">
@@ -290,7 +352,7 @@ export default function EditListingPage() {
                     <p className="hint">{t("post.descriptionHint")}</p>
                   </div>
 
-                  <button type="submit" className="btn btn-accent btn-block" disabled={submitting}>
+                  <button type="submit" className="btn btn-accent btn-block" disabled={submitting || uploadingPhoto || uploadingVideo}>
                     {submitting ? t("common.saving") : t("account.saveChanges")}
                   </button>
                 </form>

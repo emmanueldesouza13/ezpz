@@ -13,7 +13,7 @@ import BlueTick from "@/components/BlueTick";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { getMyListings, getMyTaxiServices } from "@/lib/data";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, isPhotoUrl } from "@/lib/format";
 import type { Listing, Profile, TaxiService } from "@/lib/types";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -141,6 +141,15 @@ export default function AccountPage() {
                 <div className="admin-list">
                   {myListings.map((l) => (
                     <div className="admin-row" key={l.id}>
+                      <div
+                        className="admin-swatch"
+                        style={isPhotoUrl(l.images[0]) ? undefined : { background: l.images[0] }}
+                      >
+                        {isPhotoUrl(l.images[0]) && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={l.images[0]} alt={l.title} className="admin-swatch-img" />
+                        )}
+                      </div>
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           <Link href={`/listing/${l.id}`}>{l.title}</Link>
@@ -166,8 +175,21 @@ export default function AccountPage() {
                       </div>
                     </div>
                   ))}
-                  {myTaxi.map((svc) => (
+                  {myTaxi.map((svc) => {
+                    const taxiPhoto = svc.photo_url ?? svc.photos?.[0] ?? null;
+                    return (
                     <div className="admin-row" key={svc.id}>
+                      <div
+                        className="admin-swatch"
+                        style={!taxiPhoto ? { display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" } : undefined}
+                      >
+                        {taxiPhoto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={taxiPhoto} alt={svc.driver_name} className="admin-swatch-img" />
+                        ) : (
+                          <Icon name="Car" />
+                        )}
+                      </div>
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           <Link href={`/taxi/${svc.id}`}>{svc.driver_name}</Link>
@@ -192,7 +214,7 @@ export default function AccountPage() {
                         />
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </>
             )}

@@ -9,8 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { GUYANA_REGIONS, OTHER_REGION_VALUE } from "@/lib/guyana";
-
-const MAX_PHOTOS = 6;
+import { MAX_LISTING_PHOTOS, uploadListingPhoto } from "@/lib/media";
 
 export default function EditTaxiPage() {
   const supabase = createClient();
@@ -87,24 +86,17 @@ export default function EditTaxiPage() {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (files.length === 0) return;
-    const room = MAX_PHOTOS - photos.length;
-    if (room <= 0) { toast(`You can add up to ${MAX_PHOTOS} photos`); return; }
+    const room = MAX_LISTING_PHOTOS - photos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_LISTING_PHOTOS} photos`); return; }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) return;
     setUploadingPhoto(true);
     const uploaded: string[] = [];
     for (const file of files.slice(0, room)) {
-      if (!file.type.startsWith("image/")) { toast(`${file.name} isn't an image — skipped`); continue; }
-      if (file.size > 8 * 1024 * 1024) { toast(`${file.name} is too large — 8MB max`); continue; }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/taxi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("listings")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) { toast(`Couldn't upload ${file.name} — ${upErr.message}`); continue; }
-      const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-      uploaded.push(pub.publicUrl);
+      const result = await uploadListingPhoto(supabase, user.id, file, "taxi-");
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
     }
     setUploadingPhoto(false);
     if (uploaded.length > 0) setPhotos((p) => [...p, ...uploaded]);
@@ -205,7 +197,7 @@ export default function EditTaxiPage() {
                           </button>
                         </div>
                       ))}
-                      {photos.length < MAX_PHOTOS && (
+                      {photos.length < MAX_LISTING_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
                           {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}

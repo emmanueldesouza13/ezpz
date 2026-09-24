@@ -10,9 +10,14 @@ import { toast } from "@/lib/toast";
 import { isPhotoUrl } from "@/lib/format";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { GRADIENTS, type Profile, type Listing, type Category } from "@/lib/types";
-import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
-
-const MAX_PHOTOS = 6;
+import {
+  MAX_LISTING_PHOTOS,
+  MAX_LISTING_VIDEOS,
+  MAX_VIDEO_SECONDS,
+  MAX_VIDEO_MB,
+  uploadListingPhoto,
+  uploadListingVideo,
+} from "@/lib/media";
 
 export default function EditProfileModal({
   profile,
@@ -51,7 +56,7 @@ export default function EditProfileModal({
   const [lSwatch, setLSwatch] = useState(0);
   const [lPhotos, setLPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [lVideoUrl, setLVideoUrl] = useState<string | null>(null);
+  const [lVideos, setLVideos] = useState<string[]>([]);
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [saving, setSaving] = useState(false);
@@ -77,7 +82,7 @@ export default function EditProfileModal({
         const gi = GRADIENTS.indexOf(listing.images?.[0]);
         setLSwatch(gi >= 0 ? gi : 0);
       }
-      setLVideoUrl(listing.video_url ?? null);
+      setLVideos(listing.videos ?? []);
     }
 
     setOpen(true);
@@ -138,33 +143,17 @@ export default function EditProfileModal({
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (files.length === 0) return;
-    const room = MAX_PHOTOS - lPhotos.length;
+    const room = MAX_LISTING_PHOTOS - lPhotos.length;
     if (room <= 0) {
-      toast(`You can add up to ${MAX_PHOTOS} photos`);
+      toast(`You can add up to ${MAX_LISTING_PHOTOS} photos`);
       return;
     }
     setUploadingPhoto(true);
     const uploaded: string[] = [];
     for (const file of files.slice(0, room)) {
-      if (!file.type.startsWith("image/")) {
-        toast(`${file.name} isn't an image — skipped`);
-        continue;
-      }
-      if (file.size > 8 * 1024 * 1024) {
-        toast(`${file.name} is too large — 8MB max`);
-        continue;
-      }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${profile.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("listings")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) {
-        toast(`Couldn't upload ${file.name} — ${upErr.message}`);
-        continue;
-      }
-      const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-      uploaded.push(pub.publicUrl);
+      const result = await uploadListingPhoto(supabase, profile.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
     }
     setUploadingPhoto(false);
     if (uploaded.length > 0) setLPhotos((p) => [...p, ...uploaded]);
@@ -174,41 +163,28 @@ export default function EditProfileModal({
     setLPhotos((p) => p.filter((_, idx) => idx !== i));
   }
 
-  async function handleVideoFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handleVideoFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("video/")) {
-      toast("That's not a video file");
-      return;
-    }
-    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
-      toast(`That video is too large — ${MAX_VIDEO_MB}MB max`);
-      return;
-    }
-    try {
-      const duration = await readVideoDuration(file);
-      if (duration > MAX_VIDEO_SECONDS + 1) {
-        toast(`Keep it to ${MAX_VIDEO_SECONDS} seconds or less`);
-        return;
-      }
-    } catch {
-      toast("Couldn't read that video — try another file");
+    if (files.length === 0) return;
+    const room = MAX_LISTING_VIDEOS - lVideos.length;
+    if (room <= 0) {
+      toast(`You can add up to ${MAX_LISTING_VIDEOS} videos`);
       return;
     }
     setUploadingVideo(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
-    const path = `${profile.id}/video-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("listings")
-      .upload(path, file, { upsert: false, cacheControl: "3600" });
-    setUploadingVideo(false);
-    if (upErr) {
-      toast(`Couldn't upload video — ${upErr.message}`);
-      return;
+    const uploaded: string[] = [];
+    for (const file of files.slice(0, room)) {
+      const result = await uploadListingVideo(supabase, profile.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
     }
-    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-    setLVideoUrl(pub.publicUrl);
+    setUploadingVideo(false);
+    if (uploaded.length > 0) setLVideos((v) => [...v, ...uploaded]);
+  }
+
+  function removeVideo(i: number) {
+    setLVideos((v) => v.filter((_, idx) => idx !== i));
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -242,7 +218,7 @@ export default function EditProfileModal({
             category: lCategory,
             location: lLocation.trim(),
             images: lPhotos.length > 0 ? lPhotos : [GRADIENTS[lSwatch]],
-            video_url: lVideoUrl,
+            videos: lVideos,
           })
           .eq("id", listing.id)
       : null;
@@ -418,7 +394,7 @@ export default function EditProfileModal({
                           </button>
                         </div>
                       ))}
-                      {lPhotos.length < MAX_PHOTOS && (
+                      {lPhotos.length < MAX_LISTING_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
                           {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
@@ -433,7 +409,7 @@ export default function EditProfileModal({
                       )}
                     </div>
                     {lPhotos.length === 0 ? (
-                      <p className="hint">{t("post.photosHintEmpty", { max: MAX_PHOTOS })}</p>
+                      <p className="hint">{t("post.photosHintEmpty", { max: MAX_LISTING_PHOTOS })}</p>
                     ) : (
                       <p className="hint">{t("post.photosHintSome")}</p>
                     )}
@@ -441,27 +417,36 @@ export default function EditProfileModal({
 
                   <div className="field">
                     <label>{t("post.videoLabel")}</label>
-                    {lVideoUrl ? (
-                      <div className="video-tile">
-                        <video src={lVideoUrl} controls playsInline />
-                        <button type="button" className="text-btn" onClick={() => setLVideoUrl(null)}>
-                          {t("post.removeVideo")}
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
-                        <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
-                        {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
-                        <input
-                          type="file"
-                          accept="video/*"
-                          onChange={handleVideoFile}
-                          disabled={uploadingVideo}
-                        />
-                      </label>
-                    )}
+                    <div className="swatch-picker">
+                      {lVideos.map((url, i) => (
+                        <div className="video-tile video-grid-tile" key={url}>
+                          <video src={url} playsInline muted />
+                          <button
+                            type="button"
+                            className="photo-tile-remove"
+                            aria-label={t("post.removeVideo")}
+                            onClick={() => removeVideo(i)}
+                          >
+                            <Icon name="X" />
+                          </button>
+                        </div>
+                      ))}
+                      {lVideos.length < MAX_LISTING_VIDEOS && (
+                        <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
+                          <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
+                          {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
+                          <input
+                            type="file"
+                            accept="video/*"
+                            multiple
+                            onChange={handleVideoFiles}
+                            disabled={uploadingVideo}
+                          />
+                        </label>
+                      )}
+                    </div>
                     <p className="hint">
-                      {t("post.videoHint", { seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
+                      {t("post.videoHint", { max: MAX_LISTING_VIDEOS, seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
                     </p>
                   </div>
 

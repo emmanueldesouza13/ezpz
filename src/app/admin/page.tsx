@@ -19,10 +19,9 @@ import {
 import { formatPrice, isPhotoUrl } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { getSiteSettings } from "@/lib/data";
+import { MAX_LISTING_PHOTOS, uploadListingPhoto } from "@/lib/media";
 
 type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts";
-
-const MAX_PHOTOS = 6;
 
 const CATEGORY_ICONS = [
   "Briefcase", "Wrench", "Home", "Car", "Dumbbell", "MapPin", "Star", "Shield", "Clock", "MessageCircle",
@@ -469,7 +468,15 @@ export default function AdminPage() {
                 ) : (
                   listings.map((l) => (
                     <div className="admin-row" key={l.id}>
-                      <div className="admin-swatch" style={{ background: l.images[0] }} />
+                      <div
+                        className="admin-swatch"
+                        style={isPhotoUrl(l.images[0]) ? undefined : { background: l.images[0] }}
+                      >
+                        {isPhotoUrl(l.images[0]) && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={l.images[0]} alt={l.title} className="admin-swatch-img" />
+                        )}
+                      </div>
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           {l.title}
@@ -533,19 +540,30 @@ export default function AdminPage() {
                 (taxiServices.length === 0 ? (
                   <div className="admin-empty">No taxi services yet.</div>
                 ) : (
-                  taxiServices.map((t) => (
+                  taxiServices.map((t) => {
+                    const taxiPhoto = t.photo_url ?? t.photos?.[0] ?? null;
+                    return (
                     <div className="admin-row" key={t.id}>
                       <div
                         className="admin-swatch"
-                        style={{
-                          background: "var(--surface-2)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "var(--accent)",
-                        }}
+                        style={
+                          taxiPhoto
+                            ? undefined
+                            : {
+                                background: "var(--surface-2)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "var(--accent)",
+                              }
+                        }
                       >
-                        <Icon name="Car" />
+                        {taxiPhoto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={taxiPhoto} alt={t.driver_name} className="admin-swatch-img" />
+                        ) : (
+                          <Icon name="Car" />
+                        )}
                       </div>
                       <div className="admin-row-info">
                         <div className="admin-row-title">
@@ -598,7 +616,7 @@ export default function AdminPage() {
                         </button>
                       </div>
                     </div>
-                  ))
+                  );})
                 ))}
 
               {tab === "sellers" &&
@@ -810,6 +828,7 @@ export default function AdminPage() {
         <ListingModal
           listing={editListing === "new" ? null : editListing}
           categories={categories}
+          profiles={profiles}
           onClose={() => setEditListing(null)}
           onSaved={() => { setEditListing(null); loadAll(); }}
         />
@@ -817,6 +836,7 @@ export default function AdminPage() {
       {editTaxi && (
         <TaxiModal
           service={editTaxi === "new" ? null : editTaxi}
+          profiles={profiles}
           onClose={() => setEditTaxi(null)}
           onSaved={() => { setEditTaxi(null); loadAll(); }}
         />
@@ -1108,9 +1128,10 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 }
 
 function ListingModal({
-  listing, categories, onClose, onSaved,
-}: { listing: Listing | null; categories: Category[]; onClose: () => void; onSaved: () => void }) {
+  listing, categories, profiles, onClose, onSaved,
+}: { listing: Listing | null; categories: Category[]; profiles: Profile[]; onClose: () => void; onSaved: () => void }) {
   const supabase = createClient();
+  const [ownerId, setOwnerId] = useState(listing?.seller_id ?? "");
   const [title, setTitle] = useState(listing?.title ?? "");
   const [category, setCategory] = useState(listing?.category ?? categories[0]?.slug ?? "");
   const [price, setPrice] = useState(listing ? String(listing.price) : "");
@@ -1130,24 +1151,17 @@ function ListingModal({
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (files.length === 0) return;
-    const room = MAX_PHOTOS - photos.length;
-    if (room <= 0) { toast(`You can add up to ${MAX_PHOTOS} photos`); return; }
+    const room = MAX_LISTING_PHOTOS - photos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_LISTING_PHOTOS} photos`); return; }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) { toast("Sign in again to upload photos"); return; }
     setUploadingPhoto(true);
     const uploaded: string[] = [];
     for (const file of files.slice(0, room)) {
-      if (!file.type.startsWith("image/")) { toast(`${file.name} isn't an image — skipped`); continue; }
-      if (file.size > 8 * 1024 * 1024) { toast(`${file.name} is too large — 8MB max`); continue; }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("listings")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) { toast(`Couldn't upload ${file.name} — ${upErr.message}`); continue; }
-      const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-      uploaded.push(pub.publicUrl);
+      const result = await uploadListingPhoto(supabase, user.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
     }
     setUploadingPhoto(false);
     if (uploaded.length > 0) setPhotos((p) => [...p, ...uploaded]);
@@ -1159,7 +1173,7 @@ function ListingModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !location.trim() || !description.trim()) {
+    if (!title.trim() || !location.trim() || !description.trim() || (!listing && !ownerId)) {
       toast("Fill in all required fields");
       return;
     }
@@ -1171,7 +1185,7 @@ function ListingModal({
     };
     const { data, error } = listing
       ? await supabase.from("listings").update(vals).eq("id", listing.id).select()
-      : await supabase.from("listings").insert({ ...vals, seller_id: (await supabase.auth.getUser()).data.user?.id }).select();
+      : await supabase.from("listings").insert({ ...vals, seller_id: ownerId }).select();
     setSaving(false);
     if (error) { toast("Couldn't save — " + error.message); return; }
     if (!data || data.length === 0) { toast("Couldn't save — no permission or the listing is gone"); return; }
@@ -1182,6 +1196,16 @@ function ListingModal({
   return (
     <Modal title={listing ? "Edit listing" : "Add listing"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
+        {!listing && (
+          <div className="field">
+            <label>Seller</label>
+            <select className="control" required value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+              <option value="" disabled>Choose who this listing belongs to</option>
+              {profiles.map((p) => <option value={p.id} key={p.id}>{p.display_name}</option>)}
+            </select>
+            <p className="hint">Each account can only have 1 listing — this fails if they already have one.</p>
+          </div>
+        )}
         <div className="field">
           <label>Title</label>
           <input className="control" required value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -1226,7 +1250,7 @@ function ListingModal({
                 </button>
               </div>
             ))}
-            {photos.length < MAX_PHOTOS && (
+            {photos.length < MAX_LISTING_PHOTOS && (
               <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                 <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
                 {uploadingPhoto ? "Uploading…" : "Add photo"}
@@ -1330,9 +1354,10 @@ function SellerModal({
 }
 
 function TaxiModal({
-  service, onClose, onSaved,
-}: { service: TaxiService | null; onClose: () => void; onSaved: () => void }) {
+  service, profiles, onClose, onSaved,
+}: { service: TaxiService | null; profiles: Profile[]; onClose: () => void; onSaved: () => void }) {
   const supabase = createClient();
+  const [ownerId, setOwnerId] = useState(service?.owner_id ?? "");
   const [driverName, setDriverName] = useState(service?.driver_name ?? "");
   const [vehicleMake, setVehicleMake] = useState(service?.vehicle_make ?? "");
   const [vehicleModel, setVehicleModel] = useState(service?.vehicle_model ?? "");
@@ -1352,7 +1377,8 @@ function TaxiModal({
       !plate.trim() ||
       !serviceArea.trim() ||
       !phone.trim() ||
-      !mmg.trim()
+      !mmg.trim() ||
+      (!service && !ownerId)
     ) {
       toast("Fill in all required fields");
       return;
@@ -1370,7 +1396,7 @@ function TaxiModal({
     };
     const { data, error } = service
       ? await supabase.from("taxi_services").update(vals).eq("id", service.id).select()
-      : await supabase.from("taxi_services").insert({ ...vals, owner_id: (await supabase.auth.getUser()).data.user?.id }).select();
+      : await supabase.from("taxi_services").insert({ ...vals, owner_id: ownerId }).select();
     setSaving(false);
     if (error) { toast("Couldn't save — " + error.message); return; }
     if (!data || data.length === 0) { toast("Couldn't save — no permission or the service is gone"); return; }
@@ -1381,6 +1407,16 @@ function TaxiModal({
   return (
     <Modal title={service ? "Edit taxi service" : "Add taxi service"} onClose={onClose}>
       <form onSubmit={handleSubmit}>
+        {!service && (
+          <div className="field">
+            <label>Owner</label>
+            <select className="control" required value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+              <option value="" disabled>Choose who this service belongs to</option>
+              {profiles.map((p) => <option value={p.id} key={p.id}>{p.display_name}</option>)}
+            </select>
+            <p className="hint">Each account can only have 1 listing — this fails if they already have one.</p>
+          </div>
+        )}
         <div className="field">
           <label>Driver / business name</label>
           <input className="control" required value={driverName} onChange={(e) => setDriverName(e.target.value)} />

@@ -6,14 +6,19 @@ import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import { createClient } from "@/lib/supabase/client";
-import { getCategories, getSiteSettings } from "@/lib/data";
+import { getCategories, getSiteSettings, getOccupyingListing } from "@/lib/data";
 import { GRADIENTS, type Category } from "@/lib/types";
 import { toast } from "@/lib/toast";
-import { MAX_VIDEO_SECONDS, MAX_VIDEO_MB, readVideoDuration } from "@/lib/video";
+import {
+  MAX_LISTING_PHOTOS,
+  MAX_LISTING_VIDEOS,
+  MAX_VIDEO_SECONDS,
+  MAX_VIDEO_MB,
+  uploadListingPhoto,
+  uploadListingVideo,
+} from "@/lib/media";
 import { stripDigits } from "@/lib/format";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-
-const MAX_PHOTOS = 6;
 
 export default function PostPage() {
   const supabase = createClient();
@@ -32,7 +37,7 @@ export default function PostPage() {
   const [swatch, setSwatch] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videos, setVideos] = useState<string[]>([]);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -42,24 +47,17 @@ export default function PostPage() {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (files.length === 0) return;
-    const room = MAX_PHOTOS - photos.length;
-    if (room <= 0) { toast(`You can add up to ${MAX_PHOTOS} photos`); return; }
+    const room = MAX_LISTING_PHOTOS - photos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_LISTING_PHOTOS} photos`); return; }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) { router.push("/sign-in?next=/post"); return; }
     setUploadingPhoto(true);
     const uploaded: string[] = [];
     for (const file of files.slice(0, room)) {
-      if (!file.type.startsWith("image/")) { toast(`${file.name} isn't an image — skipped`); continue; }
-      if (file.size > 8 * 1024 * 1024) { toast(`${file.name} is too large — 8MB max`); continue; }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("listings")
-        .upload(path, file, { upsert: false, cacheControl: "3600" });
-      if (upErr) { toast(`Couldn't upload ${file.name} — ${upErr.message}`); continue; }
-      const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-      uploaded.push(pub.publicUrl);
+      const result = await uploadListingPhoto(supabase, user.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
     }
     setUploadingPhoto(false);
     if (uploaded.length > 0) setPhotos((p) => [...p, ...uploaded]);
@@ -69,42 +67,28 @@ export default function PostPage() {
     setPhotos((p) => p.filter((_, idx) => idx !== i));
   }
 
-  async function handleVideoFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handleVideoFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("video/")) { toast("That's not a video file"); return; }
-    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
-      toast(`That video is too large — ${MAX_VIDEO_MB}MB max`);
-      return;
-    }
-    try {
-      const duration = await readVideoDuration(file);
-      if (duration > MAX_VIDEO_SECONDS + 1) {
-        toast(`Keep it to ${MAX_VIDEO_SECONDS} seconds or less`);
-        return;
-      }
-    } catch {
-      toast("Couldn't read that video — try another file");
-      return;
-    }
+    if (files.length === 0) return;
+    const room = MAX_LISTING_VIDEOS - videos.length;
+    if (room <= 0) { toast(`You can add up to ${MAX_LISTING_VIDEOS} videos`); return; }
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) { router.push("/sign-in?next=/post"); return; }
     setUploadingVideo(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
-    const path = `${user.id}/video-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("listings")
-      .upload(path, file, { upsert: false, cacheControl: "3600" });
+    const uploaded: string[] = [];
+    for (const file of files.slice(0, room)) {
+      const result = await uploadListingVideo(supabase, user.id, file);
+      if (!result.url) { toast(result.error ?? "Upload failed"); continue; }
+      uploaded.push(result.url);
+    }
     setUploadingVideo(false);
-    if (upErr) { toast(`Couldn't upload video — ${upErr.message}`); return; }
-    const { data: pub } = supabase.storage.from("listings").getPublicUrl(path);
-    setVideoUrl(pub.publicUrl);
+    if (uploaded.length > 0) setVideos((v) => [...v, ...uploaded]);
   }
 
-  function removeVideo() {
-    setVideoUrl(null);
+  function removeVideo(i: number) {
+    setVideos((v) => v.filter((_, idx) => idx !== i));
   }
 
   useEffect(() => {
@@ -112,6 +96,12 @@ export default function PostPage() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
         router.push("/sign-in?next=/post");
+        return;
+      }
+      const occupying = await getOccupyingListing(supabase, data.user.id);
+      if (occupying) {
+        toast(t("post.alreadyHaveListing"));
+        router.push("/account");
         return;
       }
       setCheckingAuth(false);
@@ -158,14 +148,14 @@ export default function PostPage() {
         category,
         location: location.trim(),
         images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
-        video_url: videoUrl,
+        videos,
       })
       .select("id")
       .single();
 
     setSubmitting(false);
     if (error || !listing) {
-      toast("Something went wrong — try again");
+      toast(error?.message || "Something went wrong — try again");
       return;
     }
     setDone(true);
@@ -209,7 +199,7 @@ export default function PostPage() {
                           </button>
                         </div>
                       ))}
-                      {photos.length < MAX_PHOTOS && (
+                      {photos.length < MAX_LISTING_PHOTOS && (
                         <label className="photo-add" style={{ cursor: uploadingPhoto ? "wait" : "pointer" }}>
                           <Icon name={uploadingPhoto ? "Loader2" : "Camera"} className={uploadingPhoto ? "spin" : undefined} />
                           {uploadingPhoto ? t("post.uploading") : t("post.addPhoto")}
@@ -225,7 +215,7 @@ export default function PostPage() {
                     </div>
                     {photos.length === 0 ? (
                       <p className="hint">
-                        {t("post.photosHintEmpty", { max: MAX_PHOTOS })}
+                        {t("post.photosHintEmpty", { max: MAX_LISTING_PHOTOS })}
                       </p>
                     ) : (
                       <p className="hint">
@@ -236,27 +226,36 @@ export default function PostPage() {
 
                   <div className="field">
                     <label>{t("post.videoLabel")}</label>
-                    {videoUrl ? (
-                      <div className="video-tile">
-                        <video src={videoUrl} controls playsInline />
-                        <button type="button" className="text-btn" onClick={removeVideo}>
-                          {t("post.removeVideo")}
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
-                        <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
-                        {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
-                        <input
-                          type="file"
-                          accept="video/*"
-                          onChange={handleVideoFile}
-                          disabled={uploadingVideo}
-                        />
-                      </label>
-                    )}
+                    <div className="swatch-picker">
+                      {videos.map((url, i) => (
+                        <div className="video-tile video-grid-tile" key={url}>
+                          <video src={url} playsInline muted />
+                          <button
+                            type="button"
+                            className="photo-tile-remove"
+                            aria-label={t("post.removeVideo")}
+                            onClick={() => removeVideo(i)}
+                          >
+                            <Icon name="X" />
+                          </button>
+                        </div>
+                      ))}
+                      {videos.length < MAX_LISTING_VIDEOS && (
+                        <label className="photo-add" style={{ cursor: uploadingVideo ? "wait" : "pointer" }}>
+                          <Icon name={uploadingVideo ? "Loader2" : "Video"} className={uploadingVideo ? "spin" : undefined} />
+                          {uploadingVideo ? t("post.uploading") : t("post.addVideo")}
+                          <input
+                            type="file"
+                            accept="video/*"
+                            multiple
+                            onChange={handleVideoFiles}
+                            disabled={uploadingVideo}
+                          />
+                        </label>
+                      )}
+                    </div>
                     <p className="hint">
-                      {t("post.videoHint", { seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
+                      {t("post.videoHint", { max: MAX_LISTING_VIDEOS, seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
                     </p>
                   </div>
 

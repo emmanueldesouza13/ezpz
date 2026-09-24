@@ -166,6 +166,35 @@ export async function getMyListings(
   return (data as Listing[]) || [];
 }
 
+// Each account can only have 1 occupying listing — a regular listing
+// (active or sold) or a taxi service (active), combined across both
+// tables. Used to steer someone away from the post forms before they fill
+// one out, rather than letting them hit the DB constraint at submit time.
+export async function getOccupyingListing(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ kind: "listing" | "taxi"; id: string } | null> {
+  const [{ data: listing }, { data: taxi }] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("id")
+      .eq("seller_id", userId)
+      .in("status", ["active", "sold"])
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("taxi_services")
+      .select("id")
+      .eq("owner_id", userId)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (listing) return { kind: "listing", id: listing.id };
+  if (taxi) return { kind: "taxi", id: taxi.id };
+  return null;
+}
+
 export async function getSellerActiveListings(
   supabase: SupabaseClient,
   sellerId: string

@@ -57,9 +57,9 @@ export default async function ListingDetailPage({
   const sellerImages = (sellerListings.length > 0 ? sellerListings : [listing]).flatMap(
     (l) => l.images ?? []
   );
-  const sellerVideos = (sellerListings.length > 0 ? sellerListings : [listing])
-    .map((l) => l.video_url)
-    .filter((v): v is string => Boolean(v));
+  const sellerVideos = (sellerListings.length > 0 ? sellerListings : [listing]).flatMap(
+    (l) => l.videos ?? []
+  );
 
   return (
     <>

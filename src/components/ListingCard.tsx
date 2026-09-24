@@ -30,7 +30,7 @@ export default function ListingCard({
           <img src={photo} alt={listing.title} className="listing-card-photo-img" />
         )}
         <div className="listing-card-photo-shade" />
-        {listing.video_url && (
+        {listing.videos && listing.videos.length > 0 && (
           <span className="listing-card-video-badge" title="Has a video">
             <Icon name="Play" />
           </span>

@@ -1279,7 +1279,8 @@
     background: var(--surface); border: 1px solid var(--line);
     border-radius: var(--radius-card); padding: 12px 14px;
   }
-  .admin-swatch { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; }
+  .admin-swatch { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; overflow: hidden; }
+  .admin-swatch-img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .admin-row-info { flex: 1; min-width: 0; }
   .admin-row-title { font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .admin-row-sub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 2px; }
@@ -1459,6 +1460,15 @@
   .video-tile video {
     width: 100%; max-width: 220px; max-height: 320px;
     border-radius: var(--radius-control); border: 1px solid var(--line);
+    background: #000; display: block;
+  }
+
+  /* Small square tile for a video inside a multi-clip grid, matching the
+     photo-tile size so photos and videos line up the same way. */
+  .video-grid-tile { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
+  .video-grid-tile video {
+    width: 84px; height: 84px; max-width: none; max-height: none;
+    object-fit: cover; border-radius: var(--radius-control); border: 1px solid var(--line);
     background: #000; display: block;
   }
 
