@@ -133,9 +133,6 @@ export default function AccountPage() {
                   {saving ? t("common.saving") : t("account.saveChanges")}
                 </button>
               </form>
-              <button type="button" className="btn btn-line btn-block" style={{ marginTop: 20 }} onClick={handleSignOut}>
-                {t("common.signOut")}
-              </button>
             </div>
 
             {(myListings.length > 0 || myTaxi.length > 0) && (
@@ -199,6 +196,10 @@ export default function AccountPage() {
                 </div>
               </>
             )}
+
+            <button type="button" className="btn btn-line btn-block" style={{ marginTop: 32 }} onClick={handleSignOut}>
+              {t("common.signOut")}
+            </button>
           </div>
         </section>
       </main>
