@@ -57,7 +57,7 @@ export default function MessagesInboxPage() {
       <main>
         <section className="wrap">
           <div className="inbox-wrap">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="page-top-row">
               <BackButton fallback="/" disableSmartBack />
               <LanguageSwitcher />
             </div>

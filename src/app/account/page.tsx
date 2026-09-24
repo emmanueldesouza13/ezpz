@@ -58,7 +58,7 @@ export default function AccountPage() {
       <main>
         <section className="wrap">
           <div className="post-wrap">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="page-top-row">
               <BackButton fallback="/" disableSmartBack />
               <LanguageSwitcher />
             </div>

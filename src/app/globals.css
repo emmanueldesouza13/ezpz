@@ -1220,12 +1220,12 @@
   }
   .admin-login-wrap > .page-back {
     position: absolute;
-    top: 14px; left: 0;
+    top: calc(14px + env(safe-area-inset-top, 0px)); left: 0;
     margin: 0;
   }
   .admin-login-wrap > .signin-lang {
     position: absolute;
-    top: 14px; right: 0;
+    top: calc(14px + env(safe-area-inset-top, 0px)); right: 0;
     border-left: none; padding-left: 0;
   }
   .admin-login-wrap .icon-circle {
@@ -1562,14 +1562,29 @@
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ---------- page back button ---------- */
+  /* Every page without a sticky Header (account, post, messages, admin,
+     listing/taxi detail + edit, etc.) opens with this button as its
+     top-most element — so the safe-area offset lives here once, centrally,
+     rather than being re-added per page. Never remove this without adding
+     an equivalent offset wherever .page-back's margin-top used to cover it. */
   .page-back {
     display: inline-flex; align-items: center; gap: 6px;
     background: none; border: none; padding: 0;
     font-size: 0.85rem; font-weight: 700; color: var(--ink-soft);
-    margin-top: 18px;
+    margin-top: calc(18px + env(safe-area-inset-top, 0px));
   }
   .page-back:hover { color: var(--ink); }
   .page-back svg { width: 16px; height: 16px; }
+
+  /* Shared row for pages that pair the back button with the language
+     switcher at the very top (account, messages, payments, ...). The row
+     itself carries the one safe-area offset; .page-back's own offset is
+     zeroed out here so the two don't stack. */
+  .page-top-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: calc(18px + env(safe-area-inset-top, 0px));
+  }
+  .page-top-row .page-back { margin-top: 0; }
 
   /* ---------- age gate ---------- */
   .age-gate {

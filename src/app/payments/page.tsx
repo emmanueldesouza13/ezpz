@@ -54,7 +54,7 @@ export default function PaymentsPage() {
       <main>
         <section className="wrap">
           <div className="post-wrap">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="page-top-row">
               <BackButton />
               <LanguageSwitcher />
             </div>
