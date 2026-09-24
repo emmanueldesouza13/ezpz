@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ToastHost from "@/components/ToastHost";
 import AgeGate from "@/components/AgeGate";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 import NavDepthTracker from "@/components/NavDepthTracker";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
@@ -40,7 +41,10 @@ export default function RootLayout({
       <body>
         <LanguageProvider>
           <NavDepthTracker />
-          <AgeGate>{children}</AgeGate>
+          <AgeGate>
+            <AnnouncementBanner />
+            {children}
+          </AgeGate>
           <ToastHost />
         </LanguageProvider>
       </body>

@@ -537,6 +537,24 @@
   }
   .callout-close:hover { color: var(--ink); }
 
+  .announcement-bar {
+    display: flex; gap: 10px; align-items: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 10px 44px 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    font-size: 0.84rem; font-weight: 600; line-height: 1.4;
+    position: relative;
+  }
+  .announcement-bar svg { flex-shrink: 0; }
+  .announcement-bar span { flex: 1; }
+  .announcement-close {
+    position: absolute; right: 14px; top: 50%; transform: translateY(calc(-50% + env(safe-area-inset-top, 0px) / 2));
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: var(--on-accent); opacity: 0.75;
+  }
+  .announcement-close:hover { opacity: 1; }
+
   .report-link {
     display: inline-flex; align-items: center; gap: 6px;
     margin-top: 16px; font-size: 0.82rem; color: var(--ink-faint);

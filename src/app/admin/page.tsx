@@ -21,7 +21,7 @@ import { toast } from "@/lib/toast";
 import { getSiteSettings } from "@/lib/data";
 import { MAX_LISTING_PHOTOS, uploadListingPhoto } from "@/lib/media";
 
-type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts";
+type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts" | "broadcast";
 
 const CATEGORY_ICONS = [
   "Briefcase", "Wrench", "Home", "Car", "Dumbbell", "MapPin", "Star", "Shield", "Clock", "MessageCircle",
@@ -373,7 +373,7 @@ export default function AdminPage() {
               away.
             </p>
             <div className="admin-tabs">
-              {(["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts"] as Tab[]).map((t) => (
+              {(["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts", "broadcast"] as Tab[]).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -394,7 +394,9 @@ export default function AdminPage() {
                     ? "Categories"
                     : t === "branding"
                     ? "Branding"
-                    : "Payouts"}
+                    : t === "payouts"
+                    ? "Payouts"
+                    : "Broadcast"}
                 </button>
               ))}
             </div>
@@ -490,6 +492,8 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            {tab === "broadcast" && <BroadcastPanel settings={settings} onSaved={loadAll} />}
 
             {tab === "categories" && (
               <div className="admin-toolbar">
@@ -1157,6 +1161,99 @@ function PayoutsPanel({ settings, onSaved }: { settings: Settings | null; onSave
           <button type="submit" className="btn btn-accent" disabled={saving}>
             {saving ? "Saving…" : "Save"}
           </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// A single free-text broadcast shown as a dismissible bar at the top of
+// every page (see AnnouncementBanner). Only one is live at a time — sending
+// a new one replaces whatever was there, and re-shows it even to people who
+// dismissed the last one. "Clear" pulls it down for everyone immediately.
+function BroadcastPanel({ settings, onSaved }: { settings: Settings | null; onSaved: () => void }) {
+  const supabase = createClient();
+  const [text, setText] = useState(settings?.announcement ?? "");
+  const [saving, setSaving] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  useEffect(() => {
+    setText(settings?.announcement ?? "");
+  }, [settings]);
+
+  const isLive = !!settings?.announcement?.trim();
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("settings")
+      .update({ announcement: text.trim(), announcement_updated_at: new Date().toISOString() })
+      .eq("id", 1)
+      .select();
+    setSaving(false);
+    if (error) { toast("Couldn't send — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't send — no permission to update settings"); return; }
+    toast("Broadcast sent — it'll show up across the site");
+    onSaved();
+  }
+
+  async function handleClear() {
+    setClearing(true);
+    const { data, error } = await supabase
+      .from("settings")
+      .update({ announcement: null, announcement_updated_at: new Date().toISOString() })
+      .eq("id", 1)
+      .select();
+    setClearing(false);
+    if (error) { toast("Couldn't clear — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't clear — no permission to update settings"); return; }
+    setText("");
+    toast("Broadcast cleared");
+    onSaved();
+  }
+
+  return (
+    <div className="admin-row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div className="admin-row-info" style={{ flex: "1 1 320px" }}>
+        <div className="admin-row-title">
+          Site-wide broadcast
+          {isLive ? (
+            <span className="admin-flag on">Live</span>
+          ) : (
+            <span className="admin-flag off">Nothing live</span>
+          )}
+        </div>
+        <div className="admin-row-sub">
+          Shows as a bar at the top of every page for every visitor, until each person dismisses it.
+          Good for short notices — a fee change, planned downtime, a new feature. One live message at
+          a time; sending a new one replaces the last.
+        </div>
+        <form onSubmit={handleSend} style={{ marginTop: 14, maxWidth: 420 }}>
+          <div className="field">
+            <label htmlFor="broadcastInput">Message</label>
+            <textarea
+              className="control"
+              id="broadcastInput"
+              rows={3}
+              maxLength={220}
+              placeholder="e.g. Taxi sign-up fees are now GY$5,000 starting Oct 1."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+            <p className="hint">{text.length}/220</p>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="submit" className="btn btn-accent" disabled={saving || !text.trim()}>
+              {saving ? "Sending…" : "Send"}
+            </button>
+            {isLive && (
+              <button type="button" className="btn btn-line" disabled={clearing} onClick={handleClear}>
+                {clearing ? "Clearing…" : "Clear"}
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>

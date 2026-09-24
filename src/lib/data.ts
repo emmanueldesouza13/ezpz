@@ -42,6 +42,8 @@ export async function getSiteSettings(supabase: SupabaseClient): Promise<Setting
       taxi_fee: 5000,
       verification_fee: 2000,
       updated_at: "",
+      announcement: null,
+      announcement_updated_at: null,
     }
   );
 }

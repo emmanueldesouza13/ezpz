@@ -7,6 +7,8 @@ export type Settings = {
   taxi_fee: number;
   verification_fee: number;
   updated_at: string;
+  announcement: string | null;
+  announcement_updated_at: string | null;
 };
 
 export type TaxiService = {
