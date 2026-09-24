@@ -7,7 +7,6 @@ import BackButton from "@/components/BackButton";
 import Icon from "@/components/Icon";
 import RemoveListingButton from "@/components/RemoveListingButton";
 import EditProfileModal from "@/components/EditProfileModal";
-import PasswordInput from "@/components/PasswordInput";
 import ProfileTabs from "@/components/ProfileTabs";
 import VerifyIdentity from "@/components/VerifyIdentity";
 import BlueTick from "@/components/BlueTick";
@@ -27,8 +26,6 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mmg, setMmg] = useState("");
   const [saving, setSaving] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [myTaxi, setMyTaxi] = useState<TaxiService[]>([]);
 
@@ -64,19 +61,6 @@ export default function AccountPage() {
     setSaving(false);
     if (error) toast("Couldn't save — try again");
     else toast("Saved");
-  }
-
-  async function handleSetPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setSavingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setSavingPassword(false);
-    if (error) {
-      toast("Couldn't set password — " + error.message);
-    } else {
-      setNewPassword("");
-      toast("Password set — you can sign in with it from now on");
-    }
   }
 
   async function handleSignOut() {
@@ -139,23 +123,6 @@ export default function AccountPage() {
                 </div>
                 <button type="submit" className="btn btn-accent btn-block" disabled={saving}>
                   {saving ? t("common.saving") : t("account.saveChanges")}
-                </button>
-              </form>
-              <form onSubmit={handleSetPassword} style={{ marginTop: 20 }}>
-                <div className="field">
-                  <label htmlFor="newPasswordInput">{t("account.setPasswordLabel")}</label>
-                  <PasswordInput
-                    id="newPasswordInput"
-                    minLength={6}
-                    autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder={t("auth.passwordPlaceholder")}
-                  />
-                  <p className="hint">{t("account.setPasswordHint")}</p>
-                </div>
-                <button type="submit" className="btn btn-line btn-block" disabled={savingPassword || newPassword.length < 6}>
-                  {savingPassword ? t("common.saving") : t("account.savePassword")}
                 </button>
               </form>
               <button type="button" className="btn btn-line btn-block" style={{ marginTop: 20 }} onClick={handleSignOut}>
