@@ -57,7 +57,7 @@ export default function AccountPage() {
     <>
       <main>
         <section className="wrap">
-          <div className="post-wrap">
+          <div className="post-wrap account-wrap">
             <div className="page-top-row">
               <BackButton fallback="/" disableSmartBack />
               <LanguageSwitcher />
@@ -66,43 +66,45 @@ export default function AccountPage() {
             {profile?.verified && <p className="lede">{t("account.verifiedSeller")}</p>}
 
             {profile && (
-              <div className="profile-id" style={{ marginBottom: 20 }}>
-                <EditProfileModal profile={profile} onSaved={setProfile} />
-                <div className="profile-badge-row">
-                  {!profile.is_admin && (
-                    <span className="profile-badge">
-                      <Icon name="CalendarDays" />
-                      {t("listing.since", { year: new Date(profile.created_at).getFullYear() })}
-                    </span>
+              <div className="account-layout">
+                <div className="profile-id profile-id-solo">
+                  <EditProfileModal profile={profile} onSaved={setProfile} />
+                  <div className="profile-badge-row">
+                    {!profile.is_admin && (
+                      <span className="profile-badge">
+                        <Icon name="CalendarDays" />
+                        {t("listing.since", { year: new Date(profile.created_at).getFullYear() })}
+                      </span>
+                    )}
+                    {profile.available && (
+                      <span className="profile-badge good">
+                        <Icon name="CircleDot" />
+                        {t("listing.availableNow")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="profile-name-row">
+                    <h2>{profile.display_name}</h2>
+                    {profile.is_admin ? <BlueTick size={16} admin /> : profile.verified && <BlueTick size={16} />}
+                  </div>
+                  {profile.location && (
+                    <p className="profile-location-row">
+                      <Icon name="MapPin" />
+                      {profile.location}
+                    </p>
                   )}
-                  {profile.available && (
-                    <span className="profile-badge good">
-                      <Icon name="CircleDot" />
-                      {t("listing.availableNow")}
-                    </span>
-                  )}
+                  {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+                  <VerifyIdentity profile={profile} />
                 </div>
-                <div className="profile-name-row">
-                  <h2>{profile.display_name}</h2>
-                  {profile.is_admin ? <BlueTick size={16} admin /> : profile.verified && <BlueTick size={16} />}
-                </div>
-                {profile.location && (
-                  <p className="profile-location-row">
-                    <Icon name="MapPin" />
-                    {profile.location}
-                  </p>
-                )}
-                {profile.bio && <p className="profile-bio">{profile.bio}</p>}
-                <VerifyIdentity profile={profile} />
-                <ProfileTabs profile={profile} isOwner />
-              </div>
-            )}
 
-            {!profile?.is_admin && (myListings.length > 0 || myTaxi.length > 0) && (
-              <>
-                <h1 style={{ marginTop: 32 }}>{t("account.myListings")}</h1>
-                <div className="admin-list">
-                  {myListings.map((l) => (
+                <div className="account-main">
+                  <ProfileTabs profile={profile} isOwner />
+
+                  {!profile.is_admin && (myListings.length > 0 || myTaxi.length > 0) && (
+                    <>
+                      <h2 style={{ marginTop: 28 }}>{t("account.myListings")}</h2>
+                      <div className="admin-list">
+                        {myListings.map((l) => (
                     <div className="admin-row" key={l.id}>
                       <div
                         className="admin-swatch my-listing-thumb"
@@ -178,8 +180,11 @@ export default function AccountPage() {
                       </div>
                     </div>
                   );})}
+                      </div>
+                    </>
+                  )}
                 </div>
-              </>
+              </div>
             )}
 
             <button type="button" className="btn btn-line btn-block" style={{ marginTop: 32 }} onClick={handleSignOut}>
