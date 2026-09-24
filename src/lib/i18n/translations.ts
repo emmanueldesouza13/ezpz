@@ -72,7 +72,6 @@ export const translations = {
       acrossGuyana: "across Guyana",
       noneFiltered: "No listings match your search yet.",
       noneYet: "No listings yet — be the first to post one.",
-      featured: "Featured",
     },
     auth: {
       checkEmail: "Check your email",
@@ -485,7 +484,6 @@ export const translations = {
       acrossGuyana: "en toda Guyana",
       noneFiltered: "Ningún anuncio coincide con tu búsqueda todavía.",
       noneYet: "Todavía no hay anuncios — sé el primero en publicar uno.",
-      featured: "Destacado",
     },
     auth: {
       checkEmail: "Revisa tu correo",

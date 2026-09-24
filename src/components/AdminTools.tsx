@@ -299,13 +299,6 @@ export default function AdminTools() {
     })();
   }, [supabase, loadAll]);
 
-  async function toggleFeatured(l: Listing) {
-    const { data, error } = await supabase.from("listings").update({ featured: !l.featured }).eq("id", l.id).select();
-    if (error) { toast("Couldn't update — " + error.message); return; }
-    if (!data || data.length === 0) { toast("Couldn't update — no permission or the listing is gone"); return; }
-    loadAll();
-  }
-
   async function deleteCategory(c: Category) {
     const usedBy = listings.filter((l) => l.category === c.slug && l.status === "active").length;
     if (usedBy > 0) { toast(`Can't delete — ${usedBy} listing${usedBy === 1 ? "" : "s"} use this category`); return; }
@@ -503,7 +496,6 @@ export default function AdminTools() {
                       <div className="admin-row-info">
                         <div className="admin-row-title">
                           {l.title}
-                          {l.featured && <span className="admin-flag on">Featured</span>}
                           {l.fee_status !== "pending" ? (
                             <span className="admin-flag on">Fee {l.fee_status}</span>
                           ) : (
@@ -520,10 +512,6 @@ export default function AdminTools() {
                         <button type="button" className="admin-btn" onClick={() => setListingFeeStatus(l, nextFeeStatus(l.fee_status))}>
                           <Icon name="Wallet" />
                           {l.fee_status === "pending" ? "Mark fee paid" : l.fee_status === "paid" ? "Mark fee waived" : "Mark fee pending"}
-                        </button>
-                        <button type="button" className="admin-btn" onClick={() => toggleFeatured(l)}>
-                          <Icon name="Star" />
-                          {l.featured ? "Unfeature" : "Feature"}
                         </button>
                         <button type="button" className="admin-btn" onClick={() => setEditListing(l)}>
                           <Icon name="Pencil" />
@@ -1235,7 +1223,6 @@ function ListingModal({
   const [price, setPrice] = useState(listing ? String(listing.price) : "");
   const [isFree, setIsFree] = useState(listing?.is_free ?? false);
   const [location, setLocation] = useState(listing?.location ?? "");
-  const [featured, setFeatured] = useState(listing?.featured ?? false);
   const [description, setDescription] = useState(listing?.description ?? "");
   const [swatch, setSwatch] = useState(() => {
     const idx = listing ? GRADIENTS.indexOf(listing.images[0]) : 0;
@@ -1278,7 +1265,7 @@ function ListingModal({
     setSaving(true);
     const vals = {
       title: title.trim(), category, price: isFree ? 0 : Number(price) || 0,
-      is_free: isFree, location: location.trim(), featured, description: description.trim(),
+      is_free: isFree, location: location.trim(), description: description.trim(),
       images: photos.length > 0 ? photos : [GRADIENTS[swatch]],
     };
     const { data, error } = listing
@@ -1370,10 +1357,6 @@ function ListingModal({
             <p className="hint">The first photo is used as the main listing photo.</p>
           )}
         </div>
-        <label className="check-inline" style={{ marginBottom: 16 }}>
-          <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
-          Featured listing
-        </label>
         <div className="field">
           <label>Description</label>
           <textarea className="control" required value={description} onChange={(e) => setDescription(e.target.value)} />

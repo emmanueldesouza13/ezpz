@@ -129,7 +129,6 @@ export type Listing = {
   location: string;
   images: string[]; // uploaded photo public URLs, or (for older/no-photo listings) a CSS gradient string from the preset palette
   videos: string[]; // optional short clips showing the work, uploaded public URLs (up to MAX_LISTING_VIDEOS)
-  featured: boolean;
   status: "active" | "sold" | "removed";
   fee_status: "pending" | "paid" | "waived";
   fee_paid_at: string | null;
