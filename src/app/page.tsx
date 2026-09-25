@@ -16,12 +16,14 @@ export default async function BrowsePage({
     category?: string;
     q?: string;
     region?: string;
+    verified?: string;
   }>;
 }) {
-  const { category, q, region } = await searchParams;
+  const { category, q, region, verified } = await searchParams;
+  const verifiedOnly = verified === "1";
   const supabase = await createClient();
   const [listings, categories] = await Promise.all([
-    getListings(supabase, { category, q, region }),
+    getListings(supabase, { category, q, region, verifiedOnly }),
     getCategories(supabase),
   ]);
 
@@ -48,7 +50,7 @@ export default async function BrowsePage({
             <BrowseHeading categoryName={cat?.name} count={oneEach.length} query={q} region={region} />
             <FiltersButton
               categories={categories}
-              current={{ category, q, region }}
+              current={{ category, q, region, verified: verifiedOnly }}
             />
           </div>
           <div className="listing-grid">

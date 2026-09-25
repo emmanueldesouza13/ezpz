@@ -46,11 +46,16 @@ export default function MessagesInboxPage() {
     })();
   }, [supabase, router]);
 
-  const sorted = [...convos].sort((a, b) => {
-    const at = lastByConvo[a.id]?.created_at ?? a.created_at;
-    const bt = lastByConvo[b.id]?.created_at ?? b.created_at;
-    return new Date(bt).getTime() - new Date(at).getTime();
-  });
+  // Tapping "Message" on a profile opens an empty thread right away, before
+  // either side has actually typed anything — don't clutter the inbox with
+  // those until a real message has been sent in them.
+  const sorted = [...convos]
+    .filter((c) => lastByConvo[c.id])
+    .sort((a, b) => {
+      const at = lastByConvo[a.id]?.created_at ?? a.created_at;
+      const bt = lastByConvo[b.id]?.created_at ?? b.created_at;
+      return new Date(bt).getTime() - new Date(at).getTime();
+    });
 
   return (
     <>

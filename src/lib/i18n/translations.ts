@@ -392,6 +392,7 @@ export const translations = {
     filters: {
       filters: "Filters",
       keywords: "Keywords",
+      verifiedOnly: "Blue tick verified only",
       clear: "Clear",
       apply: "Apply filters",
     },
@@ -802,6 +803,7 @@ export const translations = {
     filters: {
       filters: "Filtros",
       keywords: "Palabras clave",
+      verifiedOnly: "Solo con insignia azul verificada",
       clear: "Borrar",
       apply: "Aplicar filtros",
     },

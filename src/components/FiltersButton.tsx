@@ -11,19 +11,21 @@ export default function FiltersButton({
   current,
 }: {
   categories: Category[];
-  current: { category?: string; q?: string; region?: string };
+  current: { category?: string; q?: string; region?: string; verified?: boolean };
 }) {
   const router = useRouter();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [keywords, setKeywords] = useState(current.q ?? "");
   const [category, setCategory] = useState(current.category ?? "");
+  const [verifiedOnly, setVerifiedOnly] = useState(current.verified ?? false);
 
   function apply() {
     const params = new URLSearchParams();
     if (keywords.trim()) params.set("q", keywords.trim());
     if (category) params.set("category", category);
     if (current.region) params.set("region", current.region);
+    if (verifiedOnly) params.set("verified", "1");
     setOpen(false);
     router.push(params.toString() ? `/?${params.toString()}` : "/");
   }
@@ -31,6 +33,7 @@ export default function FiltersButton({
   function clearAll() {
     setKeywords("");
     setCategory("");
+    setVerifiedOnly(false);
     setOpen(false);
     router.push("/");
   }
@@ -63,6 +66,15 @@ export default function FiltersButton({
                 onChange={(e) => setKeywords(e.target.value)}
               />
             </div>
+
+            <label className="check-inline" style={{ marginBottom: 16 }}>
+              <input
+                type="checkbox"
+                checked={verifiedOnly}
+                onChange={(e) => setVerifiedOnly(e.target.checked)}
+              />
+              {t("filters.verifiedOnly")}
+            </label>
 
             <div className="modal-actions">
               <button type="button" className="btn btn-line" onClick={clearAll}>
