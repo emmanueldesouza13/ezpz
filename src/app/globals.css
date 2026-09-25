@@ -1167,7 +1167,13 @@
     padding-top: 18px;
     padding-bottom: 24px;
     display: flex; flex-direction: column;
-    min-height: calc(100dvh - var(--header-h, 132px));
+    /* svh (the "smallest" viewport height), not dvh — on iOS Safari, dvh
+       is recalculated live as the on-screen keyboard opens and closes,
+       and after it closes the browser doesn't always settle back to the
+       right value, leaving a chunk of dead space below the sticky send
+       bar. svh stays fixed at the keyboard-closed size the whole time,
+       so the bar never drifts. */
+    min-height: calc(100svh - var(--header-h, 132px));
   }
   .chat-head {
     display: flex; align-items: center; gap: 11px;
