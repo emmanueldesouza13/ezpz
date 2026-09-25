@@ -5,6 +5,7 @@ import Avatar from "@/components/Avatar";
 import BlueTick from "@/components/BlueTick";
 import Icon from "@/components/Icon";
 import MessageSellerButton from "@/components/MessageSellerButton";
+import ListingMedia from "@/components/ListingMedia";
 import ProfileTabs from "./ProfileTabs";
 import T from "@/components/T";
 import { createClient } from "@/lib/supabase/server";
@@ -52,6 +53,17 @@ export default async function SellerProfilePage({
   // buyer/seller line up with that listing's real seller_id — pick their
   // most recent one as the default context.
   const messageListingId = listings[0]?.id ?? null;
+
+  // Pool photos/videos across all of this seller's listings and taxi
+  // services, the same way the listing detail page does — this profile is
+  // reached independent of any one listing, so it's the one place a buyer
+  // can see everything this seller has posted at a glance.
+  const sellerImages = listings.flatMap((l) => l.images ?? []);
+  const sellerVideos = listings.flatMap((l) => l.videos ?? []);
+  const taxiImages = taxiServices.flatMap((s) =>
+    s.photos && s.photos.length > 0 ? s.photos : s.photo_url ? [s.photo_url] : []
+  );
+  const allImages = [...sellerImages, ...taxiImages];
 
   return (
     <>
@@ -105,6 +117,8 @@ export default async function SellerProfilePage({
               />
             </div>
           )}
+
+          <ListingMedia images={allImages} videos={sellerVideos} />
 
           <ProfileTabs
             seller={seller}
