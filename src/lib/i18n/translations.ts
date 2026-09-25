@@ -53,7 +53,7 @@ export const translations = {
       // aria-label strings above, which stay full-length for screen readers.
       homeLabel: "Home",
       taxiLabel: "Taxi",
-      payLabel: "Pay",
+      payLabel: "Wallet",
       chatLabel: "Chat",
       profileLabel: "Profile",
       allServices: "All services",
@@ -474,7 +474,7 @@ export const translations = {
       profile: "Perfil",
       homeLabel: "Inicio",
       taxiLabel: "Taxi",
-      payLabel: "Pagos",
+      payLabel: "Billetera",
       chatLabel: "Chat",
       profileLabel: "Perfil",
       allServices: "Todos los servicios",
