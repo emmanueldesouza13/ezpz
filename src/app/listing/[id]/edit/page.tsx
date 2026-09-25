@@ -30,7 +30,7 @@ export default function EditListingPage() {
   const [checking, setChecking] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [title, setTitle] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
@@ -52,10 +52,11 @@ export default function EditListingPage() {
 
       const [{ data: listing }, { data: profile }, cats] = await Promise.all([
         supabase.from("listings").select("*").eq("id", id).maybeSingle(),
-        supabase.from("profiles").select("is_admin").eq("id", userData.user.id).maybeSingle(),
+        supabase.from("profiles").select("is_admin, display_name").eq("id", userData.user.id).maybeSingle(),
         getCategories(supabase),
       ]);
       setCategories(cats);
+      setDisplayName(profile?.display_name ?? "");
 
       if (!listing) {
         setNotFound(true);
@@ -70,7 +71,6 @@ export default function EditListingPage() {
         return;
       }
 
-      setTitle(listing.title);
       setCategory(listing.category);
       setLocation(listing.location);
       setDescription(listing.description);
@@ -135,7 +135,7 @@ export default function EditListingPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !location.trim() || !description.trim()) {
+    if (!location.trim() || !description.trim()) {
       toast("Fill in all required fields");
       return;
     }
@@ -143,7 +143,9 @@ export default function EditListingPage() {
     const { data, error } = await supabase
       .from("listings")
       .update({
-        title: title.trim(),
+        // Keeps the listing's "name" in sync with the seller's current
+        // account name — there's nothing separate to type or edit here.
+        title: displayName.trim() || t("listing.sellerFallback"),
         description: description.trim(),
         category,
         location: location.trim(),
@@ -266,17 +268,6 @@ export default function EditListingPage() {
                     <p className="hint">
                       {t("post.videoHint", { max: MAX_LISTING_VIDEOS, seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
                     </p>
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="titleInput">{t("post.nameLabel")}</label>
-                    <input
-                      className="control"
-                      id="titleInput"
-                      required
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
                   </div>
 
                   <div className="field">

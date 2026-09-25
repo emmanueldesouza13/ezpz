@@ -27,7 +27,7 @@ export default function PostPage() {
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [title, setTitle] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
@@ -100,6 +100,12 @@ export default function PostPage() {
         router.push("/account");
         return;
       }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      setDisplayName(profile?.display_name ?? "");
       setCheckingAuth(false);
       const cats = await getCategories(supabase);
       setCategories(cats);
@@ -109,7 +115,7 @@ export default function PostPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !location.trim() || !description.trim()) {
+    if (!location.trim() || !description.trim()) {
       toast("Fill in all required fields");
       return;
     }
@@ -125,7 +131,11 @@ export default function PostPage() {
       .from("listings")
       .insert({
         seller_id: user.id,
-        title: title.trim(),
+        // The listing's own "name" is just the seller's account name —
+        // there's no separate title to type, so buyers see one
+        // consistent name whether they're looking at the listing or
+        // messaging the seller directly.
+        title: displayName.trim() || t("listing.sellerFallback"),
         description: description.trim(),
         category,
         location: location.trim(),
@@ -242,17 +252,6 @@ export default function PostPage() {
                     <p className="hint">
                       {t("post.videoHint", { max: MAX_LISTING_VIDEOS, seconds: MAX_VIDEO_SECONDS, mb: MAX_VIDEO_MB })}
                     </p>
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="titleInput">{t("post.nameLabel")}</label>
-                    <input
-                      className="control"
-                      id="titleInput"
-                      required
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
                   </div>
 
                   <div className="field">
