@@ -18,6 +18,10 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
+  // The taxi section is sign-in gated entirely, so landing here from a bare
+  // tap on the Taxi nav icon (no failed action, nothing they typed) reads
+  // as a random, unexplained wall unless the heading says why they're here.
+  const isTaxi = next === "/taxi" || next.startsWith("/taxi/") || next.startsWith("/taxi?");
   const initialMode = searchParams.get("mode");
   const [mode, setMode] = useState<Mode>(
     initialMode === "signup" || initialMode === "forgot" ? initialMode : "signin"
@@ -95,9 +99,17 @@ function SignInForm() {
       <div className="icon-circle">
         <Icon name={mode === "forgot" ? "KeyRound" : "Mail"} />
       </div>
-      <h1>{mode === "signin" ? t("auth.titleSignIn") : mode === "signup" ? t("auth.titleSignUp") : t("auth.titleForgot")}</h1>
+      <h1>
+        {mode === "signin"
+          ? isTaxi
+            ? t("auth.titleSignInTaxi")
+            : t("auth.titleSignIn")
+          : mode === "signup"
+            ? t("auth.titleSignUp")
+            : t("auth.titleForgot")}
+      </h1>
       <p>
-        {mode === "signin" && t("auth.subSignIn")}
+        {mode === "signin" && (isTaxi ? t("auth.subSignInTaxi") : t("auth.subSignIn"))}
         {mode === "signup" && t("auth.subSignUp")}
         {mode === "forgot" && t("auth.subForgot")}
       </p>
