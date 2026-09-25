@@ -1165,7 +1165,12 @@
   .chat-wrap {
     max-width: 720px;
     padding-top: 18px;
-    padding-bottom: 24px;
+    /* No padding-bottom here on purpose — the send bar below is sticky
+       with bottom:0, and a sticky element can't go past its own parent's
+       padding box. Any bottom padding on .chat-wrap would box the bar in
+       above that padding instead of letting it sit flush at the true
+       bottom of the screen; .chat-input-row handles its own safe-area
+       padding internally instead. */
     display: flex; flex-direction: column;
     /* svh (the "smallest" viewport height), not dvh — on iOS Safari, dvh
        is recalculated live as the on-screen keyboard opens and closes,
