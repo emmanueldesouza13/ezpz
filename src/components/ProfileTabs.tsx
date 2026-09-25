@@ -108,13 +108,15 @@ export default function ProfileTabs({
                 {new Date(profile.created_at).getFullYear()}
               </div>
             </div>
-            <div className="tab-empty">
-              {t("account.screeningPrefix")}{" "}
-              <Link href="/safety" style={{ color: "var(--brand)", fontWeight: 700 }}>
-                {t("account.screeningLinkText")}
-              </Link>
-              .
-            </div>
+            {!profile.verified && (
+              <div className="tab-empty">
+                {t("account.screeningPrefix")}{" "}
+                <Link href="/safety" style={{ color: "var(--brand)", fontWeight: 700 }}>
+                  {t("account.screeningLinkText")}
+                </Link>
+                .
+              </div>
+            )}
           </>
         )}
       </div>
