@@ -21,18 +21,43 @@ export default function AnnouncementBanner() {
 
   useEffect(() => {
     const supabase = createClient();
-    getSiteSettings(supabase).then((s) => {
-      const text = s.announcement?.trim() || null;
-      const key = s.announcement_updated_at || text || "";
-      setMessage(text);
-      setStampKey(key);
-      if (!text) return;
-      try {
-        setDismissed(localStorage.getItem(DISMISS_KEY) === key);
-      } catch {
-        setDismissed(false);
-      }
-    });
+
+    function check() {
+      getSiteSettings(supabase).then((s) => {
+        const text = s.announcement?.trim() || null;
+        const key = s.announcement_updated_at || text || "";
+        setMessage(text);
+        setStampKey(key);
+        if (!text) return;
+        try {
+          setDismissed(localStorage.getItem(DISMISS_KEY) === key);
+        } catch {
+          setDismissed(false);
+        }
+      });
+    }
+
+    check(); // on mount
+
+    // This banner lives in the root layout, which only mounts once per
+    // full page load — a browser tab or the home-screen PWA left open
+    // across a client-side navigation never re-runs the effect above, so
+    // an account that was already signed in before the admin sent a new
+    // broadcast would otherwise never see it until it happened to reload.
+    // Re-check whenever the tab regains focus/visibility, and as a
+    // fallback every couple of minutes, so an already-open account picks
+    // up a new (or cleared) broadcast on its own.
+    function onVisible() {
+      if (document.visibilityState === "visible") check();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", check);
+    const interval = setInterval(check, 120_000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", check);
+      clearInterval(interval);
+    };
   }, []);
 
   if (!message || dismissed) return null;
