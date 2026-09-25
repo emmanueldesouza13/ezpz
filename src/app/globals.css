@@ -1119,6 +1119,11 @@
   }
   .icon-btn:hover { background: var(--surface-2); }
   .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn-dot {
+    position: absolute; top: 2px; right: 2px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--bad); border: 2px solid var(--paper);
+  }
   .badge-dot {
     position: absolute; top: -3px; right: -3px;
     min-width: 17px; height: 17px; padding: 0 4px;

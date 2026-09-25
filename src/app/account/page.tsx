@@ -12,7 +12,7 @@ import VerifyIdentity from "@/components/VerifyIdentity";
 import BlueTick from "@/components/BlueTick";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
-import { getMyListings, getMyTaxiServices } from "@/lib/data";
+import { getMyListings, getMyTaxiServices, getMyVerificationRequest } from "@/lib/data";
 import { isPhotoUrl } from "@/lib/format";
 import type { Listing, Profile, TaxiService } from "@/lib/types";
 import { toast } from "@/lib/toast";
@@ -26,6 +26,7 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [myTaxi, setMyTaxi] = useState<TaxiService[]>([]);
+  const [hasPendingFee, setHasPendingFee] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -36,12 +37,21 @@ export default function AccountPage() {
       if (profileRow) {
         setProfile(profileRow as Profile);
       }
-      const [listings, taxi] = await Promise.all([
+      const [listings, taxi, verification] = await Promise.all([
         getMyListings(supabase, data.user.id),
         getMyTaxiServices(supabase, data.user.id),
+        getMyVerificationRequest(supabase, data.user.id),
       ]);
       setMyListings(listings);
       setMyTaxi(taxi);
+      // Same "anything owed" check the Payments page itself uses — the
+      // admin account collects fees rather than owing them, so it never
+      // shows this dot.
+      const isAdmin = profileRow?.is_admin ?? false;
+      const pendingTaxi = !isAdmin && taxi.some((s) => s.fee_status === "pending");
+      const pendingVerification =
+        !isAdmin && !profileRow?.verified && verification?.fee_status === "pending";
+      setHasPendingFee(pendingTaxi || pendingVerification);
       setLoading(false);
     })();
   }, [supabase, router]);
@@ -64,6 +74,7 @@ export default function AccountPage() {
                 {profile && !profile.is_admin && (
                   <Link href="/payments" className="icon-btn" aria-label={t("nav.payments")}>
                     <Icon name="Wallet" />
+                    {hasPendingFee && <span className="icon-btn-dot" />}
                   </Link>
                 )}
                 {!profile?.is_admin && <LanguageSwitcher />}
