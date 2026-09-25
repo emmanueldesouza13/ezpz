@@ -60,7 +60,14 @@ export default function AccountPage() {
           <div className="post-wrap account-wrap">
             <div className="page-top-row">
               <BackButton fallback="/" disableSmartBack />
-              {!profile?.is_admin && <LanguageSwitcher />}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {profile && !profile.is_admin && (
+                  <Link href="/payments" className="icon-btn" aria-label={t("nav.payments")}>
+                    <Icon name="Wallet" />
+                  </Link>
+                )}
+                {!profile?.is_admin && <LanguageSwitcher />}
+              </div>
             </div>
             <h1>{t("account.title")}</h1>
             {profile?.verified && <p className="lede">{t("account.verifiedSeller")}</p>}
@@ -182,18 +189,7 @@ export default function AccountPage() {
               </div>
             )}
 
-            {profile && !profile.is_admin && (
-              <Link
-                href="/payments"
-                className="btn btn-line btn-block"
-                style={{ marginTop: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              >
-                <Icon name="Wallet" size={16} />
-                {t("nav.payments")}
-              </Link>
-            )}
-
-            <button type="button" className="btn btn-line btn-block" style={{ marginTop: 12 }} onClick={handleSignOut}>
+            <button type="button" className="btn btn-line btn-block" style={{ marginTop: 32 }} onClick={handleSignOut}>
               {t("common.signOut")}
             </button>
           </div>
