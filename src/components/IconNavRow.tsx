@@ -7,7 +7,13 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 // Split out from CategoryNav (a server component) purely so these
 // aria-labels can be translated — the icons themselves carry no visible
 // text either way.
-export default function IconNavRow({ hasUnread }: { hasUnread: boolean }) {
+export default function IconNavRow({
+  hasUnread,
+  isAdmin = false,
+}: {
+  hasUnread: boolean;
+  isAdmin?: boolean;
+}) {
   const { t } = useLanguage();
 
   return (
@@ -18,9 +24,11 @@ export default function IconNavRow({ hasUnread }: { hasUnread: boolean }) {
       <Link href="/taxi" className="icon-nav-btn" aria-label={t("nav.taxi")}>
         <Icon name="Car" size={18} />
       </Link>
-      <Link href="/payments" className="icon-nav-btn" aria-label={t("nav.payments")}>
-        <Icon name="Wallet" size={18} />
-      </Link>
+      {!isAdmin && (
+        <Link href="/payments" className="icon-nav-btn" aria-label={t("nav.payments")}>
+          <Icon name="Wallet" size={18} />
+        </Link>
+      )}
       <Link
         href="/messages"
         className="icon-nav-btn"
