@@ -392,6 +392,10 @@ export const translations = {
     filters: {
       filters: "Filters",
       keywords: "Keywords",
+      region: "Location",
+      minRating: "Minimum rating",
+      anyRating: "Any rating",
+      ratingAndUp: "{rating}+ stars",
       verifiedOnly: "Blue tick verified only",
       clear: "Clear",
       apply: "Apply filters",
@@ -803,6 +807,10 @@ export const translations = {
     filters: {
       filters: "Filtros",
       keywords: "Palabras clave",
+      region: "Ubicación",
+      minRating: "Calificación mínima",
+      anyRating: "Cualquier calificación",
+      ratingAndUp: "{rating}+ estrellas",
       verifiedOnly: "Solo con insignia azul verificada",
       clear: "Borrar",
       apply: "Aplicar filtros",

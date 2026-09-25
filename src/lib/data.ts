@@ -119,15 +119,17 @@ export async function getListings(
     q?: string | null;
     region?: string | null;
     verifiedOnly?: boolean;
+    minRating?: number | null;
   } = {}
 ): Promise<Listing[]> {
-  // Filtering by the seller's verified flag needs an inner join on the
-  // embedded profiles relation, or the .eq below would only filter which
-  // seller fields come back, not which listings match — so the select
-  // shape changes based on whether that filter is active.
+  // Filtering by a column on the embedded seller (verified, rating) needs
+  // an inner join on that relation, or the .eq/.gte below would only
+  // filter which seller fields come back, not which listings match — so
+  // the select shape changes based on whether either filter is active.
+  const needsSellerJoin = Boolean(opts.verifiedOnly || opts.minRating);
   let query = supabase
     .from("listings")
-    .select(opts.verifiedOnly ? "*, seller:profiles!inner(*)" : "*, seller:profiles(*)")
+    .select(needsSellerJoin ? "*, seller:profiles!inner(*)" : "*, seller:profiles(*)")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
@@ -146,6 +148,7 @@ export async function getListings(
         : query.eq("location", "__no_listings_match_this_region__");
   }
   if (opts.verifiedOnly) query = query.eq("seller.verified", true);
+  if (opts.minRating) query = query.gte("seller.rating", opts.minRating);
 
   const { data, error } = await query;
   if (error) {
