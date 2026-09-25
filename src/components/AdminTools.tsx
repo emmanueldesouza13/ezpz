@@ -19,9 +19,9 @@ import { toast } from "@/lib/toast";
 import { getSiteSettings } from "@/lib/data";
 import { MAX_LISTING_PHOTOS, uploadListingPhoto } from "@/lib/media";
 
-export type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts" | "broadcast";
+export type Tab = "listings" | "taxi" | "sellers" | "verification" | "reports" | "categories" | "branding" | "payouts" | "broadcast" | "safety";
 
-const ALL_TABS: Tab[] = ["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts", "broadcast"];
+const ALL_TABS: Tab[] = ["listings", "taxi", "sellers", "verification", "reports", "categories", "branding", "payouts", "broadcast", "safety"];
 
 const CATEGORY_ICONS = [
   "Briefcase", "Wrench", "Home", "Car", "Dumbbell", "MapPin", "Star", "Shield", "Clock", "MessageCircle",
@@ -441,7 +441,9 @@ export default function AdminTools({
                     ? "Branding"
                     : t === "payouts"
                     ? "Payouts"
-                    : "Broadcast"}
+                    : t === "broadcast"
+                    ? "Broadcast"
+                    : "Trust & Safety"}
                 </button>
               ))}
             </div>
@@ -539,6 +541,8 @@ export default function AdminTools({
             )}
 
             {tab === "broadcast" && <BroadcastPanel settings={settings} onSaved={loadAll} />}
+
+            {tab === "safety" && <SafetyContentPanel settings={settings} onSaved={loadAll} />}
 
             {tab === "categories" && (
               <div className="admin-toolbar">
@@ -1271,6 +1275,91 @@ function BroadcastPanel({ settings, onSaved }: { settings: Settings | null; onSa
               </button>
             )}
           </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function SafetyContentPanel({ settings, onSaved }: { settings: Settings | null; onSaved: () => void }) {
+  const supabase = createClient();
+  const [tipsText, setTipsText] = useState(settings?.safety_tips_text ?? "");
+  const [reportText, setReportText] = useState(settings?.report_listing_text ?? "");
+  const [guidelinesText, setGuidelinesText] = useState(settings?.community_guidelines_text ?? "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setTipsText(settings?.safety_tips_text ?? "");
+    setReportText(settings?.report_listing_text ?? "");
+    setGuidelinesText(settings?.community_guidelines_text ?? "");
+  }, [settings]);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("settings")
+      .update({
+        safety_tips_text: tipsText.trim() || null,
+        report_listing_text: reportText.trim() || null,
+        community_guidelines_text: guidelinesText.trim() || null,
+      })
+      .eq("id", 1)
+      .select();
+    setSaving(false);
+    if (error) { toast("Couldn't save — " + error.message); return; }
+    if (!data || data.length === 0) { toast("Couldn't save — no permission to update settings"); return; }
+    toast("Trust & Safety page updated");
+    onSaved();
+  }
+
+  return (
+    <div className="admin-row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div className="admin-row-info" style={{ flex: "1 1 420px" }}>
+        <div className="admin-row-title">Trust &amp; Safety page</div>
+        <div className="admin-row-sub">
+          Controls the &quot;Safety tips&quot;, &quot;Report a listing&quot;, and &quot;Community guidelines&quot;
+          links in the site footer. Leave a box empty to use the built-in default text.
+        </div>
+        <form onSubmit={handleSave} style={{ marginTop: 14, maxWidth: 520 }}>
+          <div className="field">
+            <label htmlFor="safetyTipsInput">Safety tips — intro text</label>
+            <textarea
+              className="control"
+              id="safetyTipsInput"
+              rows={3}
+              placeholder="Default: EzPz is built to make booking local services feel safer…"
+              value={tipsText}
+              onChange={(e) => setTipsText(e.target.value)}
+            />
+          </div>
+          <div className="field" style={{ marginTop: 12 }}>
+            <label htmlFor="reportListingInput">Report a listing</label>
+            <textarea
+              className="control"
+              id="reportListingInput"
+              rows={4}
+              placeholder="Default: See a listing that looks fake, misleading, or breaks the rules?…"
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+            />
+            <p className="hint">Separate paragraphs with a blank line.</p>
+          </div>
+          <div className="field" style={{ marginTop: 12 }}>
+            <label htmlFor="communityGuidelinesInput">Community guidelines</label>
+            <textarea
+              className="control"
+              id="communityGuidelinesInput"
+              rows={4}
+              placeholder="Default: Be honest in your listings, photos, and messages…"
+              value={guidelinesText}
+              onChange={(e) => setGuidelinesText(e.target.value)}
+            />
+            <p className="hint">Separate paragraphs with a blank line.</p>
+          </div>
+          <button type="submit" className="btn btn-accent" style={{ marginTop: 14 }} disabled={saving}>
+            {saving ? "Saving…" : "Save"}
+          </button>
         </form>
       </div>
     </div>

@@ -29,9 +29,9 @@ export default function Footer() {
         <div>
           <h3>{t("footer.trustSafety")}</h3>
           <ul>
-            <li><Link href="/safety">{t("footer.safetyTips")}</Link></li>
-            <li><Link href="/safety">{t("footer.reportListing")}</Link></li>
-            <li><Link href="/safety">{t("footer.communityGuidelines")}</Link></li>
+            <li><Link href="/safety#safety-tips">{t("footer.safetyTips")}</Link></li>
+            <li><Link href="/safety#report-listing">{t("footer.reportListing")}</Link></li>
+            <li><Link href="/safety#community-guidelines">{t("footer.communityGuidelines")}</Link></li>
           </ul>
         </div>
       </div>

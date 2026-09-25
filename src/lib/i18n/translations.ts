@@ -148,6 +148,14 @@ export const translations = {
           body: "EzPz shows each seller's MMG number so you can pay them directly — we never collect or hold that money ourselves. MMG transfers can't be reversed, so only send payment once you've confirmed the work.",
         },
       },
+      reportListing: {
+        title: "Report a listing",
+        body: "See a listing that looks fake, misleading, or breaks the rules? Open the listing and tap the flag icon to report it, or use the report option from a seller's profile. Our team reviews every report and removes anything that doesn't belong on EzPz.",
+      },
+      communityGuidelines: {
+        title: "Community guidelines",
+        body: "Be honest in your listings, photos, and messages. Treat other users with respect — no harassment, hate speech, or scams. Only post services you can actually deliver. Follow the safety tips above when you meet or pay someone. Breaking these guidelines can get a listing removed or an account suspended.",
+      },
     },
     post: {
       title: "Post a listing",
@@ -568,6 +576,14 @@ export const translations = {
           title: "Los pagos por MMG van directo al vendedor",
           body: "EzPz muestra el número MMG de cada vendedor para que le pagues directamente — nosotros nunca recibimos ni retenemos ese dinero. Las transferencias MMG no se pueden revertir, así que paga solo después de confirmar el trabajo.",
         },
+      },
+      reportListing: {
+        title: "Reportar un anuncio",
+        body: "¿Ves un anuncio que parece falso, engañoso o que rompe las reglas? Abre el anuncio y toca el ícono de bandera para reportarlo, o usa la opción de reportar desde el perfil de un vendedor. Nuestro equipo revisa cada reporte y elimina lo que no debe estar en EzPz.",
+      },
+      communityGuidelines: {
+        title: "Normas de la comunidad",
+        body: "Sé honesto en tus anuncios, fotos y mensajes. Trata a los demás usuarios con respeto — nada de acoso, discurso de odio ni estafas. Publica solo servicios que realmente puedas ofrecer. Sigue los consejos de seguridad de arriba al reunirte o pagar. Romper estas normas puede hacer que se elimine un anuncio o se suspenda una cuenta.",
       },
     },
     post: {

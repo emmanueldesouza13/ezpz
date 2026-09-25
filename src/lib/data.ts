@@ -46,6 +46,9 @@ export async function getSiteSettings(supabase: SupabaseClient): Promise<Setting
       announcement_updated_at: null,
       privacy_blur: false,
       maintenance_mode: false,
+      safety_tips_text: null,
+      report_listing_text: null,
+      community_guidelines_text: null,
     }
   );
 }

@@ -11,6 +11,9 @@ export type Settings = {
   announcement_updated_at: string | null;
   privacy_blur: boolean;
   maintenance_mode: boolean;
+  safety_tips_text: string | null;
+  report_listing_text: string | null;
+  community_guidelines_text: string | null;
 };
 
 export type TaxiService = {
