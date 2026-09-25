@@ -10,10 +10,8 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 // text either way.
 export default function IconNavRow({
   hasUnread,
-  isAdmin = false,
 }: {
   hasUnread: boolean;
-  isAdmin?: boolean;
 }) {
   const { t } = useLanguage();
   const pathname = usePathname();
@@ -33,16 +31,6 @@ export default function IconNavRow({
         <Icon name="Car" size={18} />
         <span className="icon-nav-label">{t("nav.taxiLabel")}</span>
       </Link>
-      {!isAdmin && (
-        <Link
-          href="/payments"
-          className={cls(pathname.startsWith("/payments"))}
-          aria-label={t("nav.payments")}
-        >
-          <Icon name="Wallet" size={18} />
-          <span className="icon-nav-label">{t("nav.payLabel")}</span>
-        </Link>
-      )}
       <Link
         href="/messages"
         className={cls(pathname.startsWith("/messages"))}

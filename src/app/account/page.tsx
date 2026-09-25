@@ -182,7 +182,18 @@ export default function AccountPage() {
               </div>
             )}
 
-            <button type="button" className="btn btn-line btn-block" style={{ marginTop: 32 }} onClick={handleSignOut}>
+            {profile && !profile.is_admin && (
+              <Link
+                href="/payments"
+                className="btn btn-line btn-block"
+                style={{ marginTop: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              >
+                <Icon name="Wallet" size={16} />
+                {t("nav.payments")}
+              </Link>
+            )}
+
+            <button type="button" className="btn btn-line btn-block" style={{ marginTop: 12 }} onClick={handleSignOut}>
               {t("common.signOut")}
             </button>
           </div>

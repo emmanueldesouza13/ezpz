@@ -9,18 +9,12 @@ export default async function CategoryNav({ active }: { active?: string }) {
     getCategories(supabase),
     supabase.auth.getUser(),
   ]);
-  const [hasUnread, profileRow] = await Promise.all([
-    userData.user ? getHasUnreadMessages(supabase) : Promise.resolve(false),
-    userData.user
-      ? supabase.from("profiles").select("is_admin").eq("id", userData.user.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
-  const isAdmin = profileRow.data?.is_admin ?? false;
+  const hasUnread = userData.user ? await getHasUnreadMessages(supabase) : false;
 
   return (
     <nav className="cat-rail">
       <div className="wrap">
-        <IconNavRow hasUnread={hasUnread} isAdmin={isAdmin} />
+        <IconNavRow hasUnread={hasUnread} />
         <div className="cat-row">
           <ServicesMenu categories={categories} active={active} />
         </div>
