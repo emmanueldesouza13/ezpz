@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { translations, type Lang } from "./translations";
+import { translations, LANGS, type Lang } from "./translations";
 
 const STORAGE_KEY = "ezpz_lang";
 
@@ -37,7 +37,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "en" || saved === "es") setLangState(saved);
+      if (saved && LANGS.some((l) => l.code === saved)) setLangState(saved as Lang);
     } catch {
       // ignore — storage unavailable, just stay on the default
     }

@@ -149,21 +149,21 @@
   .locale:hover { color: var(--ink); }
   .region-menu { left: 0; min-width: 260px; max-height: 320px; overflow-y: auto; }
   .lang-switcher {
-    display: flex; align-items: center; gap: 3px;
+    position: relative;
+    display: flex; align-items: center;
     flex-shrink: 0;
     border-left: 1px solid var(--line);
     padding-left: 12px;
   }
-  .lang-switcher-btn {
+  .lang-switcher-trigger {
+    display: flex; align-items: center; gap: 5px;
     font-size: 0.76rem; font-weight: 700; letter-spacing: 0.01em;
     padding: 5px 9px; border-radius: 999px;
     border: 1px solid transparent;
     background: none; color: var(--ink-faint);
   }
-  .lang-switcher-btn:hover { color: var(--ink); }
-  .lang-switcher-btn.active {
-    background: var(--brand-tint); color: var(--accent); border-color: var(--brand-tint-line);
-  }
+  .lang-switcher-trigger:hover { color: var(--ink); }
+  .lang-menu { left: auto; right: 0; min-width: 168px; max-height: 320px; overflow-y: auto; }
   .search-form {
     flex: 1 1 220px;
     min-width: 0;
