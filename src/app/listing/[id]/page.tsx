@@ -102,10 +102,16 @@ export default async function ListingDetailPage({
                       )}
                     </Link>
                   )}
-                  <p className="profile-rating-row">
-                    <Icon name="Star" />
-                    {(seller?.rating ?? 5).toFixed(1)} ({seller?.rating_count ?? 0} ratings)
-                  </p>
+                  {seller?.account_type !== "buyer" && (
+                    <p className="profile-rating-row">
+                      <Icon name="Star" />
+                      {seller?.rating_count ? (
+                        <T k="listing.ratingSummary" vars={{ rating: seller.rating.toFixed(1), count: seller.rating_count }} />
+                      ) : (
+                        <T k="reviews.noRatingsYet" />
+                      )}
+                    </p>
+                  )}
                   {seller?.location && (
                     <p className="profile-location-row">
                       <Icon name="MapPin" />

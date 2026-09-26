@@ -342,6 +342,8 @@ export const translations = {
       backToBrowse: "Back to browse",
       sellerFallback: "Seller",
       since: "Since {year}",
+      ratingSummary_one: "{rating} ({count} rating)",
+      ratingSummary_other: "{rating} ({count} ratings)",
       availableNow: "Available now",
       verified: "Verified",
       tabAbout: "About",
@@ -425,6 +427,7 @@ export const translations = {
       apply: "Apply filters",
     },
     reviews: {
+      noRatingsYet: "No ratings yet",
       basedOn_one: "Based on {count} review",
       basedOn_other: "Based on {count} reviews",
       signInPrompt: "Sign in",
@@ -779,6 +782,8 @@ export const translations = {
       backToBrowse: "Volver a explorar",
       sellerFallback: "Vendedor",
       since: "Desde {year}",
+      ratingSummary_one: "{rating} ({count} calificación)",
+      ratingSummary_other: "{rating} ({count} calificaciones)",
       availableNow: "Disponible ahora",
       verified: "Verificado",
       tabAbout: "Acerca de",
@@ -862,6 +867,7 @@ export const translations = {
       apply: "Aplicar filtros",
     },
     reviews: {
+      noRatingsYet: "Sin calificaciones todavía",
       basedOn_one: "Basado en {count} reseña",
       basedOn_other: "Basado en {count} reseñas",
       signInPrompt: "Inicia sesión",

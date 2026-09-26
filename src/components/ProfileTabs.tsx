@@ -41,8 +41,11 @@ export default function ProfileTabs({
   isOwner: boolean;
 }) {
   const showMaintenance = isOwner && profile.is_admin;
+  // Same as the standalone seller-profile tabs: a Buyer account has
+  // nothing to be reviewed on, so it doesn't get a Reviews tab either.
+  const isBuyer = profile.account_type === "buyer";
   const { t } = useLanguage();
-  const [tab, setTab] = useState<TabKey>(showMaintenance ? "maintenance" : "reviews");
+  const [tab, setTab] = useState<TabKey>(showMaintenance ? "maintenance" : isBuyer ? "schedule" : "reviews");
 
   const tabs: { key: TabKey; label: string; icon: string }[] = showMaintenance
     ? [
@@ -50,7 +53,7 @@ export default function ProfileTabs({
         { key: "screening", label: t("account.tabScreening"), icon: "ShieldCheck" },
       ]
     : [
-        { key: "reviews", label: t("listing.tabReviews"), icon: "Star" },
+        ...(isBuyer ? [] : [{ key: "reviews" as const, label: t("listing.tabReviews"), icon: "Star" }]),
         { key: "schedule", label: t("listing.tabSchedule"), icon: "Calendar" },
         { key: "screening", label: t("account.tabScreening"), icon: "ShieldCheck" },
       ];
@@ -77,7 +80,7 @@ export default function ProfileTabs({
         {tab === "reviews" && !showMaintenance && (
           <ReviewsPanel
             sellerId={profile.id}
-            initialRating={profile.rating ?? 5}
+            initialRating={profile.rating ?? 0}
             initialCount={profile.rating_count ?? 0}
           />
         )}

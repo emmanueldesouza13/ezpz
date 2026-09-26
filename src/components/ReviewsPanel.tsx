@@ -145,15 +145,21 @@ export default function ReviewsPanel({
   return (
     <>
       <div className="rating-summary-card">
-        <div className="rating-summary-main">
-          <span className="rating-big">{avg.toFixed(1)}</span>
-          <div>
-            <Stars value={avg} size={16} />
-            <p className="rating-count-line">
-              {t(count === 1 ? "reviews.basedOn_one" : "reviews.basedOn_other", { count })}
-            </p>
+        {count > 0 ? (
+          <div className="rating-summary-main">
+            <span className="rating-big">{avg.toFixed(1)}</span>
+            <div>
+              <Stars value={avg} size={16} />
+              <p className="rating-count-line">
+                {t(count === 1 ? "reviews.basedOn_one" : "reviews.basedOn_other", { count })}
+              </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="rating-summary-main">
+            <p className="rating-count-line">{loading ? "" : t("reviews.noRatingsYet")}</p>
+          </div>
+        )}
         {!loading && count > 0 && (
           <div className="rating-breakdown">
             {breakdown.map(({ star, starCount, pct }) => (

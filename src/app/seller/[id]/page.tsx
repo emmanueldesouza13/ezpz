@@ -84,10 +84,16 @@ export default async function SellerProfilePage({
               <h2>{seller.display_name}</h2>
               {seller.is_admin ? <BlueTick size={16} admin /> : seller.verified && <BlueTick size={16} />}
             </div>
-            <p className="profile-rating-row">
-              <Icon name="Star" />
-              {(seller.rating ?? 5).toFixed(1)} ({seller.rating_count ?? 0} ratings)
-            </p>
+            {seller.account_type !== "buyer" && (
+              <p className="profile-rating-row">
+                <Icon name="Star" />
+                {seller.rating_count ? (
+                  <T k="listing.ratingSummary" vars={{ rating: seller.rating.toFixed(1), count: seller.rating_count }} />
+                ) : (
+                  <T k="reviews.noRatingsYet" />
+                )}
+              </p>
+            )}
             <div className="profile-badge-row">
               <span className="profile-badge">
                 <Icon name="CalendarDays" />

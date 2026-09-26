@@ -29,11 +29,14 @@ export default function DetailTabs({
   const [tab, setTab] = useState<TabKey>("about");
   const seller = listing.seller;
   const { t } = useLanguage();
+  // A seller who's since switched their account to Buyer has nothing to
+  // be reviewed on anymore — drop the tab rather than show it empty.
+  const tabs = seller?.account_type === "buyer" ? TABS.filter((tabDef) => tabDef.key !== "reviews") : TABS;
 
   return (
     <div>
       <div className="tab-bar" role="tablist" aria-label="Listing details">
-        {TABS.map((tabDef) => (
+        {tabs.map((tabDef) => (
           <button
             key={tabDef.key}
             type="button"
@@ -71,7 +74,7 @@ export default function DetailTabs({
         {tab === "reviews" && seller && (
           <ReviewsPanel
             sellerId={seller.id}
-            initialRating={seller.rating ?? 5}
+            initialRating={seller.rating ?? 0}
             initialCount={seller.rating_count ?? 0}
           />
         )}

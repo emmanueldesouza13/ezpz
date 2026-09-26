@@ -32,11 +32,14 @@ export default function ProfileTabs({
   const [tab, setTab] = useState<TabKey>("about");
   const hasListings = listings.length > 0 || taxiServices.length > 0;
   const { t } = useLanguage();
+  // Buyer accounts don't offer any service, so there's nothing to rate or
+  // review — drop that tab for them instead of showing an empty one.
+  const tabs = seller.account_type === "buyer" ? TABS.filter((tabDef) => tabDef.key !== "reviews") : TABS;
 
   return (
     <div>
       <div className="tab-bar" role="tablist" aria-label="Profile details">
-        {TABS.map((tabDef) => (
+        {tabs.map((tabDef) => (
           <button
             key={tabDef.key}
             type="button"
@@ -78,7 +81,7 @@ export default function ProfileTabs({
         {tab === "reviews" && (
           <ReviewsPanel
             sellerId={seller.id}
-            initialRating={seller.rating ?? 5}
+            initialRating={seller.rating ?? 0}
             initialCount={seller.rating_count ?? 0}
           />
         )}
