@@ -20,7 +20,12 @@ export default async function TaxiPage({
   if (!userData.user) {
     redirect("/sign-in?next=/taxi");
   }
-  const services = await getTaxiServices(supabase, q);
+  const [services, { data: profile }] = await Promise.all([
+    getTaxiServices(supabase, q),
+    supabase.from("profiles").select("account_type, is_admin").eq("id", userData.user.id).maybeSingle(),
+  ]);
+  // Same seller-only gate as the "Post a listing" button in the header.
+  const canPost = !profile || profile.is_admin || profile.account_type !== "buyer";
 
   // One horizontally-scrolling row per service area (region), like a
   // rental-car browse page grouped by city.
@@ -41,10 +46,12 @@ export default async function TaxiPage({
         <section className="wrap">
           <div className="browse-head">
             <TaxiHeading count={services.length} query={q} />
-            <Link href="/taxi/post" className="btn btn-accent">
-              <Icon name="Plus" size={15} strokeWidth={2.4} />
-              <T k="taxi.signUp" />
-            </Link>
+            {canPost && (
+              <Link href="/taxi/post" className="btn btn-accent">
+                <Icon name="Plus" size={15} strokeWidth={2.4} />
+                <T k="taxi.signUp" />
+              </Link>
+            )}
           </div>
 
           {regions.map(([region, list]) => (

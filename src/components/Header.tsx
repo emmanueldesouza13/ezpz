@@ -15,6 +15,7 @@ const DEFAULT_REGION_LABEL = "Georgetown, Guyana";
 export default function Header() {
   const { t } = useLanguage();
   const [email, setEmail] = useState<string | null>(null);
+  const [canPost, setCanPost] = useState(false);
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [region, setRegion] = useState(DEFAULT_REGION_LABEL);
   const [regionOpen, setRegionOpen] = useState(false);
@@ -56,13 +57,31 @@ export default function Header() {
     router.push(qs ? `/?${qs}` : "/");
   }
 
+  // "Post a listing" is a seller action — a Buyer account, and a signed-out
+  // visitor, don't get the button. Admin keeps seeing it too, matching how
+  // it's always behaved for that account.
+  async function refreshCanPost(userId: string | undefined) {
+    if (!userId) { setCanPost(false); return; }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("account_type, is_admin")
+      .eq("id", userId)
+      .maybeSingle();
+    setCanPost(!profile || profile.is_admin || profile.account_type !== "buyer");
+  }
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
+      refreshCanPost(data.user?.id);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email ?? null);
+      refreshCanPost(session?.user?.id);
     });
     getSiteSettings(supabase).then((s) => setLogoUrl(s.logo_url));
     return () => sub.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
   // Publish the header's real rendered height as a CSS var so the quick-nav
@@ -140,7 +159,7 @@ export default function Header() {
           />
         </form>
         <LanguageSwitcher />
-        {email && (
+        {email && canPost && (
           <Link href="/post" className="btn btn-accent">
             <Icon name="Plus" size={15} strokeWidth={2.4} />
             {t("header.postListing")}

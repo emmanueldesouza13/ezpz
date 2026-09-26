@@ -94,17 +94,22 @@ export default function PostPage() {
         router.push("/sign-in?next=/post");
         return;
       }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, account_type, is_admin")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profile && !profile.is_admin && profile.account_type === "buyer") {
+        toast(t("post.buyersCantPost"));
+        router.push("/account");
+        return;
+      }
       const occupying = await getOccupyingListing(supabase, data.user.id);
       if (occupying) {
         toast(t("post.alreadyHaveListing"));
         router.push("/account");
         return;
       }
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", data.user.id)
-        .maybeSingle();
       setDisplayName(profile?.display_name ?? "");
       setCheckingAuth(false);
       const cats = await getCategories(supabase);

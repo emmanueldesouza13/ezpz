@@ -22,10 +22,17 @@ function SignInForm() {
   // tap on the Taxi nav icon (no failed action, nothing they typed) reads
   // as a random, unexplained wall unless the heading says why they're here.
   const isTaxi = next === "/taxi" || next.startsWith("/taxi/") || next.startsWith("/taxi?");
+  // Whoever got bounced here by tapping "Post a listing" or "Sign up as a
+  // driver" clearly means to sell, not just browse — default the new
+  // account picker to match instead of making them flip it themselves.
+  const wantsToSell =
+    next === "/post" || next.startsWith("/post?") ||
+    next === "/taxi/post" || next.startsWith("/taxi/post?");
   const initialMode = searchParams.get("mode");
   const [mode, setMode] = useState<Mode>(
     initialMode === "signup" || initialMode === "forgot" ? initialMode : "signin"
   );
+  const [accountType, setAccountType] = useState<"buyer" | "seller">(wantsToSell ? "seller" : "buyer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
@@ -54,11 +61,16 @@ function SignInForm() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          data: { account_type: accountType },
         },
       });
       setBusy(false);
       if (error) { setError(error.message); return; }
       if (data.session) {
+        // Signups on this project don't need email confirmation, so the
+        // profile row (created by the DB trigger on auth.users insert)
+        // already exists — just stamp the buyer/seller choice onto it.
+        await supabase.from("profiles").update({ account_type: accountType }).eq("id", data.session.user.id);
         router.push(next);
       } else {
         setSent(true);
@@ -128,6 +140,29 @@ function SignInForm() {
         </div>
       )}
       <form onSubmit={handleSubmit}>
+        {mode === "signup" && (
+          <div className="field">
+            <label>{t("auth.accountTypeLabel")}</label>
+            <div className="account-type-picker">
+              <button
+                type="button"
+                className={`account-type-option${accountType === "buyer" ? " active" : ""}`}
+                onClick={() => setAccountType("buyer")}
+              >
+                <span className="account-type-name">{t("auth.accountTypeBuyer")}</span>
+                <span className="account-type-hint">{t("auth.accountTypeBuyerHint")}</span>
+              </button>
+              <button
+                type="button"
+                className={`account-type-option${accountType === "seller" ? " active" : ""}`}
+                onClick={() => setAccountType("seller")}
+              >
+                <span className="account-type-name">{t("auth.accountTypeSeller")}</span>
+                <span className="account-type-hint">{t("auth.accountTypeSellerHint")}</span>
+              </button>
+            </div>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="email">{t("auth.emailLabel")}</label>
           <input

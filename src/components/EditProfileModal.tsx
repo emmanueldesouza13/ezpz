@@ -45,6 +45,7 @@ export default function EditProfileModal({
   const [location, setLocation] = useState(profile.location ?? "");
   const [bio, setBio] = useState(profile.bio ?? "");
   const [available, setAvailable] = useState(profile.available);
+  const [accountType, setAccountType] = useState(profile.account_type);
 
   // listing fields
   const [lTitle, setLTitle] = useState("");
@@ -66,6 +67,7 @@ export default function EditProfileModal({
     setLocation(profile.location ?? "");
     setBio(profile.bio ?? "");
     setAvailable(profile.available);
+    setAccountType(profile.account_type);
 
     if (listing) {
       setLTitle(listing.title);
@@ -200,6 +202,7 @@ export default function EditProfileModal({
       location: location.trim() || null,
       bio: bio.trim() || null,
       available,
+      ...(profile.is_admin ? {} : { account_type: accountType }),
     };
 
     const profileTask = supabase.from("profiles").update(profileUpdates).eq("id", profile.id);
@@ -352,7 +355,7 @@ export default function EditProfileModal({
                 <p className="hint">{bio.length}/400</p>
               </div>
 
-              <div className="avail-toggle-row" style={{ marginBottom: listing ? 0 : 22 }}>
+              <div className="avail-toggle-row">
                 <div className="avail-toggle-text">
                   <p>{t("editProfile.availableToWork")}</p>
                   <p>{t("editProfile.availableHint")}</p>
@@ -366,6 +369,29 @@ export default function EditProfileModal({
                   <span className="switch-track" />
                 </label>
               </div>
+
+              {!profile.is_admin && (
+                <div className="field" style={{ marginBottom: listing ? 0 : 22 }}>
+                  <label>{t("editProfile.accountTypeLabel")}</label>
+                  <div className="account-type-picker">
+                    <button
+                      type="button"
+                      className={`account-type-option${accountType === "buyer" ? " active" : ""}`}
+                      onClick={() => setAccountType("buyer")}
+                    >
+                      <span className="account-type-name">{t("auth.accountTypeBuyer")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`account-type-option${accountType === "seller" ? " active" : ""}`}
+                      onClick={() => setAccountType("seller")}
+                    >
+                      <span className="account-type-name">{t("auth.accountTypeSeller")}</span>
+                    </button>
+                  </div>
+                  <p className="hint">{t("editProfile.accountTypeHint")}</p>
+                </div>
+              )}
 
               {listing && (
                 <>

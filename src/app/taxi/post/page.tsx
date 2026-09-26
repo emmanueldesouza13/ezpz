@@ -39,6 +39,16 @@ export default function TaxiPostPage() {
         router.push("/sign-in?next=/taxi/post");
         return;
       }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, account_type, is_admin")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profile && !profile.is_admin && profile.account_type === "buyer") {
+        toast(t("post.buyersCantPost"));
+        router.push("/account");
+        return;
+      }
       const occupying = await getOccupyingListing(supabase, data.user.id);
       if (occupying) {
         toast(t("post.alreadyHaveListing"));
@@ -47,11 +57,6 @@ export default function TaxiPostPage() {
       }
       setCheckingAuth(false);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", data.user.id)
-        .maybeSingle();
       if (profile?.display_name) setDriverName(profile.display_name);
 
       const settings = await getSiteSettings(supabase);

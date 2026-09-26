@@ -53,6 +53,8 @@ export type Schedule = {
   days?: Partial<Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", DaySchedule>>;
 };
 
+export type AccountType = "buyer" | "seller";
+
 export type Profile = {
   id: string;
   display_name: string;
@@ -60,6 +62,7 @@ export type Profile = {
   avatar_url: string | null;
   verified: boolean;
   is_admin: boolean;
+  account_type: AccountType;
   mmg_number: string | null;
   rating: number;
   rating_count: number;
