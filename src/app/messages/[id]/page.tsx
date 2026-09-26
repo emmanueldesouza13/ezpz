@@ -13,12 +13,13 @@ import type { Conversation, Message } from "@/lib/types";
 import { fmtChatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import type { Lang } from "@/lib/i18n/translations";
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = usePromise(params);
   const supabase = createClient();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [userId, setUserId] = useState<string | null>(null);
   const [convo, setConvo] = useState<Conversation | null | undefined>(undefined);
@@ -26,6 +27,54 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Per-message translation state, keyed by "<messageId>::<lang>" rather
+  // than just the message id — a translation is only ever valid for the
+  // app language it was fetched in, and folding that language into the key
+  // means switching languages mid-chat naturally starts fresh (the old
+  // entries are just dead keys) instead of needing an effect to clear the
+  // cache on every language change. Fetched translations are cached here so
+  // re-tapping "Translate" on the same message never calls the API again,
+  // both to stay well under MyMemory's free daily word quota and so
+  // switching back and forth feels instant after the first tap.
+  const [translated, setTranslated] = useState<Record<string, string>>({});
+  const [showingTranslation, setShowingTranslation] = useState<Record<string, boolean>>({});
+  const [translating, setTranslating] = useState<Record<string, boolean>>({});
+  const [translateFailed, setTranslateFailed] = useState<Record<string, boolean>>({});
+
+  async function handleTranslate(m: Message) {
+    const key = `${m.id}::${lang}`;
+    if (showingTranslation[key]) {
+      // Already translated and showing it — a second tap just flips back
+      // to the original text rather than re-fetching.
+      setShowingTranslation((prev) => ({ ...prev, [key]: false }));
+      return;
+    }
+    if (translated[key]) {
+      setShowingTranslation((prev) => ({ ...prev, [key]: true }));
+      return;
+    }
+    setTranslating((prev) => ({ ...prev, [key]: true }));
+    setTranslateFailed((prev) => ({ ...prev, [key]: false }));
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: m.body, target: lang as Lang }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setTranslated((prev) => ({ ...prev, [key]: data.translated }));
+        setShowingTranslation((prev) => ({ ...prev, [key]: true }));
+      } else {
+        setTranslateFailed((prev) => ({ ...prev, [key]: true }));
+      }
+    } catch {
+      setTranslateFailed((prev) => ({ ...prev, [key]: true }));
+    } finally {
+      setTranslating((prev) => ({ ...prev, [key]: false }));
+    }
+  }
 
   useEffect(() => {
     (async () => {
@@ -148,14 +197,35 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               )}
             </div>
             <div className="chat-scroll" ref={scrollRef}>
-              {messages.map((m) => (
-                <div className={`bubble-row ${m.sender_id === userId ? "me" : "them"}`} key={m.id}>
-                  <div>
-                    <div className="bubble">{m.body}</div>
-                    <div className="bubble-time">{fmtChatTime(m.created_at)}</div>
+              {messages.map((m) => {
+                const key = `${m.id}::${lang}`;
+                const isShowingTranslation = showingTranslation[key];
+                return (
+                  <div className={`bubble-row ${m.sender_id === userId ? "me" : "them"}`} key={m.id}>
+                    <div>
+                      <div className="bubble">{isShowingTranslation ? translated[key] : m.body}</div>
+                      <div className="bubble-meta">
+                        <span className="bubble-time">{fmtChatTime(m.created_at)}</span>
+                        <button
+                          type="button"
+                          className="bubble-translate-btn"
+                          onClick={() => handleTranslate(m)}
+                          disabled={translating[key]}
+                        >
+                          {translating[key]
+                            ? t("messages.translating")
+                            : isShowingTranslation
+                              ? t("messages.showOriginal")
+                              : t("messages.translate")}
+                        </button>
+                        {translateFailed[key] && (
+                          <span className="bubble-translate-error">{t("messages.translateError")}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <form className="chat-input-row" onSubmit={handleSend}>
               <textarea

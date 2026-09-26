@@ -1243,9 +1243,21 @@
     color: var(--on-accent);
     border-bottom-right-radius: 4px;
   }
+  .bubble-meta {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; margin-top: 3px; flex-wrap: wrap;
+  }
   .bubble-time {
     font-size: 0.65rem; color: var(--ink-faint);
-    margin-top: 3px; text-align: center;
+  }
+  .bubble-translate-btn {
+    font-size: 0.65rem; font-weight: 600; color: var(--brand);
+    background: none; border: none; padding: 0; cursor: pointer;
+  }
+  .bubble-translate-btn:hover { text-decoration: underline; }
+  .bubble-translate-btn:disabled { color: var(--ink-faint); cursor: default; }
+  .bubble-translate-error {
+    font-size: 0.65rem; color: var(--danger, #d64545);
   }
   .typing-dots { display: inline-flex; gap: 3px; padding: 3px 2px; }
   .typing-dots span {
